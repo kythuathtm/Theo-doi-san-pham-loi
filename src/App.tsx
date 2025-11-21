@@ -5,7 +5,6 @@ import * as XLSX from 'xlsx';
 import Loading from './components/Loading';
 
 // Firebase Imports
-// FIX: Use relative path instead of alias '@/'
 import { db } from './firebaseConfig';
 import { 
   collection, 
