@@ -260,14 +260,14 @@ const DefectReportList: React.FC<Props> = ({
             <div className="flex items-center gap-2">
                 <input
                     type="date"
-                    className="block w-full sm:w-auto pl-3 pr-2 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-600"
+                    className="block w-full sm:w-auto pl-3 pr-2 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800"
                     value={filters.dateFilter.start}
                     onChange={(e) => onDateFilterChange({ ...filters.dateFilter, start: e.target.value })}
                 />
                 <span className="text-slate-400">-</span>
                 <input
                     type="date"
-                    className="block w-full sm:w-auto pl-3 pr-2 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-600"
+                    className="block w-full sm:w-auto pl-3 pr-2 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800"
                     value={filters.dateFilter.end}
                     onChange={(e) => onDateFilterChange({ ...filters.dateFilter, end: e.target.value })}
                 />

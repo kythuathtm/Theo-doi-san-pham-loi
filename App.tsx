@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useTransition, Suspense } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, ArrowUpTrayIcon, CalendarIcon, Cog8ToothIcon } from './components/Icons';
@@ -449,18 +450,29 @@ const App: React.FC = () => {
   
   const handleImportProducts = async (newProducts: any[]) => {
       try {
-          const batch = writeBatch(db);
+          // BATCH LIMIT FIX: Firestore only allows 500 operations per batch.
+          // We need to chunk the data if it exceeds this limit.
+          const BATCH_SIZE = 450; // Using 450 to be safe
+          const chunks = [];
+          
+          for (let i = 0; i < newProducts.length; i += BATCH_SIZE) {
+              chunks.push(newProducts.slice(i, i + BATCH_SIZE));
+          }
+
           let count = 0;
           
-          newProducts.forEach(p => {
-              if(p.maSanPham) {
-                  const ref = doc(db, "products", p.maSanPham);
-                  batch.set(ref, p);
-                  count++;
-              }
-          });
+          for (const chunk of chunks) {
+               const batch = writeBatch(db);
+               chunk.forEach(p => {
+                  if(p.maSanPham) {
+                      const ref = doc(db, "products", p.maSanPham);
+                      batch.set(ref, p);
+                      count++;
+                  }
+              });
+              await batch.commit();
+          }
           
-          await batch.commit();
           showToast(`Đã import thành công ${count} sản phẩm lên Cloud.`, 'success');
           setIsProductModalOpen(false);
       } catch (error) {
@@ -539,6 +551,11 @@ const App: React.FC = () => {
           setCurrentView('list');
       });
   };
+
+  // Prevent showing login screen until DB check is done to avoid default credential login issue
+  if (isLoadingDB && users.length === 0) {
+      return <Loading />;
+  }
 
   if (!currentUser) {
       return (
