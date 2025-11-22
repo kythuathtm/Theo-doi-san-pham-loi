@@ -50,8 +50,13 @@ const StatCard = ({ title, value, percentage, icon, onClick, themeKey = 'slate' 
                  <div className="flex flex-col justify-between min-w-0 h-full">
                     <p className={`text-[10px] lg:text-xs font-extrabold uppercase tracking-wider mb-1 truncate ${theme.textTitle}`}>{title}</p>
                     <div className="flex items-baseline gap-1.5 mt-auto">
-                        {/* Responsive Font Size: Normal on Laptop (xl), Big on Desktop (2xl) */}
-                        <h3 className={`text-2xl sm:text-3xl 2xl:text-4xl font-black leading-none tracking-tight ${theme.textValue}`}>
+                        {/* Responsive Font Size: 
+                            - Mobile: 2xl
+                            - Tablet (sm): 3xl (3 cols)
+                            - Laptop (xl): 2xl (6 cols - needs smaller font)
+                            - Desktop (2xl): 4xl (6 cols - wide screen)
+                        */}
+                        <h3 className={`text-2xl sm:text-3xl xl:text-2xl 2xl:text-4xl font-black leading-none tracking-tight ${theme.textValue}`}>
                             {value.toLocaleString('vi-VN')}
                         </h3>
                         {percentage !== undefined && (
@@ -155,16 +160,16 @@ const BrandPerformanceCard: React.FC<BrandPerformanceCardProps> = ({ data, onCli
              <div className="flex-1 flex flex-col bg-white min-h-0 divide-y divide-slate-100">
                  {/* Top Row: Total Reports (Takes ~50% height) */}
                  <div className="flex-1 w-full py-2">
-                     <MetricSection label="Số báo cáo" value={data.reports} percent={data.reportsPercent} valueSize="text-3xl sm:text-4xl 2xl:text-5xl" />
+                     <MetricSection label="Số báo cáo" value={data.reports} percent={data.reportsPercent} valueSize="text-3xl sm:text-4xl xl:text-3xl 2xl:text-5xl" />
                  </div>
                  
                  {/* Bottom Row: Exchange & Product Count (Takes ~50% height, split horizontally) */}
                  <div className="flex-1 flex divide-x divide-slate-100 py-2">
                      <div className="flex-1">
-                         <MetricSection label="Đổi hàng" value={data.exchange} percent={data.exchangePercent} valueSize="text-xl sm:text-2xl 2xl:text-3xl" />
+                         <MetricSection label="Đổi hàng" value={data.exchange} percent={data.exchangePercent} valueSize="text-xl sm:text-2xl xl:text-xl 2xl:text-3xl" />
                      </div>
                      <div className="flex-1">
-                         <MetricSection label="Sản phẩm lỗi" value={data.products} percent={data.productsPercent} valueSize="text-xl sm:text-2xl 2xl:text-3xl" />
+                         <MetricSection label="Sản phẩm lỗi" value={data.products} percent={data.productsPercent} valueSize="text-xl sm:text-2xl xl:text-xl 2xl:text-3xl" />
                      </div>
                  </div>
              </div>
@@ -269,8 +274,12 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect }) => {
                 <span className="bg-blue-600 text-white w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 shadow-sm">1</span>
                 THỐNG KÊ CHUNG
             </h2>
-            {/* Auto-resize Grid: 2 cols on mobile, 3 on tablet, 6 on large screens */}
-            {/* Adjusted gap for smaller xl screens */}
+            {/* Auto-resize Grid: 
+                - mobile: 2 cols
+                - tablet (sm): 3 cols
+                - laptop (xl - 1280px): 6 cols (tight fit) -> Font size reduced in StatCard
+                - desktop (2xl - 1536px): 6 cols (wide fit) -> Font size increased
+            */}
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 2xl:gap-6">
                 <StatCard 
                     title="Tổng báo cáo" value={stats.total} themeKey="indigo"
