@@ -47,18 +47,12 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   const productCodeInputRef = useRef<HTMLInputElement>(null);
 
   const isFieldDisabled = (fieldName: keyof Omit<DefectReport, 'id'>) => {
-    // Always allow editing if we are creating a new report (assuming the creator has rights to fill initial data)
-    // Or strict mode: only if editableFields allows. 
-    // Requirement implies "allow only admins to edit X", usually refers to updates.
-    // For better UX, we allow creating a report to populate basic info.
     if (!initialData) return false; 
     
-    // Special check for Product Locked Info (derived fields)
     if (isProductInfoLocked && ['dongSanPham', 'tenThuongMai', 'nhanHang'].includes(fieldName)) {
         return true;
     }
 
-    // Map form field names to Permission Fields
     let permissionKey: PermissionField;
 
     if (['nguyenNhan'].includes(fieldName)) permissionKey = 'nguyenNhan';
@@ -68,13 +62,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     else if (['loaiLoi'].includes(fieldName)) permissionKey = 'loaiLoi';
     else if (['soLuongDoi'].includes(fieldName)) permissionKey = 'soLuongDoi';
     else permissionKey = 'general';
-
-    // Check if the permission key is present in user's allowed fields
-    // Note: If user has 'general', they can edit fields mapped to 'general'.
-    // If they have 'soLuongDoi', they can edit 'soLuongDoi'.
-    // But if a user has 'general' permission, should they also be able to edit 'soLuongDoi'? 
-    // Let's keep it explicit: 'soLuongDoi' is its own permission for granular control (e.g. CungUng).
-    // If an Admin needs to edit everything, they should have ALL permissions in their config.
 
     return !editableFields.includes(permissionKey);
   };
@@ -113,7 +100,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
         nhanHang: 'Khác',
       });
       setIsProductInfoLocked(false);
-      // Focus on product code input when opening new form
       setTimeout(() => productCodeInputRef.current?.focus(), 100);
     }
   }, [initialData, products]);
@@ -142,7 +128,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             }
         } else if (name === 'trangThai') {
             newState.trangThai = value as any;
-            // Auto set completion date if status is Completed and date is empty
             if (value === 'Hoàn thành' && !newState.ngayHoanThanh) {
                 newState.ngayHoanThanh = getTodayDateString();
             }
@@ -183,16 +168,21 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 flex items-center justify-center p-4 transition-opacity">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] flex flex-col overflow-hidden ring-1 ring-black/5">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
-          <h2 className="text-xl font-bold text-slate-800">{initialData ? 'Chỉnh sửa Báo cáo' : 'Tạo Báo cáo Mới'}</h2>
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 flex items-end sm:items-center justify-center sm:p-4 transition-opacity">
+      {/* Modal Container: Bottom sheet on mobile, centered card on desktop */}
+      <div className="bg-white w-full max-w-6xl h-[96vh] sm:h-auto sm:max-h-[95vh] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-black/5 transition-transform duration-300 transform translate-y-0">
+        
+        {/* Header */}
+        <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 bg-white flex-shrink-0">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-800">{initialData ? 'Chỉnh sửa Báo cáo' : 'Tạo Báo cáo Mới'}</h2>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-colors">
             <XIcon className="h-6 w-6" />
           </button>
         </div>
-        <form id="report-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 bg-slate-50/30" noValidate>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-x-8 gap-y-5">
+
+        {/* Scrollable Form Area */}
+        <form id="report-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/30" noValidate>
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-x-8 gap-y-4 sm:gap-y-5">
             
             {/* SECTION 1: THÔNG TIN PHẢN ÁNH */}
             <div className="md:col-span-6 text-sm font-bold text-blue-600 uppercase tracking-wide border-b border-blue-100 pb-2 mb-2">1. Thông tin phản ánh</div>
@@ -241,9 +231,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
               <label htmlFor="maNgaySanXuat" className="block text-sm font-medium text-slate-700">Mã ngày sản xuất</label>
               <input type="text" name="maNgaySanXuat" value={formData.maNgaySanXuat} onChange={handleChange} className={getInputClasses('maNgaySanXuat')} disabled={isFieldDisabled('maNgaySanXuat')}/>
             </div>
-            <div className="md:col-span-2">
-               {/* Spacer for grid alignment if needed, or empty */}
-            </div>
+            <div className="hidden md:block md:col-span-2"></div>
 
              <div className="md:col-span-2">
               <label htmlFor="soLuongDaNhap" className="block text-sm font-medium text-slate-700">SL Đã nhập</label>
@@ -312,7 +300,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
           </div>
         </form>
-        <div className="flex justify-end items-center px-6 py-4 bg-slate-50 border-t border-slate-200 gap-3">
+        <div className="flex justify-end items-center px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 border-t border-slate-200 gap-3 flex-shrink-0 pb-6 sm:pb-4">
           <button onClick={onClose} className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
             Hủy bỏ
           </button>

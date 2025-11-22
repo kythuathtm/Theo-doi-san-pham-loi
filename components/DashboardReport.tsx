@@ -44,24 +44,24 @@ const StatCard = ({ title, value, percentage, icon, onClick, themeKey = 'slate' 
     return (
         <div 
             onClick={onClick}
-            className={`flex flex-col justify-between p-3 rounded-xl border cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200 h-full group relative overflow-hidden ${theme.bg} ${theme.border}`}
+            className={`flex flex-col justify-between p-3 lg:p-4 rounded-xl border cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200 h-full group relative overflow-hidden ${theme.bg} ${theme.border}`}
         >
-            <div className="flex justify-between items-start z-10 h-full">
+            <div className="flex justify-between items-start z-10 h-full gap-2">
                  <div className="flex flex-col justify-between min-w-0 h-full">
-                    <p className={`text-[10px] sm:text-xs font-extrabold uppercase tracking-wider mb-1 truncate ${theme.textTitle}`}>{title}</p>
+                    <p className={`text-[10px] sm:text-xs lg:text-sm font-extrabold uppercase tracking-wider mb-1 truncate ${theme.textTitle}`}>{title}</p>
                     <div className="flex items-baseline gap-1.5 mt-auto">
-                        <h3 className={`text-2xl sm:text-3xl font-black leading-none tracking-tight ${theme.textValue}`}>
+                        <h3 className={`text-2xl sm:text-3xl xl:text-4xl font-black leading-none tracking-tight ${theme.textValue}`}>
                             {value.toLocaleString('vi-VN')}
                         </h3>
                         {percentage !== undefined && (
-                            <span className={`text-[10px] lg:text-[11px] font-bold ${theme.percentage} opacity-80`}>
+                            <span className={`text-[10px] lg:text-xs font-bold ${theme.percentage} opacity-80`}>
                                 {percentage}%
                             </span>
                         )}
                     </div>
                  </div>
-                 <div className={`p-1.5 lg:p-2 rounded-lg shadow-sm flex-shrink-0 ${theme.iconBg} ${theme.iconColor} transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3`}>
-                    {React.cloneElement(icon, { className: "h-4 w-4 lg:h-5 lg:w-5" })}
+                 <div className={`p-2 rounded-lg shadow-sm flex-shrink-0 ${theme.iconBg} ${theme.iconColor} transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3`}>
+                    {React.cloneElement(icon, { className: "h-5 w-5 sm:h-6 sm:w-6" })}
                  </div>
             </div>
         </div>
@@ -120,7 +120,7 @@ const BrandPerformanceCard: React.FC<BrandPerformanceCardProps> = ({ data, onCli
 
     const MetricSection = ({ label, value, percent, className = "", valueSize = "text-3xl" }: any) => (
         <div className={`flex flex-col items-center justify-center h-full w-full group-hover:bg-slate-50/30 transition-colors duration-300 p-2 ${className}`}>
-            <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">{label}</p>
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 sm:mb-2 text-center">{label}</p>
             <div className="flex flex-col items-center">
                 <span className={`${valueSize} lg:text-5xl font-black tracking-tighter ${styles.titleColor} leading-none mb-1`}>
                     {value.toLocaleString('vi-VN')}
@@ -153,17 +153,17 @@ const BrandPerformanceCard: React.FC<BrandPerformanceCardProps> = ({ data, onCli
              {/* Body - Layout: Top Row (1 col), Bottom Row (2 cols) */}
              <div className="flex-1 flex flex-col bg-white min-h-0 divide-y divide-slate-100">
                  {/* Top Row: Total Reports (Takes ~50% height) */}
-                 <div className="flex-1 w-full">
-                     <MetricSection label="Số báo cáo" value={data.reports} percent={data.reportsPercent} valueSize="text-4xl" />
+                 <div className="flex-1 w-full py-2">
+                     <MetricSection label="Số báo cáo" value={data.reports} percent={data.reportsPercent} valueSize="text-3xl sm:text-4xl" />
                  </div>
                  
                  {/* Bottom Row: Exchange & Product Count (Takes ~50% height, split horizontally) */}
-                 <div className="flex-1 flex divide-x divide-slate-100">
+                 <div className="flex-1 flex divide-x divide-slate-100 py-2">
                      <div className="flex-1">
-                         <MetricSection label="Đổi hàng" value={data.exchange} percent={data.exchangePercent} valueSize="text-2xl sm:text-3xl" />
+                         <MetricSection label="Đổi hàng" value={data.exchange} percent={data.exchangePercent} valueSize="text-xl sm:text-2xl" />
                      </div>
                      <div className="flex-1">
-                         <MetricSection label="Sản phẩm lỗi" value={data.products} percent={data.productsPercent} valueSize="text-2xl sm:text-3xl" />
+                         <MetricSection label="Sản phẩm lỗi" value={data.products} percent={data.productsPercent} valueSize="text-xl sm:text-2xl" />
                      </div>
                  </div>
              </div>
@@ -260,16 +260,16 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect }) => {
   }, [reports]);
 
   return (
-    <div className="flex flex-col h-full p-3 lg:p-4 gap-3 lg:gap-4 bg-slate-100 overflow-y-auto font-sans text-slate-900">
+    <div className="flex flex-col h-full p-3 lg:p-6 gap-4 lg:gap-6 bg-slate-100 overflow-y-auto font-sans text-slate-900">
          
          {/* --- ROW 1: THỐNG KÊ CHUNG --- */}
-         <div className="flex-shrink-0 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
+         <div className="flex-shrink-0 bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight flex items-center px-1">
                 <span className="bg-blue-600 text-white w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 shadow-sm">1</span>
                 THỐNG KÊ CHUNG
             </h2>
             {/* Auto-resize Grid: 2 cols on mobile, 3 on tablet, 6 on large screens */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4">
                 <StatCard 
                     title="Tổng báo cáo" value={stats.total} themeKey="indigo"
                     icon={<DocumentDuplicateIcon/>} 
@@ -304,12 +304,12 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect }) => {
          </div>
 
          {/* --- ROW 2: THỐNG KÊ THEO LOẠI LỖI --- */}
-         <div className="flex-shrink-0 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3">
+         <div className="flex-shrink-0 bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight flex items-center px-1">
                 <span className="bg-blue-600 text-white w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 shadow-sm">2</span>
                 THỐNG KÊ THEO LOẠI LỖI
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 h-full">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-4 h-full">
                 <StatCard 
                     title="Sản xuất" value={stats.defect.dProduction.count} percentage={stats.defect.dProduction.percent} themeKey="rose"
                     icon={<WrenchIcon/>} 
@@ -337,7 +337,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect }) => {
          <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-12 gap-4 pb-4">
               
               {/* --- SECTION 3: THỐNG KÊ THEO NHÃN HÀNG --- */}
-              <div className="lg:col-span-8 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+              <div className="lg:col-span-8 bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                     <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight flex items-center mb-3 px-1 flex-shrink-0">
                         <span className="bg-blue-600 text-white w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 shadow-sm">3</span>
                         THỐNG KÊ THEO NHÃN HÀNG
@@ -355,12 +355,12 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect }) => {
               </div>
 
               {/* --- SECTION 4: TOP 5 SẢN PHẨM LỖI --- */}
-              <div className="lg:col-span-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-full min-h-[300px] lg:min-h-0">
+              <div className="lg:col-span-4 bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-full min-h-[300px] lg:min-h-0">
                     <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight flex items-center mb-3 px-1 flex-shrink-0">
                         <span className="bg-blue-600 text-white w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 shadow-sm">4</span>
                         TOP 5 SẢN PHẨM LỖI
                     </h2>
-                    <div className="flex-1 overflow-y-auto pr-1 min-h-0">
+                    <div className="flex-1 overflow-y-auto pr-1 min-h-0 custom-scrollbar">
                          <div className="space-y-2">
                             {stats.top5.map((item, index) => (
                                 <div 
