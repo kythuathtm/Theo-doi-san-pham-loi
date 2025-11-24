@@ -22,6 +22,7 @@ interface Props {
   currentPage: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  onItemsPerPageChange: (items: number) => void;
   selectedReport: DefectReport | null;
   onSelectReport: (report: DefectReport) => void;
   currentUserRole: UserRole;
@@ -54,20 +55,21 @@ interface ColumnConfig {
   id: ColumnId;
   label: string;
   visible: boolean;
-  span: number; // Represents relative width weight
+  span: number; // Represents relative width weight (flex-grow)
+  minWidth: string; // Minimum width in pixels to prevent crushing
 }
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
-    { id: 'stt', label: 'STT', visible: true, span: 1 },
-    { id: 'ngayTao', label: 'Ngày tạo', visible: true, span: 2 },
-    { id: 'ngayPhanAnh', label: 'Ngày P.Ánh', visible: true, span: 2 },
-    { id: 'maSanPham', label: 'Mã SP', visible: true, span: 1 },
-    { id: 'tenThuongMai', label: 'Tên thương mại', visible: true, span: 4 },
-    { id: 'noiDungPhanAnh', label: 'Nội dung P.Ánh', visible: true, span: 4 },
-    { id: 'soLo', label: 'Số lô', visible: true, span: 2 },
-    { id: 'maNgaySanXuat', label: 'Mã NSX', visible: true, span: 2 },
-    { id: 'trangThai', label: 'Trạng thái', visible: true, span: 2 },
-    { id: 'ngayHoanThanh', label: 'Ngày hoàn thành', visible: false, span: 2 }, // Hidden by default
+    { id: 'stt', label: 'STT', visible: true, span: 0.5, minWidth: '50px' },
+    { id: 'ngayTao', label: 'Ngày tạo', visible: true, span: 1, minWidth: '100px' },
+    { id: 'ngayPhanAnh', label: 'Ngày P.Ánh', visible: true, span: 1, minWidth: '100px' },
+    { id: 'maSanPham', label: 'Mã SP', visible: true, span: 1, minWidth: '90px' },
+    { id: 'tenThuongMai', label: 'Tên thương mại', visible: true, span: 3, minWidth: '200px' },
+    { id: 'noiDungPhanAnh', label: 'Nội dung P.Ánh', visible: true, span: 4, minWidth: '250px' },
+    { id: 'soLo', label: 'Số lô', visible: true, span: 1, minWidth: '80px' },
+    { id: 'maNgaySanXuat', label: 'Mã NSX', visible: true, span: 1, minWidth: '80px' },
+    { id: 'trangThai', label: 'Trạng thái', visible: true, span: 1.5, minWidth: '140px' },
+    { id: 'ngayHoanThanh', label: 'Ngày hoàn thành', visible: false, span: 1, minWidth: '120px' }, // Hidden by default
 ];
 
 // Memoize StatCard to prevent re-renders if values haven't changed
@@ -84,7 +86,7 @@ const StatCard: React.FC<{ title: string; value: number; colorClass: string; ico
 ));
 
 const DefectReportList: React.FC<Props> = ({ 
-  reports, totalReports, currentPage, itemsPerPage, onPageChange,
+  reports, totalReports, currentPage, itemsPerPage, onPageChange, onItemsPerPageChange,
   selectedReport, onSelectReport, currentUserRole,
   filters, onSearchTermChange, onStatusFilterChange, onDefectTypeFilterChange, onYearFilterChange, onDateFilterChange,
   summaryStats
@@ -100,9 +102,16 @@ const DefectReportList: React.FC<Props> = ({
       const savedColumns = localStorage.getItem('tableColumnConfig');
       if (savedColumns) {
           try {
-              setColumns(JSON.parse(savedColumns));
+              const parsedColumns = JSON.parse(savedColumns);
+              // Merge saved columns with default definitions to ensure new properties (like minWidth) are present
+              const mergedColumns = parsedColumns.map((savedCol: any) => {
+                  const defaultCol = DEFAULT_COLUMNS.find(def => def.id === savedCol.id);
+                  return defaultCol ? { ...defaultCol, ...savedCol, minWidth: defaultCol.minWidth } : savedCol;
+              });
+              setColumns(mergedColumns);
           } catch (e) {
               console.error("Error parsing column config", e);
+              setColumns(DEFAULT_COLUMNS);
           }
       } else if (isTGD) {
           // Apply TGD defaults if no saved config found
@@ -172,9 +181,9 @@ const DefectReportList: React.FC<Props> = ({
               return <span className="font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded text-xs">{report.maSanPham}</span>;
           case 'tenThuongMai':
               return (
-                <div>
-                    <div className="font-semibold text-slate-800">{report.tenThuongMai}</div>
-                    <div className="text-xs text-slate-500">{report.dongSanPham}</div>
+                <div className="min-w-0">
+                    <div className="font-semibold text-slate-800 truncate" title={report.tenThuongMai}>{report.tenThuongMai}</div>
+                    <div className="text-xs text-slate-500 truncate" title={report.dongSanPham}>{report.dongSanPham}</div>
                 </div>
               );
           case 'noiDungPhanAnh':
@@ -187,11 +196,11 @@ const DefectReportList: React.FC<Props> = ({
               return report.ngayHoanThanh ? <span className="text-slate-600">{new Date(report.ngayHoanThanh).toLocaleDateString('en-GB')}</span> : <span className="text-slate-300">-</span>;
           case 'trangThai':
               return (
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColorMap[report.trangThai]}`}>
-                      {report.trangThai === 'Mới' && <SparklesIcon className="mr-1.5 h-3 w-3" />}
-                      {report.trangThai === 'Đang xử lý' && <ClockIcon className="mr-1.5 h-3 w-3" />}
-                      {report.trangThai === 'Chưa tìm ra nguyên nhân' && <QuestionMarkCircleIcon className="mr-1.5 h-3 w-3" />}
-                      {report.trangThai === 'Hoàn thành' && <CheckCircleIcon className="mr-1.5 h-3 w-3" />}
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap ${statusColorMap[report.trangThai]}`}>
+                      {report.trangThai === 'Mới' && <SparklesIcon className="mr-1.5 h-3 w-3 flex-shrink-0" />}
+                      {report.trangThai === 'Đang xử lý' && <ClockIcon className="mr-1.5 h-3 w-3 flex-shrink-0" />}
+                      {report.trangThai === 'Chưa tìm ra nguyên nhân' && <QuestionMarkCircleIcon className="mr-1.5 h-3 w-3 flex-shrink-0" />}
+                      {report.trangThai === 'Hoàn thành' && <CheckCircleIcon className="mr-1.5 h-3 w-3 flex-shrink-0" />}
                       {report.trangThai}
                   </span>
               );
@@ -332,13 +341,17 @@ const DefectReportList: React.FC<Props> = ({
       {/* Table Content */}
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
         {reports.length > 0 ? (
-            <div className="flex-1 overflow-x-auto">
+            <div className="flex-1 overflow-x-auto custom-scrollbar">
                 <div className="min-w-full inline-block align-middle">
                     <div className="border-b border-slate-100">
                         {/* Table Header */}
-                        <div className="flex bg-slate-50/80 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
+                        <div className="flex bg-slate-50/80 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm min-w-max">
                             {visibleColumns.map((col) => (
-                                <div key={col.id} className="py-3 px-4 first:pl-6 last:pr-6" style={{ flex: col.span }}>
+                                <div 
+                                    key={col.id} 
+                                    className="py-3 px-4 first:pl-6 last:pr-6" 
+                                    style={{ flex: `${col.span} 1 0%`, minWidth: col.minWidth }}
+                                >
                                     {col.label}
                                 </div>
                             ))}
@@ -346,7 +359,7 @@ const DefectReportList: React.FC<Props> = ({
                     </div>
                     
                     {/* Table Rows */}
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-slate-100 min-w-max">
                         {reports.map((report, index) => (
                             <div 
                                 key={report.id}
@@ -354,7 +367,11 @@ const DefectReportList: React.FC<Props> = ({
                                 className={`group flex items-center hover:bg-blue-50/50 transition-colors cursor-pointer ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}
                             >
                                 {visibleColumns.map((col) => (
-                                    <div key={col.id} className="py-3 px-4 first:pl-6 last:pr-6 text-sm" style={{ flex: col.span }}>
+                                    <div 
+                                        key={col.id} 
+                                        className="py-3 px-4 first:pl-6 last:pr-6 text-sm overflow-hidden" 
+                                        style={{ flex: `${col.span} 1 0%`, minWidth: col.minWidth }}
+                                    >
                                         {renderCell(report, col.id, index)}
                                     </div>
                                 ))}
@@ -386,16 +403,15 @@ const DefectReportList: React.FC<Props> = ({
         )}
         
         {/* Pagination Footer */}
-        {totalReports > 0 && (
-            <div className="p-4 border-t border-slate-200 bg-white">
-                <Pagination
-                    currentPage={currentPage}
-                    totalItems={totalReports}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={onPageChange}
-                />
-            </div>
-        )}
+        <div className="p-4 border-t border-slate-200 bg-white">
+            <Pagination
+                currentPage={currentPage}
+                totalItems={totalReports}
+                itemsPerPage={itemsPerPage}
+                onPageChange={onPageChange}
+                onItemsPerPageChange={onItemsPerPageChange}
+            />
+        </div>
       </div>
     </div>
   );

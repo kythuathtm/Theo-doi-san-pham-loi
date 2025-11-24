@@ -122,7 +122,7 @@ const App: React.FC = () => {
 
   // Filters & Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [defectTypeFilter, setDefectTypeFilter] = useState('All');
@@ -313,7 +313,7 @@ const App: React.FC = () => {
   const paginatedReports = useMemo(() => {
       const start = (currentPage - 1) * itemsPerPage;
       return filteredReports.slice(start, start + itemsPerPage);
-  }, [filteredReports, currentPage]);
+  }, [filteredReports, currentPage, itemsPerPage]);
 
   const summaryStats = useMemo(() => {
       return {
@@ -325,6 +325,7 @@ const App: React.FC = () => {
       }
   }, [filteredReports]);
   
+  // Calculate available years for global filter
   const availableYears = useMemo(() => {
       const years = new Set<string>();
       const currentYear = new Date().getFullYear().toString();
@@ -342,7 +343,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter]);
+  }, [searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter, itemsPerPage]);
 
 
   // Handlers
@@ -364,6 +365,11 @@ const App: React.FC = () => {
       setIsProductModalOpen(false);
       setIsPermissionModalOpen(false);
       setIsSystemSettingsModalOpen(false);
+  };
+
+  const handleItemsPerPageChange = (items: number) => {
+      setItemsPerPage(items);
+      setCurrentPage(1);
   };
 
   // --- FIRESTORE ACTIONS ---
@@ -450,29 +456,18 @@ const App: React.FC = () => {
   
   const handleImportProducts = async (newProducts: any[]) => {
       try {
-          // BATCH LIMIT FIX: Firestore only allows 500 operations per batch.
-          // We need to chunk the data if it exceeds this limit.
-          const BATCH_SIZE = 450; // Using 450 to be safe
-          const chunks = [];
-          
-          for (let i = 0; i < newProducts.length; i += BATCH_SIZE) {
-              chunks.push(newProducts.slice(i, i + BATCH_SIZE));
-          }
-
+          const batch = writeBatch(db);
           let count = 0;
           
-          for (const chunk of chunks) {
-               const batch = writeBatch(db);
-               chunk.forEach(p => {
-                  if(p.maSanPham) {
-                      const ref = doc(db, "products", p.maSanPham);
-                      batch.set(ref, p);
-                      count++;
-                  }
-              });
-              await batch.commit();
-          }
+          newProducts.forEach(p => {
+              if(p.maSanPham) {
+                  const ref = doc(db, "products", p.maSanPham);
+                  batch.set(ref, p);
+                  count++;
+              }
+          });
           
+          await batch.commit();
           showToast(`Đã import thành công ${count} sản phẩm lên Cloud.`, 'success');
           setIsProductModalOpen(false);
       } catch (error) {
@@ -508,22 +503,24 @@ const App: React.FC = () => {
           showToast("Lỗi khi lưu phân quyền", "error");
       }
   };
-
+  
   const handleSaveSystemSettings = async (newSettings: SystemSettings) => {
-      try {
-          await setDoc(doc(db, "settings", "system"), newSettings);
-          showToast('Cập nhật cấu hình hệ thống thành công.', 'success');
-      } catch (error) {
-          showToast("Lỗi khi lưu cấu hình hệ thống", "error");
-      }
+    try {
+        await setDoc(doc(db, "settings", "system"), newSettings);
+        showToast('Cập nhật cấu hình hệ thống thành công.', 'success');
+    } catch (error) {
+        showToast("Lỗi khi lưu cấu hình", "error");
+    }
   };
 
+  // Search & Filter Handlers used in List Component
   const handleSearchTermChange = (term: string) => startTransition(() => setSearchTerm(term));
   const handleStatusFilterChange = (status: string) => startTransition(() => setStatusFilter(status));
   const handleDefectTypeFilterChange = (type: string) => startTransition(() => setDefectTypeFilter(type));
   const handleYearFilterChange = (year: string) => startTransition(() => setYearFilter(year));
   const handleDateFilterChange = (dates: {start: string, end: string}) => startTransition(() => setDateFilter(dates));
   
+  // Dashboard interaction handler
   const handleDashboardFilterSelect = (filterType: 'status' | 'defectType' | 'all' | 'search' | 'brand', value?: string) => {
       startTransition(() => {
           setYearFilter('All'); // Reset year on dashboard click
@@ -552,11 +549,6 @@ const App: React.FC = () => {
       });
   };
 
-  // Prevent showing login screen until DB check is done to avoid default credential login issue
-  if (isLoadingDB && users.length === 0) {
-      return <Loading />;
-  }
-
   if (!currentUser) {
       return (
         <Suspense fallback={<Loading />}>
@@ -571,22 +563,18 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 font-sans font-medium text-slate-900">
+    <div className="flex flex-col h-screen bg-slate-100 font-sans text-slate-900">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 transition-all">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
           {/* Left: Logo & Title */}
           <div className="flex items-center gap-3 min-w-0">
-            {systemSettings.logoUrl ? (
-                <img src={systemSettings.logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
-            ) : (
-                <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/20 flex-shrink-0">
-                   <BarChartIcon className="h-6 w-6 text-white" />
-                </div>
-            )}
+            <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/20 flex-shrink-0">
+               <BarChartIcon className="h-6 w-6 text-white" />
+            </div>
             <h1 className="text-lg font-bold text-slate-800 tracking-tight truncate hidden sm:block uppercase">
-              {systemSettings.appName}
+              {systemSettings.appName || "THEO DÕI SẢN PHẨM LỖI"}
             </h1>
             {isLoadingDB && <span className="text-xs text-blue-500 animate-pulse ml-2">● Đang đồng bộ...</span>}
           </div>
@@ -665,10 +653,10 @@ const App: React.FC = () => {
 
                 {currentUser.role === UserRole.Admin && (
                     <>
-                         <button
+                        <button
                             onClick={() => setIsSystemSettingsModalOpen(true)}
                             className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
-                            title="Cấu hình Giao diện"
+                            title="Cấu hình Hệ thống"
                         >
                             <Cog8ToothIcon className="h-6 w-6" />
                         </button>
@@ -741,6 +729,7 @@ const App: React.FC = () => {
                     currentPage={currentPage}
                     itemsPerPage={itemsPerPage}
                     onPageChange={setCurrentPage}
+                    onItemsPerPageChange={handleItemsPerPageChange}
                     selectedReport={selectedReport}
                     onSelectReport={setSelectedReport}
                     currentUserRole={currentUser.role}
@@ -821,9 +810,9 @@ const App: React.FC = () => {
 
           {isSystemSettingsModalOpen && (
               <SystemSettingsModal
-                 currentSettings={systemSettings}
-                 onSave={handleSaveSystemSettings}
-                 onClose={() => setIsSystemSettingsModalOpen(false)}
+                currentSettings={systemSettings}
+                onSave={handleSaveSystemSettings}
+                onClose={() => setIsSystemSettingsModalOpen(false)}
               />
           )}
       </Suspense>
