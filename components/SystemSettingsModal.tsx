@@ -62,6 +62,18 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                     placeholder="Nhập tên hiển thị trên tab trình duyệt..."
                 />
             </div>
+            
+            {/* Company Name */}
+             <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Tên công ty (Footer)</label>
+                <input 
+                    type="text" 
+                    value={settings.companyName || ''}
+                    onChange={(e) => setSettings({...settings, companyName: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    placeholder="Công ty Cổ phần..."
+                />
+            </div>
 
             {/* Logo Upload */}
             <div>

@@ -55,6 +55,7 @@ export type RoleSettings = Record<UserRole, RoleConfig>;
 // Cấu hình Hệ thống (Logo, Tên App, Background)
 export interface SystemSettings {
   appName: string;
+  companyName: string; // Tên công ty hiển thị ở footer/login
   logoUrl: string; // Base64 string hoặc URL
   backgroundType: 'default' | 'image' | 'color';
   backgroundValue: string; // URL ảnh hoặc mã màu

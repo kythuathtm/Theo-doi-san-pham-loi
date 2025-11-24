@@ -5,7 +5,8 @@ import Pagination from './Pagination';
 import { 
     MagnifyingGlassIcon, InboxIcon, ClockIcon, CheckCircleIcon, 
     DocumentDuplicateIcon, SparklesIcon, Cog6ToothIcon, EyeIcon, 
-    EyeSlashIcon, ArrowUpIcon, ArrowDownIcon, QuestionMarkCircleIcon
+    EyeSlashIcon, ArrowUpIcon, ArrowDownIcon, QuestionMarkCircleIcon,
+    TrashIcon
 } from './Icons';
 
 interface SummaryStats {
@@ -25,6 +26,7 @@ interface Props {
   onItemsPerPageChange: (items: number) => void;
   selectedReport: DefectReport | null;
   onSelectReport: (report: DefectReport) => void;
+  onDelete: (id: string) => void;
   currentUserRole: UserRole;
   filters: {
     searchTerm: string;
@@ -49,7 +51,7 @@ const statusColorMap: { [key in DefectReport['trangThai']]: string } = {
 };
 
 // Column Configuration Type
-type ColumnId = 'stt' | 'ngayTao' | 'ngayPhanAnh' | 'maSanPham' | 'tenThuongMai' | 'noiDungPhanAnh' | 'soLo' | 'maNgaySanXuat' | 'trangThai' | 'ngayHoanThanh';
+type ColumnId = 'stt' | 'ngayTao' | 'ngayPhanAnh' | 'maSanPham' | 'tenThuongMai' | 'noiDungPhanAnh' | 'soLo' | 'maNgaySanXuat' | 'trangThai' | 'ngayHoanThanh' | 'actions';
 
 interface ColumnConfig {
   id: ColumnId;
@@ -70,6 +72,7 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'maNgaySanXuat', label: 'Mã NSX', visible: true, span: 1, minWidth: '80px' },
     { id: 'trangThai', label: 'Trạng thái', visible: true, span: 1.5, minWidth: '140px' },
     { id: 'ngayHoanThanh', label: 'Ngày hoàn thành', visible: false, span: 1, minWidth: '120px' }, // Hidden by default
+    { id: 'actions', label: 'Thao tác', visible: true, span: 0.5, minWidth: '80px' },
 ];
 
 // Memoize StatCard to prevent re-renders if values haven't changed
@@ -87,7 +90,7 @@ const StatCard: React.FC<{ title: string; value: number; colorClass: string; ico
 
 const DefectReportList: React.FC<Props> = ({ 
   reports, totalReports, currentPage, itemsPerPage, onPageChange, onItemsPerPageChange,
-  selectedReport, onSelectReport, currentUserRole,
+  selectedReport, onSelectReport, onDelete, currentUserRole,
   filters, onSearchTermChange, onStatusFilterChange, onDefectTypeFilterChange, onYearFilterChange, onDateFilterChange,
   summaryStats
 }) => {
@@ -96,6 +99,9 @@ const DefectReportList: React.FC<Props> = ({
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [showSettings, setShowSettings] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  
+  // State for delete confirmation modal
+  const [reportToDelete, setReportToDelete] = useState<DefectReport | null>(null);
 
   // Load columns from local storage or set defaults based on role
   useEffect(() => {
@@ -108,6 +114,14 @@ const DefectReportList: React.FC<Props> = ({
                   const defaultCol = DEFAULT_COLUMNS.find(def => def.id === savedCol.id);
                   return defaultCol ? { ...defaultCol, ...savedCol, minWidth: defaultCol.minWidth } : savedCol;
               });
+
+              // Check for new columns in DEFAULT that are not in merged (e.g. 'actions')
+              DEFAULT_COLUMNS.forEach(def => {
+                  if (!mergedColumns.find((m: any) => m.id === def.id)) {
+                      mergedColumns.push(def);
+                  }
+              });
+
               setColumns(mergedColumns);
           } catch (e) {
               console.error("Error parsing column config", e);
@@ -168,6 +182,13 @@ const DefectReportList: React.FC<Props> = ({
 
   const visibleColumns = useMemo(() => columns.filter(c => c.visible), [columns]);
 
+  const confirmDelete = () => {
+      if (reportToDelete) {
+          onDelete(reportToDelete.id);
+          setReportToDelete(null);
+      }
+  };
+
   // Helper to render cell content
   const renderCell = (report: DefectReport, columnId: ColumnId, index: number) => {
       switch (columnId) {
@@ -203,6 +224,22 @@ const DefectReportList: React.FC<Props> = ({
                       {report.trangThai === 'Hoàn thành' && <CheckCircleIcon className="mr-1.5 h-3 w-3 flex-shrink-0" />}
                       {report.trangThai}
                   </span>
+              );
+          case 'actions':
+              // Only Admin and Technical roles can delete
+              const canDelete = [UserRole.Admin, UserRole.KyThuat].includes(currentUserRole);
+              if (!canDelete) return null;
+              return (
+                  <button
+                      onClick={(e) => {
+                          e.stopPropagation();
+                          setReportToDelete(report);
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-red-600 bg-white hover:bg-red-50 border border-transparent hover:border-red-200 rounded-lg transition-all shadow-sm"
+                      title="Xóa báo cáo"
+                  >
+                      <TrashIcon className="h-4 w-4" />
+                  </button>
               );
           default:
               return null;
@@ -305,14 +342,14 @@ const DefectReportList: React.FC<Props> = ({
             {showSettings && (
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 z-20 p-3 animate-fade-in-up">
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">Hiển thị cột</h4>
-                    <div className="space-y-1 max-h-60 overflow-y-auto">
+                    <div className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar">
                         {columns.map((col, index) => (
                             <div key={col.id} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg group">
                                 <div className="flex items-center gap-2">
                                     <button onClick={() => toggleColumnVisibility(col.id)} className="text-slate-500 hover:text-blue-600">
                                         {col.visible ? <EyeIcon className="h-4 w-4 text-blue-600" /> : <EyeSlashIcon className="h-4 w-4" />}
                                     </button>
-                                    <span className={`text-sm ${col.visible ? 'text-slate-700' : 'text-slate-400'}`}>{col.label}</span>
+                                    <span className={`text-sm ${col.visible ? 'text-slate-700' : 'text-slate-400'}`}>{col.label || 'Thao tác'}</span>
                                 </div>
                                 <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button 
@@ -413,6 +450,35 @@ const DefectReportList: React.FC<Props> = ({
             />
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {reportToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-fade-in-up ring-1 ring-slate-900/5">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
+                    <TrashIcon className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 text-center mb-2">Xác nhận xóa?</h3>
+                <p className="text-sm text-slate-500 text-center mb-6 px-4">
+                    Bạn có chắc chắn muốn xóa báo cáo <span className="font-bold text-slate-800">{reportToDelete.maSanPham}</span>? Hành động này không thể hoàn tác.
+                </p>
+                <div className="flex gap-3 justify-center">
+                    <button
+                        onClick={() => setReportToDelete(null)}
+                        className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                        Hủy bỏ
+                    </button>
+                    <button
+                        onClick={confirmDelete}
+                        className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-500/30 transition-all hover:-translate-y-0.5"
+                    >
+                        Xóa ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
