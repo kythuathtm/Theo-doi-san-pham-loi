@@ -32,6 +32,7 @@ export interface DefectReport {
   maSanPham: string;
   dongSanPham: string;
   tenThuongMai: string;
+  tenThietBi?: string; // New field added
   nhaPhanPhoi: string;
   donViSuDung: string;
   noiDungPhanAnh: string;

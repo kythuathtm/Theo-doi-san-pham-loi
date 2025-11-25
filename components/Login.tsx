@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, SystemSettings } from '../types';
 import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, CompanyLogo } from './Icons';
@@ -111,13 +112,14 @@ const Login: React.FC<Props> = ({ onLogin, users, settings }) => {
                      {loading ? 'Đang xử lý...' : 'Đăng nhập'}
                 </button>
             </form>
-
-            <div className="mt-8 text-center">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                     © {new Date().getFullYear()} {settings.companyName || 'Hồng Thiện Mỹ'}
-                 </p>
-            </div>
         </div>
+      </div>
+      
+      {/* Footer moved outside */}
+      <div className="absolute bottom-6 w-full text-center z-10 p-4">
+           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+               Copyright © 2025 Công ty Cổ phần Vật tư Hồng Thiện Mỹ
+           </p>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { XIcon, PlusIcon, PencilIcon, TrashIcon } from './Icons';
@@ -144,7 +143,7 @@ const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser,
                     <tr key={index} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-slate-900">{user.username}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-700">{user.fullName || '-'}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 font-mono">******</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">******</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">{user.role}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                         <button 

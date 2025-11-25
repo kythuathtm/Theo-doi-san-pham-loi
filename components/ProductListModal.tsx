@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { XIcon, ArrowUpTrayIcon, TrashIcon, PlusIcon, CheckCircleIcon } from './Icons';
 import * as XLSX from 'xlsx';
@@ -272,7 +271,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
               <tbody className="bg-white divide-y divide-slate-200">
                 {filteredProducts.map((product, index) => (
                   <tr key={`${product.maSanPham}-${index}`} className="hover:bg-blue-50/50 transition-colors group">
-                    <td className="px-4 py-3 text-sm font-mono font-bold text-slate-600 align-top">{product.maSanPham}</td>
+                    <td className="px-4 py-3 text-sm font-bold text-slate-600 align-top">{product.maSanPham}</td>
                     <td className="px-4 py-3 text-sm font-medium text-slate-800 whitespace-normal break-words align-top">{product.tenThuongMai}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-normal break-words align-top">{product.tenThietBi}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-normal break-words align-top">{product.dongSanPham}</td>
@@ -285,7 +284,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                             {product.nhanHang || 'Khác'}
                         </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-600 font-mono text-xs align-top">{product.GPLH}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600 text-xs align-top">{product.GPLH}</td>
                     <td className="px-4 py-3 text-right text-sm align-top">
                         <button 
                             onClick={() => onDelete(product.maSanPham)}

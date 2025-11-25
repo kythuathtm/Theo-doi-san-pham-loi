@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
-import { XIcon, CheckCircleIcon, TagIcon, UserIcon, WrenchIcon, QuestionMarkCircleIcon } from './Icons';
+import { XIcon, CheckCircleIcon, TagIcon, UserIcon, WrenchIcon, CheckCircleIcon as StatusIcon } from './Icons';
 
 interface Props {
   initialData: DefectReport | null;
@@ -24,20 +24,64 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   const [formData, setFormData] = useState<Omit<DefectReport, 'id'>>({
     ngayTao: new Date().toISOString(),
     ngayPhanAnh: getTodayDateString(),
-    maSanPham: '', dongSanPham: '', tenThuongMai: '', nhaPhanPhoi: '',
+    maSanPham: '', dongSanPham: '', tenThuongMai: '', tenThietBi: '', nhaPhanPhoi: '',
     donViSuDung: '', noiDungPhanAnh: '', soLo: '', maNgaySanXuat: '',
     soLuongLoi: 0, soLuongDaNhap: 0, soLuongDoi: 0,
     nguyenNhan: '', huongKhacPhuc: '', trangThai: 'Mới',
-    ngayHoanThanh: '', loaiLoi: '' as any, nhanHang: 'Khác', 
+    ngayHoanThanh: '', loaiLoi: '' as any, nhanHang: 'HTM', 
   });
   
   const [errors, setErrors] = useState<Partial<Record<keyof Omit<DefectReport, 'id'>, string>>>({});
   const [isProductInfoLocked, setIsProductInfoLocked] = useState(false);
   const productCodeInputRef = useRef<HTMLInputElement>(null);
 
+  // --- DERIVED LISTS FOR CASCADING SELECTS ---
+
+  // 1. Available Product Lines based on selected Brand
+  const availableLines = useMemo(() => {
+      let filtered = products;
+      if (formData.nhanHang && formData.nhanHang !== 'Khác') {
+          filtered = products.filter(p => p.nhanHang === formData.nhanHang);
+      }
+      return Array.from(new Set(filtered.map(p => p.dongSanPham).filter(Boolean))).sort();
+  }, [products, formData.nhanHang]);
+
+  // 2. Available Device Names based on Brand AND Product Line
+  const availableDeviceNames = useMemo(() => {
+      let filtered = products;
+      if (formData.nhanHang && formData.nhanHang !== 'Khác') {
+          filtered = filtered.filter(p => p.nhanHang === formData.nhanHang);
+      }
+      if (formData.dongSanPham) {
+          filtered = filtered.filter(p => p.dongSanPham === formData.dongSanPham);
+      }
+      return Array.from(new Set(filtered.map(p => p.tenThietBi).filter(Boolean))).sort();
+  }, [products, formData.nhanHang, formData.dongSanPham]);
+
+  // 3. Available Trade Names based on selected Brand, Line AND Device Name
+  const availableTradeNames = useMemo(() => {
+      let filtered = products;
+      // Filter by Brand
+      if (formData.nhanHang && formData.nhanHang !== 'Khác') {
+          filtered = filtered.filter(p => p.nhanHang === formData.nhanHang);
+      }
+      // Filter by Line (if selected)
+      if (formData.dongSanPham) {
+          filtered = filtered.filter(p => p.dongSanPham === formData.dongSanPham);
+      }
+      // Filter by Device Name (if selected)
+      if (formData.tenThietBi) {
+          filtered = filtered.filter(p => p.tenThietBi === formData.tenThietBi);
+      }
+      return Array.from(new Set(filtered.map(p => p.tenThuongMai).filter(Boolean))).sort();
+  }, [products, formData.nhanHang, formData.dongSanPham, formData.tenThietBi]);
+
   const isFieldDisabled = (fieldName: keyof Omit<DefectReport, 'id'>) => {
     if (!initialData) return false; 
-    if (isProductInfoLocked && ['dongSanPham', 'tenThuongMai', 'nhanHang'].includes(fieldName)) return true;
+    
+    // Allow editing product info if not strictly locked by an existing product reference, 
+    // but usually we lock to ensure consistency if it came from DB.
+    if (isProductInfoLocked && ['dongSanPham', 'tenThuongMai', 'nhanHang', 'tenThietBi'].includes(fieldName)) return true;
 
     let permissionKey: PermissionField;
     if (['nguyenNhan'].includes(fieldName)) permissionKey = 'nguyenNhan';
@@ -60,6 +104,11 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     if (!formData.noiDungPhanAnh) newErrors.noiDungPhanAnh = "Nội dung phản ánh không được để trống.";
     if (!formData.loaiLoi) newErrors.loaiLoi = "Vui lòng chọn phân loại lỗi.";
     
+    // New Mandatory Fields
+    if (!formData.tenThuongMai) newErrors.tenThuongMai = "Tên thương mại là bắt buộc.";
+    if (!formData.dongSanPham) newErrors.dongSanPham = "Dòng sản phẩm là bắt buộc.";
+    if (!formData.nhanHang) newErrors.nhanHang = "Nhãn hàng là bắt buộc.";
+    
     if (formData.trangThai === 'Hoàn thành') {
         if (!formData.ngayHoanThanh) newErrors.ngayHoanThanh = "Cần có ngày hoàn thành.";
         if (!formData.nguyenNhan || formData.nguyenNhan.trim() === '') newErrors.nguyenNhan = "Phải nhập nguyên nhân.";
@@ -78,7 +127,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     } else {
       setFormData(prev => ({ ...prev, ngayPhanAnh: getTodayDateString() }));
       setIsProductInfoLocked(false);
-      setTimeout(() => productCodeInputRef.current?.focus(), 100);
     }
   }, [initialData, products]);
 
@@ -87,22 +135,80 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     
     setFormData(prev => {
         const newState = { ...prev };
-        if (name === 'maSanPham') {
+        
+        // --- LOGIC FOR PRODUCT SELECTION FLOW ---
+
+        // 1. BRAND CHANGE -> Reset everything below
+        if (name === 'nhanHang') {
+            newState.nhanHang = value as any;
+            if (value !== 'Khác') {
+                newState.dongSanPham = '';
+                newState.tenThietBi = '';
+                newState.tenThuongMai = '';
+                newState.maSanPham = '';
+                setIsProductInfoLocked(false);
+            }
+        }
+        // 2. LINE CHANGE -> Reset Device Name, Trade Name and Code
+        else if (name === 'dongSanPham') {
+            newState.dongSanPham = value;
+            newState.tenThietBi = '';
+            newState.tenThuongMai = '';
+            newState.maSanPham = '';
+            setIsProductInfoLocked(false);
+        }
+        // 3. DEVICE NAME CHANGE -> Reset Trade Name and Code
+        else if (name === 'tenThietBi') {
+            newState.tenThietBi = value;
+            newState.tenThuongMai = '';
+            newState.maSanPham = '';
+            setIsProductInfoLocked(false);
+        }
+        // 4. TRADE NAME CHANGE -> Try to find Code
+        else if (name === 'tenThuongMai') {
+            newState.tenThuongMai = value;
+            
+            // Try to find a unique product match based on current selections
+            const matches = products.filter(p => 
+                (newState.nhanHang === 'Khác' || !p.nhanHang || p.nhanHang === newState.nhanHang) &&
+                (!newState.dongSanPham || p.dongSanPham === newState.dongSanPham) &&
+                (!newState.tenThietBi || p.tenThietBi === newState.tenThietBi) &&
+                p.tenThuongMai.toLowerCase() === value.toLowerCase()
+            );
+
+            if (matches.length === 1) {
+                // Exact match found
+                newState.maSanPham = matches[0].maSanPham;
+                newState.dongSanPham = matches[0].dongSanPham; // Auto-correct line if needed
+                newState.tenThietBi = matches[0].tenThietBi || ''; // Auto-correct device if needed
+                if (matches[0].nhanHang) newState.nhanHang = matches[0].nhanHang as any;
+                setIsProductInfoLocked(true);
+            } else if (matches.length === 0) {
+                 // No match (New product?), unlock code
+                 if (isProductInfoLocked) {
+                     newState.maSanPham = '';
+                     // Keep device name and line as typed
+                     setIsProductInfoLocked(false);
+                 }
+            }
+        }
+        // 5. CODE CHANGE (Manual Entry) -> Reverse Fill
+        else if (name === 'maSanPham') {
+            newState.maSanPham = value;
             const product = products.find(p => p.maSanPham.toLowerCase() === value.toLowerCase());
             if (product) {
-                newState.maSanPham = product.maSanPham;
                 newState.dongSanPham = product.dongSanPham;
                 newState.tenThuongMai = product.tenThuongMai;
+                newState.tenThietBi = product.tenThietBi || '';
                 if (product.nhanHang) newState.nhanHang = product.nhanHang as any;
                 setIsProductInfoLocked(true);
             } else {
-                newState.maSanPham = value;
-                newState.dongSanPham = '';
-                newState.tenThuongMai = '';
-                newState.nhanHang = 'Khác';
-                setIsProductInfoLocked(false);
+                if (isProductInfoLocked) setIsProductInfoLocked(false);
             }
-        } else if (name === 'trangThai') {
+        } 
+        
+        // --- OTHER FIELDS ---
+        else if (name === 'trangThai') {
             newState.trangThai = value as any;
             if (value === 'Hoàn thành' && !newState.ngayHoanThanh) newState.ngayHoanThanh = getTodayDateString();
         } else {
@@ -169,7 +275,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
         <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
           <div>
               <h2 className="text-xl font-bold text-slate-900 uppercase">{initialData ? 'CHỈNH SỬA PHẢN ÁNH' : 'TẠO PHẢN ÁNH MỚI'}</h2>
-              <p className="text-sm text-slate-500 mt-0.5">Vui lòng điền đầy đủ thông tin bắt buộc (*)</p>
+              <p className="text-sm text-slate-500 mt-0.5">Vui lòng điền đầy đủ thông tin bắt buộc <span className="text-red-500">*</span></p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-all active:scale-95">
             <XIcon className="h-6 w-6" />
@@ -185,10 +291,87 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                  {/* Product Info */}
                  <section>
                     <SectionHeader title="Thông tin Sản phẩm" icon={<TagIcon className="h-4 w-4" />} />
+                    
+                    {/* Reorganized Layout: Brand -> Line -> Device Name -> Trade Name -> Code */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                         
+                        {/* Row 1: Brand & Line */}
+                        <div className="sm:col-span-1">
+                            <label className="block text-xs font-bold text-slate-700 ml-1">Nhãn hàng <span className="text-red-500">*</span></label>
+                            <select name="nhanHang" value={formData.nhanHang} onChange={handleChange} className={getInputClasses('nhanHang')} disabled={isFieldDisabled('nhanHang')}>
+                                <option value="HTM">HTM</option>
+                                <option value="VMA">VMA</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                             <ErrorMessage field="nhanHang" />
+                        </div>
+                        <div className="sm:col-span-1">
+                            <label className="block text-xs font-bold text-slate-700 ml-1">Dòng sản phẩm <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                name="dongSanPham" 
+                                list="product-lines"
+                                value={formData.dongSanPham} 
+                                onChange={handleChange} 
+                                placeholder="Chọn dòng sản phẩm..."
+                                className={getInputClasses('dongSanPham')} 
+                                disabled={isFieldDisabled('dongSanPham')}
+                            />
+                            <datalist id="product-lines">
+                                {availableLines.map((line, idx) => <option key={idx} value={line} />)}
+                            </datalist>
+                             <ErrorMessage field="dongSanPham" />
+                        </div>
+
+                        {/* Row 2: Device Name (Moved up) */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-bold text-slate-700 ml-1">Tên thiết bị y tế</label>
+                            <input 
+                                type="text" 
+                                name="tenThietBi" 
+                                list="device-names"
+                                value={formData.tenThietBi || ''} 
+                                onChange={handleChange} 
+                                className={getInputClasses('tenThietBi', isFieldDisabled('tenThietBi'))}
+                                placeholder="Chọn hoặc nhập tên thiết bị..."
+                            />
+                            <datalist id="device-names">
+                                {availableDeviceNames.map((name, idx) => <option key={idx} value={name} />)}
+                            </datalist>
+                        </div>
+
+                        {/* Row 3: Trade Name (Full Width) */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-bold text-slate-700 ml-1">Tên thương mại <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                list="trade-names"
+                                name="tenThuongMai" 
+                                value={formData.tenThuongMai} 
+                                onChange={handleChange} 
+                                className={getInputClasses('tenThuongMai', isFieldDisabled('tenThuongMai'))}
+                                placeholder="Chọn tên sản phẩm..."
+                            />
+                            <datalist id="trade-names">
+                                {availableTradeNames.map((name, idx) => <option key={idx} value={name} />)}
+                            </datalist>
+                            <ErrorMessage field="tenThuongMai" />
+                        </div>
+
+                         {/* Row 4: Code & Batch */}
                          <div className="sm:col-span-1">
                             <label className="block text-xs font-bold text-slate-700 ml-1">Mã sản phẩm <span className="text-red-500">*</span></label>
-                            <input ref={productCodeInputRef} type="text" name="maSanPham" value={formData.maSanPham} onChange={handleChange} required placeholder="VD: AMX500" className={getInputClasses('maSanPham')} disabled={isFieldDisabled('maSanPham')}/>
+                            <input 
+                                ref={productCodeInputRef} 
+                                type="text" 
+                                name="maSanPham" 
+                                value={formData.maSanPham} 
+                                onChange={handleChange} 
+                                required 
+                                placeholder="Tự động điền hoặc nhập tay" 
+                                className={getInputClasses('maSanPham', isProductInfoLocked)} 
+                                readOnly={isProductInfoLocked || isFieldDisabled('maSanPham')}
+                            />
                             <ErrorMessage field="maSanPham" />
                         </div>
                         <div className="sm:col-span-1">
@@ -196,25 +379,8 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                             <input type="text" name="soLo" value={formData.soLo} onChange={handleChange} required className={getInputClasses('soLo')} disabled={isFieldDisabled('soLo')}/>
                             <ErrorMessage field="soLo" />
                         </div>
-                        
-                        <div className="sm:col-span-2">
-                            <label className="block text-xs font-bold text-slate-700 ml-1">Tên thương mại</label>
-                            <input type="text" name="tenThuongMai" value={formData.tenThuongMai} onChange={handleChange} readOnly={isProductInfoLocked || isFieldDisabled('tenThuongMai')} className={getInputClasses('tenThuongMai', isProductInfoLocked || isFieldDisabled('tenThuongMai'))}/>
-                        </div>
 
-                        <div className="sm:col-span-1">
-                            <label className="block text-xs font-bold text-slate-700 ml-1">Dòng sản phẩm</label>
-                            <input type="text" name="dongSanPham" value={formData.dongSanPham} onChange={handleChange} readOnly={isProductInfoLocked || isFieldDisabled('dongSanPham')} className={getInputClasses('dongSanPham', isProductInfoLocked || isFieldDisabled('dongSanPham'))}/>
-                        </div>
-                        <div className="sm:col-span-1">
-                            <label className="block text-xs font-bold text-slate-700 ml-1">Nhãn hàng</label>
-                            <select name="nhanHang" value={formData.nhanHang} onChange={handleChange} className={getInputClasses('nhanHang', isProductInfoLocked || isFieldDisabled('nhanHang'))} disabled={isProductInfoLocked || isFieldDisabled('nhanHang')}>
-                                <option value="HTM">HTM</option>
-                                <option value="VMA">VMA</option>
-                                <option value="Khác">Khác</option>
-                            </select>
-                        </div>
-
+                        {/* Row 5: Mfg Date & Stats */}
                         <div className="sm:col-span-1">
                             <label className="block text-xs font-bold text-slate-700 ml-1">Mã NSX</label>
                             <input type="text" name="maNgaySanXuat" value={formData.maNgaySanXuat} onChange={handleChange} className={getInputClasses('maNgaySanXuat')} disabled={isFieldDisabled('maNgaySanXuat')}/>
@@ -302,7 +468,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                  </section>
 
                  <section className="bg-blue-50/50 p-5 rounded-xl border border-blue-100">
-                    <SectionHeader title="Trạng thái hồ sơ" icon={<CheckCircleIcon className="h-4 w-4" />} />
+                    <SectionHeader title="Trạng thái hồ sơ" icon={<StatusIcon className="h-4 w-4" />} />
                     <div className="space-y-4">
                         <div>
                             <label className="block text-xs font-bold text-slate-700 ml-1">Trạng thái xử lý</label>

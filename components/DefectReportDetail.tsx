@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DefectReport, UserRole } from '../types';
 import { PencilIcon, TrashIcon, XIcon, WrenchIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, TagIcon, UserIcon } from './Icons';
@@ -51,7 +50,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
       <div className="px-6 py-4 border-b border-slate-100 bg-white flex justify-between items-start sticky top-0 z-20">
           <div>
             <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">{report.maSanPham}</span>
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">{report.maSanPham}</span>
                 <span className="text-xs text-slate-400">•</span>
                 <span className="text-xs font-medium text-slate-500">{new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}</span>
             </div>
@@ -83,8 +82,9 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-6">
                     <DetailItem label="Dòng sản phẩm" value={report.dongSanPham} />
                     <DetailItem label="Nhãn hàng" value={report.nhanHang} className="font-semibold"/>
-                    <DetailItem label="Số lô" value={report.soLo} className="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded w-fit"/>
-                    <DetailItem label="Mã NSX" value={report.maNgaySanXuat} className="font-mono"/>
+                    <DetailItem label="Tên thiết bị y tế" value={report.tenThietBi} fullWidth />
+                    <DetailItem label="Số lô" value={report.soLo} className="text-slate-600 bg-slate-100 px-2 py-0.5 rounded w-fit font-bold"/>
+                    <DetailItem label="Mã NSX" value={report.maNgaySanXuat}/>
                 </dl>
                 <div className="mt-6 grid grid-cols-3 gap-3">
                     <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">

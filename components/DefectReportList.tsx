@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { DefectReport, UserRole } from '../types';
 import Pagination from './Pagination';
@@ -51,7 +50,7 @@ const statusColorMap: { [key in DefectReport['trangThai']]: string } = {
   'Hoàn thành': 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20',
 };
 
-type ColumnId = 'stt' | 'ngayTao' | 'ngayPhanAnh' | 'maSanPham' | 'tenThuongMai' | 'noiDungPhanAnh' | 'soLo' | 'maNgaySanXuat' | 'trangThai' | 'ngayHoanThanh' | 'actions';
+type ColumnId = 'stt' | 'ngayTao' | 'ngayPhanAnh' | 'maSanPham' | 'tenThuongMai' | 'tenThietBi' | 'noiDungPhanAnh' | 'soLo' | 'maNgaySanXuat' | 'trangThai' | 'ngayHoanThanh' | 'actions';
 
 interface ColumnConfig {
   id: ColumnId;
@@ -66,6 +65,7 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'ngayPhanAnh', label: 'Ngày P.Ánh', visible: true, span: 0.8, minWidth: '100px' },
     { id: 'maSanPham', label: 'Mã SP', visible: true, span: 0.8, minWidth: '90px' },
     { id: 'tenThuongMai', label: 'Tên thương mại', visible: true, span: 2, minWidth: '180px' },
+    { id: 'tenThietBi', label: 'Tên thiết bị', visible: false, span: 1.5, minWidth: '150px' },
     { id: 'noiDungPhanAnh', label: 'Nội dung phản ánh', visible: true, span: 3.5, minWidth: '300px' },
     { id: 'soLo', label: 'Số lô', visible: true, span: 0.8, minWidth: '90px' },
     { id: 'trangThai', label: 'Trạng thái', visible: true, span: 1, minWidth: '150px' },
@@ -175,7 +175,7 @@ const DefectReportList: React.FC<Props> = ({
           case 'ngayPhanAnh':
               return <span className="text-slate-600 font-medium text-sm">{new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}</span>;
           case 'maSanPham':
-              return <span className="font-mono text-slate-700 bg-slate-100 px-2 py-1 rounded text-xs font-bold">{report.maSanPham}</span>;
+              return <span className="text-slate-700 bg-slate-100 px-2 py-1 rounded text-xs font-bold">{report.maSanPham}</span>;
           case 'tenThuongMai':
               return (
                 <div className="min-w-0 pr-2">
@@ -183,12 +183,14 @@ const DefectReportList: React.FC<Props> = ({
                     <div className="text-[11px] text-slate-500 truncate mt-0.5">{report.dongSanPham} • {report.nhanHang}</div>
                 </div>
               );
+          case 'tenThietBi':
+              return <div className="text-slate-600 text-sm truncate" title={report.tenThietBi}>{report.tenThietBi}</div>;
           case 'noiDungPhanAnh':
               return <div className="text-slate-600 text-sm line-clamp-2 leading-relaxed">{report.noiDungPhanAnh}</div>;
           case 'soLo':
-              return <span className="font-mono text-slate-500 text-xs">{report.soLo}</span>;
+              return <span className="text-slate-500 text-xs font-bold">{report.soLo}</span>;
           case 'maNgaySanXuat':
-              return <span className="font-mono text-slate-500 text-xs">{report.maNgaySanXuat}</span>;
+              return <span className="text-slate-500 text-xs">{report.maNgaySanXuat}</span>;
           case 'ngayHoanThanh':
               return report.ngayHoanThanh ? <span className="text-emerald-600 font-medium text-sm">{new Date(report.ngayHoanThanh).toLocaleDateString('en-GB')}</span> : <span className="text-slate-300">-</span>;
           case 'trangThai':
@@ -476,7 +478,7 @@ const DefectReportList: React.FC<Props> = ({
         {hoveredReport && (
             <div className="space-y-2">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-700/50">
-                    <span className="font-bold text-xs text-blue-300 font-mono uppercase">{hoveredReport.maSanPham}</span>
+                    <span className="font-bold text-xs text-blue-300 uppercase">{hoveredReport.maSanPham}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
                         hoveredReport.trangThai === 'Mới' ? 'bg-blue-500/20 text-blue-300' : 
                         hoveredReport.trangThai === 'Hoàn thành' ? 'bg-emerald-500/20 text-emerald-300' : 
@@ -487,7 +489,10 @@ const DefectReportList: React.FC<Props> = ({
                 </div>
                 <div>
                     <p className="text-xs font-bold text-slate-100 truncate mb-1">{hoveredReport.tenThuongMai}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mb-2">
+                    {hoveredReport.tenThietBi && (
+                         <p className="text-[10px] text-slate-400 truncate mb-1">{hoveredReport.tenThietBi}</p>
+                    )}
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400 mb-2">
                          <span className="bg-slate-800 px-1 rounded">Lô: {hoveredReport.soLo}</span>
                          {hoveredReport.loaiLoi && <span className="bg-slate-800 px-1 rounded">{hoveredReport.loaiLoi}</span>}
                     </div>
