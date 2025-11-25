@@ -10,10 +10,11 @@ interface Props {
   onImport: (newProducts: Product[]) => void;
   onAdd: (product: Product) => void;
   onDelete: (maSanPham: string) => void;
+  onDeleteAll: () => void;
   currentUserRole: string;
 }
 
-const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd, onDelete, currentUserRole }) => {
+const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd, onDelete, onDeleteAll, currentUserRole }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // State for search and manual add
@@ -142,6 +143,17 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                 className="hidden" 
                 accept=".xlsx, .xls"
              />
+             
+             {products.length > 0 && (
+                 <button 
+                    onClick={onDeleteAll}
+                    className="flex items-center px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95"
+                    title="Xóa TOÀN BỘ dữ liệu sản phẩm"
+                 >
+                    <TrashIcon className="h-5 w-5 sm:mr-2" />
+                    <span className="hidden sm:inline">Xóa tất cả</span>
+                 </button>
+             )}
              
              <button 
                 onClick={() => setIsAdding(!isAdding)}

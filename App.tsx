@@ -17,7 +17,8 @@ import {
   query, 
   orderBy,
   setDoc,
-  writeBatch
+  writeBatch,
+  getDocs
 } from 'firebase/firestore';
 
 // Lazy load components
@@ -495,6 +496,43 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleDeleteAllProducts = async () => {
+    if (!window.confirm("CẢNH BÁO QUAN TRỌNG:\n\nBạn đang thực hiện xóa TOÀN BỘ danh sách sản phẩm.\nHành động này KHÔNG THỂ khôi phục.\n\nBạn có chắc chắn muốn tiếp tục?")) return;
+
+    try {
+        // Fetch all product docs
+        const q = query(collection(db, "products"));
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            showToast("Danh sách sản phẩm đang trống.", "info");
+            return;
+        }
+
+        // Chunking for batch delete (limit 500)
+        const chunkSize = 450;
+        const chunks = [];
+        const docs = snapshot.docs;
+
+        for (let i = 0; i < docs.length; i += chunkSize) {
+            chunks.push(docs.slice(i, i + chunkSize));
+        }
+
+        for (const chunk of chunks) {
+            const batch = writeBatch(db);
+            chunk.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+        }
+        
+        showToast("Đã xóa toàn bộ dữ liệu sản phẩm.", "info");
+    } catch (error) {
+        console.error("Delete all error:", error);
+        showToast("Lỗi khi xóa dữ liệu.", "error");
+    }
+  };
+
   const handleSaveUser = async (user: User, isEdit: boolean) => {
       try {
           await setDoc(doc(db, "users", user.username), user);
@@ -812,6 +850,7 @@ export const App: React.FC = () => {
                 onImport={handleImportProducts}
                 onAdd={handleAddProduct}
                 onDelete={handleDeleteProduct}
+                onDeleteAll={handleDeleteAllProducts}
                 currentUserRole={currentUser.role}
               />
           )}

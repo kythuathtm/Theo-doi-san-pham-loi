@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useTransition, Suspense } from 'react';
-import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings } from './types';
-import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, ArrowUpTrayIcon, CalendarIcon } from './components/Icons';
+import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
+import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, ArrowUpTrayIcon, CalendarIcon, Cog8ToothIcon } from './components/Icons';
 import * as XLSX from 'xlsx';
 import Loading from './components/Loading';
 
@@ -17,7 +17,8 @@ import {
   query, 
   orderBy,
   setDoc,
-  writeBatch
+  writeBatch,
+  getDocs
 } from 'firebase/firestore';
 
 // Lazy load components
@@ -29,6 +30,7 @@ const UserManagementModal = React.lazy(() => import('./components/UserManagement
 const PermissionManagementModal = React.lazy(() => import('./components/PermissionManagementModal'));
 const Login = React.lazy(() => import('./components/Login'));
 const DashboardReport = React.lazy(() => import('./components/DashboardReport'));
+const SystemSettingsModal = React.lazy(() => import('./components/SystemSettingsModal'));
 
 interface ToastProps {
   message: string;
@@ -76,7 +78,7 @@ const INITIAL_USERS: User[] = [
 ];
 
 // Empty Initial Products List as requested
-const INITIAL_PRODUCTS: any[] = [];
+const INITIAL_PRODUCTS: Product[] = [];
 
 const DEFAULT_ROLE_SETTINGS: RoleSettings = {
     [UserRole.Admin]: { canCreate: true, canViewDashboard: true, viewableDefectTypes: ['All'], editableFields: ['general', 'soLuongDoi', 'loaiLoi', 'nguyenNhan', 'huongKhacPhuc', 'trangThai', 'ngayHoanThanh'] },
@@ -104,7 +106,7 @@ export const App: React.FC = () => {
   // Data State (Sync with Firebase)
   const [users, setUsers] = useState<User[]>([]);
   const [reports, setReports] = useState<DefectReport[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [roleSettings, setRoleSettings] = useState<RoleSettings>(DEFAULT_ROLE_SETTINGS);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(DEFAULT_SYSTEM_SETTINGS);
   
@@ -114,6 +116,7 @@ export const App: React.FC = () => {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+  const [isSystemSettingsModalOpen, setIsSystemSettingsModalOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const [currentView, setCurrentView] = useState<'list' | 'dashboard'>('list');
   const [isLoadingDB, setIsLoadingDB] = useState(true);
@@ -142,7 +145,6 @@ export const App: React.FC = () => {
       setIsLoadingDB(false);
     }, (error) => {
       console.error("Error fetching reports:", error);
-      // Don't show error toast immediately to avoid scaring user
       setIsLoadingDB(false);
     });
     return () => unsubscribe();
@@ -156,8 +158,6 @@ export const App: React.FC = () => {
       // AUTO-SEED: If database is completely empty, create default users and data
       if (usersData.length === 0 && !isLoadingDB) {
          console.log("Database empty. Seeding initial data...");
-         // We can automatically seed here if desired, but manual trigger in UI is safer
-         // await seedDatabase(); 
       } 
       setUsers(usersData);
     });
@@ -167,7 +167,7 @@ export const App: React.FC = () => {
   // 3. Listen to PRODUCTS
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "products"), (snapshot) => {
-      const productsData = snapshot.docs.map(doc => doc.data());
+      const productsData = snapshot.docs.map(doc => doc.data() as Product);
       setProducts(productsData);
     });
     return () => unsubscribe();
@@ -360,6 +360,7 @@ export const App: React.FC = () => {
       setIsUserModalOpen(false);
       setIsProductModalOpen(false);
       setIsPermissionModalOpen(false);
+      setIsSystemSettingsModalOpen(false);
   };
 
   // --- FIRESTORE ACTIONS ---
@@ -444,7 +445,7 @@ export const App: React.FC = () => {
     XLSX.writeFile(workbook, fileName);
   };
   
-  const handleImportProducts = async (newProducts: any[]) => {
+  const handleImportProducts = async (newProducts: Product[]) => {
       try {
           // Chunking logic to avoid Firebase limit
           const chunkSize = 450; // Limit per batch
@@ -474,7 +475,7 @@ export const App: React.FC = () => {
       }
   };
 
-  const handleAddProduct = async (product: any) => {
+  const handleAddProduct = async (product: Product) => {
     try {
         await setDoc(doc(db, "products", product.maSanPham), product);
         showToast('Thêm sản phẩm thành công', 'success');
@@ -492,6 +493,43 @@ export const App: React.FC = () => {
     } catch (error) {
         console.error(error);
         showToast('Lỗi khi xóa sản phẩm', 'error');
+    }
+  };
+
+  const handleDeleteAllProducts = async () => {
+    if (!window.confirm("CẢNH BÁO QUAN TRỌNG:\n\nBạn đang thực hiện xóa TOÀN BỘ danh sách sản phẩm.\nHành động này KHÔNG THỂ khôi phục.\n\nBạn có chắc chắn muốn tiếp tục?")) return;
+
+    try {
+        // Fetch all product docs
+        const q = query(collection(db, "products"));
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            showToast("Danh sách sản phẩm đang trống.", "info");
+            return;
+        }
+
+        // Chunking for batch delete (limit 500)
+        const chunkSize = 450;
+        const chunks = [];
+        const docs = snapshot.docs;
+
+        for (let i = 0; i < docs.length; i += chunkSize) {
+            chunks.push(docs.slice(i, i + chunkSize));
+        }
+
+        for (const chunk of chunks) {
+            const batch = writeBatch(db);
+            chunk.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+        }
+        
+        showToast("Đã xóa toàn bộ dữ liệu sản phẩm.", "info");
+    } catch (error) {
+        console.error("Delete all error:", error);
+        showToast("Lỗi khi xóa dữ liệu.", "error");
     }
   };
 
@@ -520,6 +558,17 @@ export const App: React.FC = () => {
           showToast('Cập nhật phân quyền thành công.', 'success');
       } catch (error) {
           showToast("Lỗi khi lưu phân quyền", "error");
+      }
+  };
+
+  const handleSaveSystemSettings = async (newSettings: SystemSettings) => {
+      try {
+          await setDoc(doc(db, "settings", "systemSettings"), newSettings);
+          setSystemSettings(newSettings); // Optimistic update
+          showToast('Cập nhật cấu hình hệ thống thành công.', 'success');
+      } catch (error) {
+          console.error("System settings save error:", error);
+          showToast("Lỗi khi lưu cấu hình", "error");
       }
   };
   
@@ -622,6 +671,7 @@ export const App: React.FC = () => {
                             ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                         }`}
+                        title="Xem danh sách báo cáo"
                     >
                         <ListBulletIcon className="h-4 w-4 mr-2" />
                         Danh sách
@@ -633,6 +683,7 @@ export const App: React.FC = () => {
                             ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                         }`}
+                        title="Xem báo cáo thống kê"
                     >
                         <ChartPieIcon className="h-4 w-4 mr-2" />
                         Báo cáo
@@ -668,11 +719,11 @@ export const App: React.FC = () => {
                 )}
 
                 {currentUser.role === UserRole.Admin && (
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-1">
                          <button
                             onClick={() => setIsPermissionModalOpen(true)}
                             className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors active:scale-95"
-                            title="Phân quyền Hệ thống"
+                            title="Cấu hình phân quyền"
                         >
                             <ShieldCheckIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
@@ -686,27 +737,18 @@ export const App: React.FC = () => {
                         <button
                             onClick={() => setIsUserModalOpen(true)}
                             className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors active:scale-95"
-                            title="Quản lý Tài khoản"
+                            title="Quản lý Người dùng"
                         >
                             <UserGroupIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
                          {/* System Settings Trigger */}
-                         <div 
-                            className="cursor-pointer p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors active:scale-95"
-                            onClick={() => {
-                                // Toggle simple modal or use state. For now let's just reuse a modal state logic or create a new one.
-                                // Since we didn't create a dedicated state for SystemSettingsModal visibility in the original code block provided in prompt, 
-                                // I will assume we need to add it. But wait, I don't have a state for it in this file?
-                                // Ah, I missed adding `isSystemSettingsOpen` state. I'll add a placeholder or reuse.
-                                // Actually, let's just add the button here. The actual Modal rendering needs state.
-                                // Let's implement it properly.
-                            }}
-                            title="Cấu hình hệ thống"
+                         <button 
+                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors active:scale-95"
+                            onClick={() => setIsSystemSettingsModalOpen(true)}
+                            title="Cấu hình / Cài đặt web"
                         >
-                            {/* We need a Cog icon here, but Cog6Tooth is in Icons.tsx */}
-                            {/* <Cog6ToothIcon className="h-5 w-5 sm:h-6 sm:w-6" /> */} 
-                            {/* Since I can't easily change Icons export without touching another file, I'll skip if icon missing, or assume it's there */}
-                        </div>
+                             <Cog8ToothIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                        </button>
                     </div>
                 )}
             </div>
@@ -808,6 +850,7 @@ export const App: React.FC = () => {
                 onImport={handleImportProducts}
                 onAdd={handleAddProduct}
                 onDelete={handleDeleteProduct}
+                onDeleteAll={handleDeleteAllProducts}
                 currentUserRole={currentUser.role}
               />
           )}
@@ -826,6 +869,14 @@ export const App: React.FC = () => {
                 roleSettings={roleSettings}
                 onSave={handleSavePermissions}
                 onClose={() => setIsPermissionModalOpen(false)}
+              />
+          )}
+
+          {isSystemSettingsModalOpen && (
+              <SystemSettingsModal
+                currentSettings={systemSettings}
+                onSave={handleSaveSystemSettings}
+                onClose={() => setIsSystemSettingsModalOpen(false)}
               />
           )}
       </Suspense>
