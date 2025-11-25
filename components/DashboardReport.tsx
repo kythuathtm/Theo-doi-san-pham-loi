@@ -12,70 +12,35 @@ interface Props {
   onFilterSelect: (filterType: 'status' | 'defectType' | 'all' | 'search' | 'brand', value?: string) => void;
 }
 
-// --- Color Themes ---
-type ColorTheme = {
-    bg: string;
-    border: string;
-    textTitle: string;
-    textValue: string;
-    iconBg: string;
-    iconColor: string;
-    percentage: string;
-};
-
-const themes: Record<string, ColorTheme> = {
-    indigo: { bg: 'bg-indigo-50/50', border: 'border-indigo-100', textTitle: 'text-indigo-600', textValue: 'text-indigo-900', iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600', percentage: 'text-indigo-600' },
-    cyan:   { bg: 'bg-cyan-50/50', border: 'border-cyan-100', textTitle: 'text-cyan-600', textValue: 'text-cyan-900', iconBg: 'bg-cyan-100', iconColor: 'text-cyan-600', percentage: 'text-cyan-600' },
-    blue:   { bg: 'bg-blue-50/50', border: 'border-blue-100', textTitle: 'text-blue-600', textValue: 'text-blue-900', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', percentage: 'text-blue-600' },
-    amber:  { bg: 'bg-amber-50/50', border: 'border-amber-100', textTitle: 'text-amber-600', textValue: 'text-amber-900', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', percentage: 'text-amber-600' },
-    purple: { bg: 'bg-purple-50/50', border: 'border-purple-100', textTitle: 'text-purple-600', textValue: 'text-purple-900', iconBg: 'bg-purple-100', iconColor: 'text-purple-600', percentage: 'text-purple-600' },
-    green:  { bg: 'bg-emerald-50/50', border: 'border-emerald-100', textTitle: 'text-emerald-600', textValue: 'text-emerald-900', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', percentage: 'text-emerald-600' },
-    rose:   { bg: 'bg-rose-50/50', border: 'border-rose-100', textTitle: 'text-rose-600', textValue: 'text-rose-900', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', percentage: 'text-rose-600' },
-    orange: { bg: 'bg-orange-50/50', border: 'border-orange-100', textTitle: 'text-orange-600', textValue: 'text-orange-900', iconBg: 'bg-orange-100', iconColor: 'text-orange-600', percentage: 'text-orange-600' },
-    fuchsia:{ bg: 'bg-fuchsia-50/50', border: 'border-fuchsia-100', textTitle: 'text-fuchsia-600', textValue: 'text-fuchsia-900', iconBg: 'bg-fuchsia-100', iconColor: 'text-fuchsia-600', percentage: 'text-fuchsia-600' },
-    slate:  { bg: 'bg-slate-50/50', border: 'border-slate-200', textTitle: 'text-slate-500', textValue: 'text-slate-800', iconBg: 'bg-slate-100', iconColor: 'text-slate-600', percentage: 'text-slate-600' },
-};
-
-// --- Helper Components ---
-
-// StatCard for Section 1 & 2
-const StatCard = ({ title, value, percentage, icon, onClick, themeKey = 'slate' }: any) => {
-    const theme = themes[themeKey];
+const StatCard = ({ title, value, percentage, icon, onClick, colorClass }: any) => {
     return (
         <div 
             onClick={onClick}
-            className={`flex flex-col justify-between p-3 2xl:p-5 rounded-xl border cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200 h-full group relative overflow-hidden ${theme.bg} ${theme.border}`}
+            className="flex flex-col justify-between p-5 rounded-2xl bg-white border border-slate-200 shadow-sm cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full group relative overflow-hidden"
         >
-            <div className="flex justify-between items-start z-10 h-full gap-2">
-                 <div className="flex flex-col justify-between min-w-0 h-full">
-                    <p className={`text-[10px] lg:text-xs font-extrabold uppercase tracking-wider mb-1 truncate ${theme.textTitle}`}>{title}</p>
-                    <div className="flex items-baseline gap-1.5 mt-auto">
-                        {/* Responsive Font Size: 
-                            - Mobile: 2xl
-                            - Tablet (sm): 3xl (3 cols)
-                            - Laptop (xl - 1280px): 2xl (6 cols - needs smaller font)
-                            - Large Laptop/1080p@125% (min-1440px): 3xl
-                            - Desktop (2xl - 1536px): 4xl (6 cols - wide screen)
-                        */}
-                        <h3 className={`text-2xl sm:text-3xl xl:text-2xl min-[1440px]:text-3xl 2xl:text-4xl font-black leading-none tracking-tight ${theme.textValue}`}>
-                            {value.toLocaleString('vi-VN')}
-                        </h3>
-                        {percentage !== undefined && (
-                            <span className={`text-[10px] lg:text-xs font-bold ${theme.percentage} opacity-80`}>
-                                {percentage}%
-                            </span>
-                        )}
-                    </div>
+            <div className={`absolute top-0 right-0 w-24 h-24 -mr-6 -mt-6 rounded-full opacity-5 group-hover:scale-150 transition-transform duration-500 ${colorClass.bg}`}></div>
+            
+            <div className="flex justify-between items-start z-10 mb-2">
+                 <div className={`p-2.5 rounded-xl ${colorClass.bg} ${colorClass.text} transition-transform duration-300 group-hover:rotate-6`}>
+                    {React.cloneElement(icon, { className: "h-6 w-6" })}
                  </div>
-                 <div className={`p-2 rounded-lg shadow-sm flex-shrink-0 ${theme.iconBg} ${theme.iconColor} transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3`}>
-                    {React.cloneElement(icon, { className: "h-5 w-5 sm:h-6 sm:w-6" })}
-                 </div>
+                 {percentage !== undefined && (
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${colorClass.bg} ${colorClass.text}`}>
+                        {percentage}%
+                    </span>
+                 )}
+            </div>
+            
+            <div className="z-10">
+                <h3 className="text-3xl font-black text-slate-800 tracking-tight leading-none mb-1">
+                    {value.toLocaleString('vi-VN')}
+                </h3>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{title}</p>
             </div>
         </div>
     );
 };
 
-// Brand Centric Card for Section 3
 interface BrandData {
     name: string;
     reports: number;
@@ -86,55 +51,27 @@ interface BrandData {
     productsPercent: string;
 }
 
-interface BrandPerformanceCardProps {
-    data: BrandData;
-    onClick: () => void;
-}
-
-const BrandPerformanceCard: React.FC<BrandPerformanceCardProps> = ({ data, onClick }) => {
-    // Determine styles based on Brand Name
-    let styles = {
-        borderColor: 'border-slate-200',
-        titleColor: 'text-slate-700',
-        headerBg: 'bg-slate-50',
-        iconBg: 'bg-slate-200 text-slate-600',
-        accentColor: 'text-slate-500',
-        barColor: 'bg-slate-500',
-        lightBg: 'bg-white'
+const BrandPerformanceCard = ({ data, onClick }: { data: BrandData; onClick: () => void }) => {
+    let theme = {
+        border: 'border-slate-200',
+        text: 'text-slate-700',
+        bg: 'bg-slate-50',
+        accent: 'text-slate-500',
+        bar: 'bg-slate-500',
     };
     
     if (data.name === 'HTM') {
-        styles = { 
-            borderColor: 'border-blue-500', 
-            titleColor: 'text-blue-700', 
-            headerBg: 'bg-gradient-to-r from-blue-50 to-white', 
-            iconBg: 'bg-blue-100 text-blue-600',
-            accentColor: 'text-blue-600',
-            barColor: 'bg-blue-500',
-            lightBg: 'bg-blue-50'
-        };
+        theme = { border: 'border-blue-500', text: 'text-blue-700', bg: 'bg-blue-50', accent: 'text-blue-600', bar: 'bg-blue-500' };
     } else if (data.name === 'VMA') {
-        styles = { 
-            borderColor: 'border-emerald-500', 
-            titleColor: 'text-emerald-700', 
-            headerBg: 'bg-gradient-to-r from-emerald-50 to-white', 
-            iconBg: 'bg-emerald-100 text-emerald-600',
-            accentColor: 'text-emerald-600',
-            barColor: 'bg-emerald-500',
-            lightBg: 'bg-emerald-50'
-        };
+        theme = { border: 'border-emerald-500', text: 'text-emerald-700', bg: 'bg-emerald-50', accent: 'text-emerald-600', bar: 'bg-emerald-500' };
     }
 
-    const MetricSection = ({ label, value, percent, className = "", valueSize = "text-3xl" }: any) => (
-        <div className={`flex flex-col items-center justify-center h-full w-full group-hover:bg-slate-50/30 transition-colors duration-300 p-2 ${className}`}>
-            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 sm:mb-2 text-center">{label}</p>
-            <div className="flex flex-col items-center">
-                <span className={`${valueSize} font-black tracking-tighter ${styles.titleColor} leading-none mb-1`}>
-                    {value.toLocaleString('vi-VN')}
-                </span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${styles.lightBg} ${styles.accentColor} border border-current/10`}>
-                    {percent}%
-                </span>
+    const Metric = ({ label, value, percent }: any) => (
+        <div className="flex flex-col items-center justify-center p-3 flex-1">
+            <span className={`text-2xl font-black tracking-tight ${theme.text} leading-none mb-1`}>{value}</span>
+            <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">{label}</span>
+                <span className={`text-[10px] font-bold px-1.5 rounded-md ${theme.bg} ${theme.accent}`}>{percent}%</span>
             </div>
         </div>
     );
@@ -142,82 +79,55 @@ const BrandPerformanceCard: React.FC<BrandPerformanceCardProps> = ({ data, onCli
     return (
         <div 
             onClick={onClick}
-            className={`relative flex flex-col h-full rounded-2xl border-[3px] ${styles.borderColor} shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-white overflow-hidden group`}
+            className={`flex flex-col rounded-2xl bg-white border-2 ${theme.border} shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden group`}
         >
-             {/* Header */}
-             <div className={`px-4 py-3 flex-none flex items-center justify-between border-b border-slate-100 ${styles.headerBg}`}>
-                <div className="flex items-center gap-2.5">
-                    <div className={`p-1.5 rounded-lg ${styles.iconBg} transition-transform duration-200 group-hover:scale-110`}>
-                        <TagIcon className="h-5 w-5" />
+             <div className={`px-5 py-4 flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-white to-slate-50`}>
+                <div className="flex items-center gap-3">
+                    <div className={`p-1.5 rounded-lg ${theme.bg}`}>
+                        <TagIcon className={`h-5 w-5 ${theme.accent}`} />
                     </div>
-                    <h3 className={`text-xl font-black tracking-tight ${styles.titleColor}`}>{data.name}</h3>
-                </div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white/60 px-2 py-1 rounded-md border border-slate-200/50 backdrop-blur-sm">
-                    Hiệu suất
+                    <h3 className={`text-xl font-black tracking-tight ${theme.text}`}>{data.name}</h3>
                 </div>
              </div>
 
-             {/* Body - Layout: Top Row (1 col), Bottom Row (2 cols) */}
-             <div className="flex-1 flex flex-col bg-white min-h-0 divide-y divide-slate-100">
-                 {/* Top Row: Total Reports (Takes ~50% height) */}
-                 <div className="flex-1 w-full py-2">
-                     {/* Updated Responsive Sizes */}
-                     <MetricSection label="Số báo cáo" value={data.reports} percent={data.reportsPercent} valueSize="text-3xl sm:text-4xl xl:text-3xl min-[1440px]:text-4xl 2xl:text-5xl" />
-                 </div>
-                 
-                 {/* Bottom Row: Exchange & Product Count (Takes ~50% height, split horizontally) */}
-                 <div className="flex-1 flex divide-x divide-slate-100 py-2">
-                     <div className="flex-1">
-                         <MetricSection label="Đổi hàng" value={data.exchange} percent={data.exchangePercent} valueSize="text-xl sm:text-2xl xl:text-xl min-[1440px]:text-2xl 2xl:text-3xl" />
-                     </div>
-                     <div className="flex-1">
-                         <MetricSection label="Sản phẩm lỗi" value={data.products} percent={data.productsPercent} valueSize="text-xl sm:text-2xl xl:text-xl min-[1440px]:text-2xl 2xl:text-3xl" />
-                     </div>
-                 </div>
+             <div className="flex divide-x divide-slate-100 py-2">
+                 <Metric label="Phản ánh" value={data.reports} percent={data.reportsPercent} />
+                 <Metric label="Đổi" value={data.exchange} percent={data.exchangePercent} />
+                 <Metric label="Sản phẩm" value={data.products} percent={data.productsPercent} />
              </div>
         </div>
     );
 };
 
 const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect }) => {
-
-  // --- Statistics Logic ---
   const stats = useMemo(() => {
     const total = reports.length;
     const totalExchange = reports.reduce((sum, r) => sum + (r.soLuongDoi || 0), 0);
     const totalUniqueProducts = new Set(reports.map(r => r.tenThuongMai + r.nhanHang)).size;
     const uniqueProducts = new Set(reports.map(r => r.tenThuongMai)).size;
 
-    // Helper to get count and percent
     const calc = (filterFn: (r: DefectReport) => boolean) => {
         const count = reports.filter(filterFn).length;
-        return {
-            count,
-            percent: total > 0 ? ((count / total) * 100).toFixed(1) : '0'
-        };
+        return { count, percent: total > 0 ? ((count / total) * 100).toFixed(1) : '0' };
     };
 
-    // Section 1: Status
     const sNew = calc(r => r.trangThai === 'Mới');
     const sProcessing = calc(r => r.trangThai === 'Đang xử lý');
     const sUnknown = calc(r => r.trangThai === 'Chưa tìm ra nguyên nhân');
     const sCompleted = calc(r => r.trangThai === 'Hoàn thành');
 
-    // Section 2: Defect Types
-    const dProduction = calc(r => r.loaiLoi === 'Lỗi bộ phận sản xuất');
+    // Updated stats calculation with legacy support
+    const dProduction = calc(r => r.loaiLoi === 'Lỗi Sản xuất' || (r.loaiLoi as any) === 'Lỗi bộ phận sản xuất');
     const dSupplier = calc(r => r.loaiLoi === 'Lỗi Nhà cung cấp');
-    const dMixed = calc(r => r.loaiLoi === 'Lỗi vừa sản xuất vừa NCC');
-    const dOther = calc(r => r.loaiLoi === 'Lỗi khác');
+    const dMixed = calc(r => r.loaiLoi === 'Lỗi Hỗn hợp' || (r.loaiLoi as any) === 'Lỗi vừa sản xuất vừa NCC');
+    const dOther = calc(r => r.loaiLoi === 'Lỗi Khác' || (r.loaiLoi as any) === 'Lỗi khác');
 
-    // Section 3: Brand Analysis
-    const brands = ['HTM', 'VMA']; // Explicitly show these two first
+    const brands = ['HTM', 'VMA'];
     const brandData = brands.map(brandName => {
         const brandReports = reports.filter(r => r.nhanHang === brandName);
-        
         const rCount = brandReports.length;
         const eCount = brandReports.reduce((sum, r) => sum + (r.soLuongDoi || 0), 0);
         const pCount = new Set(brandReports.map(r => r.tenThuongMai)).size;
-
         return {
             name: brandName,
             reports: rCount,
@@ -229,7 +139,6 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect }) => {
         };
     });
     
-    // Handle 'Other' brands if any
     const otherReports = reports.filter(r => !brands.includes(r.nhanHang as string));
     if (otherReports.length > 0) {
          const rCount = otherReports.length;
@@ -246,20 +155,15 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect }) => {
          });
     }
 
-
-    // Section 4: Top 5 Products
     const productCounts: Record<string, number> = {};
-    reports.forEach(r => {
-        productCounts[r.tenThuongMai] = (productCounts[r.tenThuongMai] || 0) + 1;
-    });
+    reports.forEach(r => { productCounts[r.tenThuongMai] = (productCounts[r.tenThuongMai] || 0) + 1; });
     const top5 = Object.keys(productCounts)
         .map(key => ({ name: key, quantity: productCounts[key] }))
         .sort((a, b) => b.quantity - a.quantity)
         .slice(0, 5);
 
     return {
-        total,
-        uniqueProducts,
+        total, uniqueProducts,
         status: { sNew, sProcessing, sUnknown, sCompleted },
         defect: { dProduction, dSupplier, dMixed, dOther },
         brands: brandData,
@@ -268,144 +172,111 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect }) => {
   }, [reports]);
 
   return (
-    <div className="flex flex-col h-full p-3 lg:p-4 2xl:p-6 gap-3 lg:gap-4 2xl:gap-6 bg-slate-100 overflow-y-auto font-sans text-slate-900">
+    <div className="flex flex-col h-full p-6 gap-6 overflow-y-auto">
          
-         {/* --- ROW 1: THỐNG KÊ CHUNG --- */}
-         <div className="flex-shrink-0 bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
-            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight flex items-center px-1">
-                <span className="bg-blue-600 text-white w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 shadow-sm">1</span>
-                THỐNG KÊ CHUNG
-            </h2>
-            {/* Auto-resize Grid: 
-                - mobile: 2 cols
-                - tablet (sm): 3 cols
-                - laptop (xl - 1280px): 6 cols (tight fit) -> Font size reduced in StatCard
-                - large laptop (1440px+): 6 cols (medium fit) -> Font size increased
-                - desktop (2xl - 1536px): 6 cols (wide fit) -> Font size largest
-            */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 min-[1440px]:gap-5 2xl:gap-6">
+         {/* SECTION 1: OVERVIEW */}
+         <div className="flex flex-col gap-4">
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest pl-1">Tổng quan</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                 <StatCard 
-                    title="Tổng báo cáo" value={stats.total} themeKey="indigo"
-                    icon={<DocumentDuplicateIcon/>} 
-                    onClick={() => onFilterSelect('all')}
+                    title="TỔNG PHẢN ÁNH" value={stats.total} 
+                    colorClass={{bg: 'bg-indigo-100', text: 'text-indigo-600'}}
+                    icon={<DocumentDuplicateIcon/>} onClick={() => onFilterSelect('all')}
                 />
                 <StatCard 
-                    title="SP Lỗi" value={stats.uniqueProducts} themeKey="cyan"
-                    icon={<ShoppingBagIcon/>} 
-                    onClick={() => onFilterSelect('all')}
+                    title="SẢN PHẨM LỖI" value={stats.uniqueProducts} 
+                    colorClass={{bg: 'bg-cyan-100', text: 'text-cyan-600'}}
+                    icon={<ShoppingBagIcon/>} onClick={() => onFilterSelect('all')}
                 />
                 <StatCard 
-                    title="Mới" value={stats.status.sNew.count} percentage={stats.status.sNew.percent} themeKey="blue"
-                    icon={<SparklesIcon/>} 
-                    onClick={() => onFilterSelect('status', 'Mới')}
+                    title="MỚI" value={stats.status.sNew.count} percentage={stats.status.sNew.percent} 
+                    colorClass={{bg: 'bg-blue-100', text: 'text-blue-600'}}
+                    icon={<SparklesIcon/>} onClick={() => onFilterSelect('status', 'Mới')}
                 />
                 <StatCard 
-                    title="Đang xử lý" value={stats.status.sProcessing.count} percentage={stats.status.sProcessing.percent} themeKey="amber"
-                    icon={<ClockIcon/>} 
-                    onClick={() => onFilterSelect('status', 'Đang xử lý')}
+                    title="ĐANG XỬ LÝ" value={stats.status.sProcessing.count} percentage={stats.status.sProcessing.percent} 
+                    colorClass={{bg: 'bg-amber-100', text: 'text-amber-600'}}
+                    icon={<ClockIcon/>} onClick={() => onFilterSelect('status', 'Đang xử lý')}
                 />
                 <StatCard 
-                    title="Chưa rõ" value={stats.status.sUnknown.count} percentage={stats.status.sUnknown.percent} themeKey="purple"
-                    icon={<QuestionMarkCircleIcon/>} 
-                    onClick={() => onFilterSelect('status', 'Chưa tìm ra nguyên nhân')}
+                    title="CHƯA RÕ NGUYÊN NHÂN" value={stats.status.sUnknown.count} percentage={stats.status.sUnknown.percent} 
+                    colorClass={{bg: 'bg-purple-100', text: 'text-purple-600'}}
+                    icon={<QuestionMarkCircleIcon/>} onClick={() => onFilterSelect('status', 'Chưa tìm ra nguyên nhân')}
                 />
                 <StatCard 
-                    title="Hoàn thành" value={stats.status.sCompleted.count} percentage={stats.status.sCompleted.percent} themeKey="green"
-                    icon={<CheckCircleIcon/>} 
-                    onClick={() => onFilterSelect('status', 'Hoàn thành')}
+                    title="HOÀN THÀNH" value={stats.status.sCompleted.count} percentage={stats.status.sCompleted.percent} 
+                    colorClass={{bg: 'bg-emerald-100', text: 'text-emerald-600'}}
+                    icon={<CheckCircleIcon/>} onClick={() => onFilterSelect('status', 'Hoàn thành')}
                 />
             </div>
          </div>
 
-         {/* --- ROW 2: THỐNG KÊ THEO LOẠI LỖI --- */}
-         <div className="flex-shrink-0 bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
-            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight flex items-center px-1">
-                <span className="bg-blue-600 text-white w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 shadow-sm">2</span>
-                THỐNG KÊ THEO LOẠI LỖI
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 2xl:gap-6 h-full">
+         {/* SECTION 2: DEFECT TYPES */}
+         <div className="flex flex-col gap-4">
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest pl-1">Phân loại lỗi</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard 
-                    title="Sản xuất" value={stats.defect.dProduction.count} percentage={stats.defect.dProduction.percent} themeKey="rose"
-                    icon={<WrenchIcon/>} 
-                    onClick={() => onFilterSelect('defectType', 'Lỗi bộ phận sản xuất')}
+                    title="LỖI SẢN XUẤT" value={stats.defect.dProduction.count} percentage={stats.defect.dProduction.percent} 
+                    colorClass={{bg: 'bg-rose-100', text: 'text-rose-600'}}
+                    icon={<WrenchIcon/>} onClick={() => onFilterSelect('defectType', 'Lỗi Sản xuất')}
                 />
                 <StatCard 
-                    title="Nhà cung cấp" value={stats.defect.dSupplier.count} percentage={stats.defect.dSupplier.percent} themeKey="orange"
-                    icon={<TruckIcon/>} 
-                    onClick={() => onFilterSelect('defectType', 'Lỗi Nhà cung cấp')}
+                    title="LỖI NHÀ CUNG CẤP" value={stats.defect.dSupplier.count} percentage={stats.defect.dSupplier.percent} 
+                    colorClass={{bg: 'bg-orange-100', text: 'text-orange-600'}}
+                    icon={<TruckIcon/>} onClick={() => onFilterSelect('defectType', 'Lỗi Nhà cung cấp')}
                 />
                 <StatCard 
-                    title="SX & NCC" value={stats.defect.dMixed.count} percentage={stats.defect.dMixed.percent} themeKey="fuchsia"
-                    icon={<CubeIcon/>} 
-                    onClick={() => onFilterSelect('defectType', 'Lỗi vừa sản xuất vừa NCC')}
+                    title="LỖI HỖN HỢP" value={stats.defect.dMixed.count} percentage={stats.defect.dMixed.percent} 
+                    colorClass={{bg: 'bg-fuchsia-100', text: 'text-fuchsia-600'}}
+                    icon={<CubeIcon/>} onClick={() => onFilterSelect('defectType', 'Lỗi Hỗn hợp')}
                 />
                 <StatCard 
-                    title="Khác" value={stats.defect.dOther.count} percentage={stats.defect.dOther.percent} themeKey="slate"
-                    icon={<QuestionMarkCircleIcon/>} 
-                    onClick={() => onFilterSelect('defectType', 'Lỗi khác')}
+                    title="LỖI KHÁC" value={stats.defect.dOther.count} percentage={stats.defect.dOther.percent} 
+                    colorClass={{bg: 'bg-slate-100', text: 'text-slate-600'}}
+                    icon={<QuestionMarkCircleIcon/>} onClick={() => onFilterSelect('defectType', 'Lỗi Khác')}
                 />
             </div>
          </div>
 
-         {/* --- ROW 3: THỐNG KÊ THEO NHÃN HÀNG & TOP 5 --- */}
-         <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-12 gap-4 pb-4">
-              
-              {/* --- SECTION 3: THỐNG KÊ THEO NHÃN HÀNG --- */}
-              <div className="lg:col-span-8 bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight flex items-center mb-3 px-1 flex-shrink-0">
-                        <span className="bg-blue-600 text-white w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 shadow-sm">3</span>
-                        THỐNG KÊ THEO NHÃN HÀNG
-                    </h2>
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 min-h-[240px] lg:min-h-0">
+         {/* SECTION 3: BRANDS & TOP PRODUCTS */}
+         <div className="flex-1 grid lg:grid-cols-12 gap-6 pb-6">
+              <div className="lg:col-span-8 flex flex-col gap-4">
+                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest pl-1">Hiệu suất Nhãn hàng</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {stats.brands.map((brand, idx) => (
-                            <BrandPerformanceCard 
-                                key={idx} 
-                                data={brand} 
-                                onClick={() => onFilterSelect('brand', brand.name)} 
-                            />
+                            <BrandPerformanceCard key={idx} data={brand} onClick={() => onFilterSelect('brand', brand.name)} />
                         ))}
-                        {stats.brands.length === 0 && <div className="text-center text-slate-400 col-span-2 self-center">Chưa có dữ liệu nhãn hàng</div>}
                     </div>
               </div>
 
-              {/* --- SECTION 4: TOP 5 SẢN PHẨM LỖI --- */}
-              <div className="lg:col-span-4 bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-full min-h-[300px] lg:min-h-0">
-                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight flex items-center mb-3 px-1 flex-shrink-0">
-                        <span className="bg-blue-600 text-white w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 shadow-sm">4</span>
-                        TOP 5 SẢN PHẨM LỖI
-                    </h2>
-                    <div className="flex-1 overflow-y-auto pr-1 min-h-0 custom-scrollbar">
-                         <div className="space-y-2">
+              <div className="lg:col-span-4 flex flex-col gap-4 h-full">
+                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest pl-1">Top 5 Sản phẩm lỗi</h2>
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-2 flex-1 overflow-hidden">
+                         <div className="flex flex-col gap-1 h-full overflow-y-auto custom-scrollbar pr-1">
                             {stats.top5.map((item, index) => (
                                 <div 
                                     key={index} 
                                     onClick={() => onFilterSelect('search', item.name)}
-                                    className="flex items-center p-2.5 rounded-xl hover:bg-blue-50 cursor-pointer group transition-all duration-200 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 bg-slate-50/30"
+                                    className="flex items-center p-3 rounded-xl hover:bg-slate-50 cursor-pointer group transition-all"
                                 >
-                                    <div className="flex-shrink-0 mr-3">
-                                         <span className={`flex items-center justify-center w-7 h-7 rounded-lg text-xs font-black shadow-sm border ${
-                                             index === 0 ? 'bg-yellow-400 text-yellow-900 border-yellow-300' : 
-                                             index === 1 ? 'bg-slate-300 text-slate-800 border-slate-300' : 
-                                             index === 2 ? 'bg-orange-400 text-orange-900 border-orange-300' : 
-                                             'bg-white text-slate-500 border-slate-200'
-                                         }`}>
-                                            {index + 1}
-                                        </span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold text-slate-700 truncate group-hover:text-blue-700 transition-colors" title={item.name}>
-                                            {item.name}
-                                        </p>
-                                    </div>
-                                    <div className="flex-shrink-0 ml-2">
-                                        <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-xs font-extrabold border border-red-100">
-                                            {item.quantity}
-                                        </span>
-                                    </div>
+                                    <span className={`flex items-center justify-center w-8 h-8 rounded-lg text-xs font-black shadow-sm border mr-3 ${
+                                            index === 0 ? 'bg-yellow-400 text-yellow-900 border-yellow-300' : 
+                                            index === 1 ? 'bg-slate-300 text-slate-800 border-slate-300' : 
+                                            index === 2 ? 'bg-orange-400 text-orange-900 border-orange-300' : 
+                                            'bg-slate-100 text-slate-500 border-slate-200'
+                                    }`}>
+                                        {index + 1}
+                                    </span>
+                                    <p className="text-sm font-bold text-slate-700 truncate flex-1 group-hover:text-blue-600 transition-colors">
+                                        {item.name}
+                                    </p>
+                                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                                        {item.quantity}
+                                    </span>
                                 </div>
                             ))}
                             {stats.top5.length === 0 && (
-                                <div className="h-full flex items-center justify-center text-xs text-slate-400 italic">Chưa có dữ liệu thống kê</div>
+                                <div className="h-full flex items-center justify-center text-sm text-slate-400 italic">Chưa có dữ liệu</div>
                             )}
                          </div>
                     </div>

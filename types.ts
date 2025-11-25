@@ -44,7 +44,7 @@ export interface DefectReport {
   huongKhacPhuc?: string;
   trangThai: 'Mới' | 'Đang xử lý' | 'Chưa tìm ra nguyên nhân' | 'Hoàn thành';
   ngayHoanThanh?: string;
-  loaiLoi: 'Lỗi bộ phận sản xuất' | 'Lỗi Nhà cung cấp' | 'Lỗi vừa sản xuất vừa NCC' | 'Lỗi khác';
+  loaiLoi: 'Lỗi Sản xuất' | 'Lỗi Nhà cung cấp' | 'Lỗi Hỗn hợp' | 'Lỗi Khác';
   nhanHang: 'HTM' | 'VMA' | 'Khác';
 }
 

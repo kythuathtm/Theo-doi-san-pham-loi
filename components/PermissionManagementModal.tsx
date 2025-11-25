@@ -14,10 +14,10 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onCl
 
   // Danh sách các loại lỗi để lựa chọn
   const defectTypes = [
-    'Lỗi bộ phận sản xuất',
+    'Lỗi Sản xuất',
     'Lỗi Nhà cung cấp',
-    'Lỗi vừa sản xuất vừa NCC',
-    'Lỗi khác'
+    'Lỗi Hỗn hợp',
+    'Lỗi Khác'
   ];
   
   const editableFieldOptions: { key: PermissionField; label: string }[] = [

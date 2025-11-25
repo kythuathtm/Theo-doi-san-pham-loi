@@ -85,7 +85,7 @@ const DEFAULT_ROLE_SETTINGS: RoleSettings = {
     [UserRole.KyThuat]: { canCreate: true, canViewDashboard: true, viewableDefectTypes: ['All'], editableFields: ['general', 'soLuongDoi', 'loaiLoi', 'nguyenNhan', 'huongKhacPhuc', 'trangThai', 'ngayHoanThanh'] },
     [UserRole.CungUng]: { canCreate: false, canViewDashboard: true, viewableDefectTypes: ['All'], editableFields: ['general', 'loaiLoi', 'trangThai'] },
     [UserRole.TongGiamDoc]: { canCreate: false, canViewDashboard: true, viewableDefectTypes: ['All'], editableFields: [] },
-    [UserRole.SanXuat]: { canCreate: false, canViewDashboard: false, viewableDefectTypes: ['Lỗi bộ phận sản xuất', 'Lỗi vừa sản xuất vừa NCC'], editableFields: ['nguyenNhan', 'huongKhacPhuc'] },
+    [UserRole.SanXuat]: { canCreate: false, canViewDashboard: false, viewableDefectTypes: ['Lỗi Sản xuất', 'Lỗi Hỗn hợp'], editableFields: ['nguyenNhan', 'huongKhacPhuc'] },
     [UserRole.Kho]: { canCreate: false, canViewDashboard: false, viewableDefectTypes: ['All'], editableFields: [] },
 };
 
@@ -258,7 +258,14 @@ export const App: React.FC = () => {
     if (currentUser) {
         const config = roleSettings[currentUser.role] || DEFAULT_ROLE_SETTINGS[currentUser.role];
         if (!config.viewableDefectTypes.includes('All')) {
-            result = result.filter(r => config.viewableDefectTypes.includes(r.loaiLoi));
+            // Flexible check for legacy/new types
+            result = result.filter(r => config.viewableDefectTypes.some(type => {
+                const loaiLoi = r.loaiLoi as string;
+                if (type === 'Lỗi Sản xuất') return loaiLoi === 'Lỗi Sản xuất' || loaiLoi === 'Lỗi bộ phận sản xuất';
+                if (type === 'Lỗi Hỗn hợp') return loaiLoi === 'Lỗi Hỗn hợp' || loaiLoi === 'Lỗi vừa sản xuất vừa NCC';
+                if (type === 'Lỗi Khác') return loaiLoi === 'Lỗi Khác' || loaiLoi === 'Lỗi khác';
+                return loaiLoi === type;
+            }));
         }
     }
 
@@ -282,7 +289,14 @@ export const App: React.FC = () => {
     }
 
     if (defectTypeFilter !== 'All') {
-        result = result.filter((r) => r.loaiLoi === defectTypeFilter);
+        result = result.filter((r) => {
+             // Handle backward compatibility for filtering
+            const loaiLoi = r.loaiLoi as string;
+            if (defectTypeFilter === 'Lỗi Sản xuất') return loaiLoi === 'Lỗi Sản xuất' || loaiLoi === 'Lỗi bộ phận sản xuất';
+            if (defectTypeFilter === 'Lỗi Hỗn hợp') return loaiLoi === 'Lỗi Hỗn hợp' || loaiLoi === 'Lỗi vừa sản xuất vừa NCC';
+            if (defectTypeFilter === 'Lỗi Khác') return loaiLoi === 'Lỗi Khác' || loaiLoi === 'Lỗi khác';
+            return loaiLoi === defectTypeFilter;
+        });
     }
 
     // Year Filter Logic
@@ -371,7 +385,7 @@ export const App: React.FC = () => {
             const reportRef = doc(db, "reports", report.id);
             const { id, ...data } = report;
             await updateDoc(reportRef, data as any);
-            showToast('Cập nhật báo cáo thành công!', 'success');
+            showToast('Cập nhật phản ánh thành công!', 'success');
         } else {
             const { id, ...data } = report;
             const newReportData = {
@@ -379,14 +393,14 @@ export const App: React.FC = () => {
                 ngayTao: new Date().toISOString()
             };
             await addDoc(collection(db, "reports"), newReportData);
-            showToast('Tạo báo cáo mới thành công!', 'success');
+            showToast('Tạo phản ánh mới thành công!', 'success');
         }
         setIsFormOpen(false);
         setEditingReport(null);
         setSelectedReport(null);
     } catch (error) {
         console.error("Error saving report:", error);
-        showToast('Lỗi khi lưu báo cáo', 'error');
+        showToast('Lỗi khi lưu phản ánh', 'error');
     }
   };
 
@@ -395,7 +409,7 @@ export const App: React.FC = () => {
     try {
         await deleteDoc(doc(db, "reports", id));
         if (selectedReport?.id === id) setSelectedReport(null);
-        showToast('Đã xóa báo cáo.', 'info');
+        showToast('Đã xóa phản ánh.', 'info');
     } catch (error) {
         console.error("Error deleting:", error);
         showToast('Lỗi khi xóa', 'error');
@@ -440,7 +454,7 @@ export const App: React.FC = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "BaoCao");
     const today = new Date().toISOString().slice(0, 10);
-    const fileName = `bao_cao_san_pham_loi_${today}.xlsx`;
+    const fileName = `phan_anh_san_pham_loi_${today}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
   
@@ -800,6 +814,7 @@ export const App: React.FC = () => {
                     onDateFilterChange={handleDateFilterChange}
                     summaryStats={summaryStats}
                     isLoading={isPending}
+                    onExport={handleExportData}
                 />
             ) : (
                 <DashboardReport 

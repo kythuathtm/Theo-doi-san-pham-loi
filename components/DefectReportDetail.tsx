@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { DefectReport, UserRole } from '../types';
-import { PencilIcon, TrashIcon, XIcon, WrenchIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon } from './Icons';
+import { PencilIcon, TrashIcon, XIcon, WrenchIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, TagIcon, UserIcon } from './Icons';
 
 interface Props {
   report: DefectReport;
@@ -12,207 +12,162 @@ interface Props {
   currentUserRole: UserRole;
 }
 
-interface DetailItemProps {
-  label: string;
-  value?: string | number | null;
-  className?: string;
-  fullWidth?: boolean;
-}
-
-const DetailItem: React.FC<DetailItemProps> = ({ label, value, className, fullWidth }) => {
+const DetailItem = ({ label, value, className, fullWidth }: any) => {
     if (value === null || value === undefined || value === '') return null;
     return (
-        <div className={fullWidth ? 'sm:col-span-2' : ''}>
-            <dt className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">{label}</dt>
-            <dd className={`text-sm text-slate-800 break-words leading-relaxed ${className}`}>{value}</dd>
+        <div className={fullWidth ? 'col-span-full' : ''}>
+            <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</dt>
+            <dd className={`text-sm text-slate-800 break-words font-medium ${className}`}>{value}</dd>
         </div>
     );
 };
 
-const Section: React.FC<{ title: string; children: React.ReactNode; icon?: React.ReactNode }> = ({ title, children, icon }) => (
-    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h4 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 mb-5 flex items-center">
-            {icon ? <span className="bg-blue-100 text-blue-600 p-1 rounded-md mr-2">{icon}</span> : <span className="bg-blue-500 w-1.5 h-4 rounded-full mr-3"></span>}
+const Section = ({ title, icon, children }: any) => (
+    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm h-full">
+        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
+            <span className="p-1.5 bg-slate-100 text-slate-600 rounded-md">{icon}</span>
             {title}
         </h4>
         {children}
     </div>
 );
 
-
 const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permissions, onClose, currentUserRole }) => {
-  
-  // Check if current user role is allowed to see "Loại lỗi"
-  const canSeeLoaiLoi = [
-    UserRole.Admin,
-    UserRole.TongGiamDoc,
-    UserRole.CungUng,
-    UserRole.KyThuat
-  ].includes(currentUserRole);
+  const canSeeLoaiLoi = [UserRole.Admin, UserRole.TongGiamDoc, UserRole.CungUng, UserRole.KyThuat].includes(currentUserRole);
 
-  const getLoaiLoiClass = (loaiLoi: string) => {
-    switch (loaiLoi) {
-      case 'Lỗi bộ phận sản xuất':
-      case 'Lỗi vừa sản xuất vừa NCC':
-        return 'bg-blue-50 text-blue-700 border border-blue-200';
-      case 'Lỗi Nhà cung cấp':
-        return 'bg-amber-50 text-amber-700 border border-amber-200';
-      case 'Lỗi khác':
-        return 'bg-slate-50 text-slate-600 border border-slate-200';
-      default:
-        return 'text-slate-700';
-    }
+  const getLoaiLoiBadge = (loaiLoi: string) => {
+    let style = 'bg-slate-100 text-slate-600 border-slate-200';
+    if (loaiLoi === 'Lỗi Hỗn hợp' || loaiLoi.includes('vừa')) style = 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200';
+    else if (loaiLoi === 'Lỗi Sản xuất' || loaiLoi.includes('sản xuất')) style = 'bg-rose-100 text-rose-700 border-rose-200';
+    else if (loaiLoi === 'Lỗi Nhà cung cấp') style = 'bg-orange-100 text-orange-700 border-orange-200';
+    else if (loaiLoi === 'Lỗi Khác') style = 'bg-slate-100 text-slate-600 border-slate-200';
+    
+    return <span className={`px-2 py-1 rounded-md text-xs font-bold border ${style}`}>{loaiLoi}</span>;
   };
 
   return (
     <>
       {/* Header */}
-      <div className="p-6 border-b border-slate-200 bg-white/90 backdrop-blur-md flex justify-between items-start sticky top-0 z-20">
+      <div className="px-6 py-4 border-b border-slate-100 bg-white flex justify-between items-start sticky top-0 z-20">
           <div>
-            <div className="flex items-center gap-2.5 mb-2">
-                <span className="text-[10px] font-bold font-mono text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md uppercase tracking-wider">{report.maSanPham}</span>
-                <span className="text-slate-300">/</span>
+            <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">{report.maSanPham}</span>
+                <span className="text-xs text-slate-400">•</span>
                 <span className="text-xs font-medium text-slate-500">{new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}</span>
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">{report.tenThuongMai}</h3>
+            <h3 className="text-xl font-bold text-slate-900 leading-tight">{report.tenThuongMai}</h3>
           </div>
-          <div className="flex-shrink-0 flex items-center space-x-2 ml-4">
+          <div className="flex items-center gap-2 ml-4">
             {permissions.canEdit && (
-              <button 
-                onClick={() => onEdit(report)}
-                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all active:scale-95"
-                title="Chỉnh sửa"
-              >
+              <button onClick={() => onEdit(report)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-95" title="Chỉnh sửa">
                 <PencilIcon className="h-5 w-5" />
               </button>
             )}
             {permissions.canDelete && (
-                <button 
-                  onClick={() => {
-                      if (window.confirm('Bạn có chắc chắn muốn xóa báo cáo này?')) {
-                          onDelete(report.id);
-                      }
-                  }}
-                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all active:scale-95"
-                  title="Xóa"
-                >
+                <button onClick={() => { if (window.confirm('Xóa báo cáo này?')) onDelete(report.id); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95" title="Xóa">
                   <TrashIcon className="h-5 w-5" />
                 </button>
             )}
-            <div className="h-6 w-px bg-slate-200 mx-2"></div>
-            <button 
-              onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors active:scale-95"
-              title="Đóng"
-            >
+            <div className="w-px h-6 bg-slate-200 mx-1"></div>
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all active:scale-95">
               <XIcon className="h-6 w-6" />
             </button>
           </div>
       </div>
       
-      <div className="px-4 sm:px-8 py-6 flex-1 overflow-y-auto bg-slate-50/50 space-y-6 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto bg-slate-50 p-6 space-y-6 custom-scrollbar">
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-             {/* Left Column: Customer Info */}
-             <Section title="Thông tin Khách hàng & Phản ánh">
-                <dl className="grid grid-cols-1 gap-y-5">
-                    <div className="grid grid-cols-2 gap-4">
-                        <DetailItem 
-                            label="Ngày tạo phiếu" 
-                            value={report.ngayTao ? new Date(report.ngayTao).toLocaleDateString('en-GB') + ' ' + new Date(report.ngayTao).toLocaleTimeString('en-GB') : '-'} 
-                            className="text-slate-500 text-xs"
-                        />
-                        <DetailItem label="Nhà phân phối" value={report.nhaPhanPhoi} />
-                    </div>
-                    <DetailItem label="Đơn vị sử dụng" value={report.donViSuDung} />
-                    
-                    <div className="mt-2 pt-4 border-t border-slate-100">
-                        <DetailItem label="Nội dung phản ánh" value={report.noiDungPhanAnh} fullWidth className="text-slate-700 font-medium bg-slate-50 p-3 rounded-lg border border-slate-100" />
-                    </div>
-                </dl>
-             </Section>
-
-             {/* Right Column: Product Info */}
-             <Section title="Thông tin Sản phẩm Lỗi">
-                <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+             {/* Left: Product Info */}
+             <Section title="Thông tin Sản phẩm" icon={<TagIcon className="h-4 w-4"/>}>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-6">
                     <DetailItem label="Dòng sản phẩm" value={report.dongSanPham} />
-                    <DetailItem label="Nhãn hàng" value={report.nhanHang} className="font-semibold text-slate-700"/>
-                    
-                    <DetailItem label="Số lô" value={report.soLo} className="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded inline-block"/>
-                    <DetailItem label="Mã NSX" value={report.maNgaySanXuat} className="font-mono text-slate-600"/>
+                    <DetailItem label="Nhãn hàng" value={report.nhanHang} className="font-semibold"/>
+                    <DetailItem label="Số lô" value={report.soLo} className="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded w-fit"/>
+                    <DetailItem label="Mã NSX" value={report.maNgaySanXuat} className="font-mono"/>
                 </dl>
-                
-                {/* Stats Grid */}
                 <div className="mt-6 grid grid-cols-3 gap-3">
-                    <div className="bg-white rounded-xl p-3 border border-slate-200 text-center shadow-sm">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Đã nhập</p>
-                        <p className="font-bold text-xl text-slate-700 mt-1">{report.soLuongDaNhap.toLocaleString('vi-VN')}</p>
+                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Đã nhập</p>
+                        <p className="font-bold text-lg text-slate-700 mt-1">{report.soLuongDaNhap}</p>
                     </div>
-                    <div className="bg-red-50 rounded-xl p-3 border border-red-100 text-center shadow-sm">
-                        <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Lỗi</p>
-                        <p className="font-bold text-xl text-red-600 mt-1">{report.soLuongLoi.toLocaleString('vi-VN')}</p>
+                    <div className="bg-red-50 rounded-xl p-3 border border-red-100 text-center">
+                        <p className="text-[10px] font-bold text-red-400 uppercase">Lỗi</p>
+                        <p className="font-bold text-lg text-red-600 mt-1">{report.soLuongLoi}</p>
                     </div>
-                    <div className="bg-green-50 rounded-xl p-3 border border-green-100 text-center shadow-sm">
-                        <p className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Đổi</p>
-                        <p className="font-bold text-xl text-green-600 mt-1">{report.soLuongDoi.toLocaleString('vi-VN')}</p>
+                    <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100 text-center">
+                        <p className="text-[10px] font-bold text-emerald-400 uppercase">Đổi</p>
+                        <p className="font-bold text-lg text-emerald-600 mt-1">{report.soLuongDoi}</p>
                     </div>
                 </div>
              </Section>
+
+             {/* Right: Customer & Issue */}
+             <Section title="Khách hàng & Phản ánh" icon={<UserIcon className="h-4 w-4"/>}>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-6">
+                    <DetailItem label="Nhà phân phối" value={report.nhaPhanPhoi} fullWidth/>
+                    <DetailItem label="Đơn vị sử dụng" value={report.donViSuDung} fullWidth/>
+                    <div className="col-span-full mt-2">
+                        <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nội dung phản ánh</dt>
+                        <dd className="text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">
+                            {report.noiDungPhanAnh}
+                        </dd>
+                    </div>
+                </dl>
+             </Section>
         </div>
 
-        {/* Full Width Section: Resolution */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h4 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 mb-5 flex items-center">
-                <span className="bg-blue-100 text-blue-600 p-1 rounded-md mr-2"><ClipboardDocumentListIcon className="w-4 h-4" /></span>
-                Kết quả Xử lý & Khắc phục
+        {/* Bottom: Resolution */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h4 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-4 mb-6 flex items-center gap-2">
+                <span className="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><ClipboardDocumentListIcon className="w-5 h-5" /></span>
+                KẾT QUẢ XỬ LÝ
             </h4>
             
-            {/* Status Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-                <DetailItem label="Trạng thái hiện tại" value={report.trangThai} className="font-medium"/>
-                {report.trangThai === 'Hoàn thành' && (
-                    <DetailItem 
-                        label="Ngày hoàn thành" 
-                        value={report.ngayHoanThanh ? new Date(report.ngayHoanThanh).toLocaleDateString('en-GB') : '---'} 
-                        className="text-green-700 font-bold"
-                    />
+            <div className="flex flex-wrap gap-6 mb-8 items-center">
+                <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Trạng thái</span>
+                    <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold border ${
+                        report.trangThai === 'Hoàn thành' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                        report.trangThai === 'Mới' ? 'bg-blue-100 text-blue-700 border-blue-200' : 
+                        'bg-amber-100 text-amber-700 border-amber-200'
+                    }`}>
+                        {report.trangThai}
+                    </span>
+                </div>
+                {report.ngayHoanThanh && (
+                    <div>
+                         <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Ngày hoàn thành</span>
+                         <span className="text-sm font-bold text-slate-700">{new Date(report.ngayHoanThanh).toLocaleDateString('en-GB')}</span>
+                    </div>
                 )}
                 {canSeeLoaiLoi && report.loaiLoi && (
-                    <div className="sm:col-span-1">
-                        <dt className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Phân loại lỗi</dt>
-                        <dd className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getLoaiLoiClass(report.loaiLoi)}`}>
-                            {report.loaiLoi}
-                        </dd>
+                    <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Phân loại lỗi</span>
+                        {getLoaiLoiBadge(report.loaiLoi)}
                     </div>
                 )}
             </div>
 
-            {/* Analysis Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Cause Card */}
-                <div className="bg-amber-50/50 rounded-2xl border border-amber-100 p-5 flex flex-col h-full relative group hover:shadow-md transition-all duration-200">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
-                            <QuestionMarkCircleIcon className="w-5 h-5" />
-                        </div>
-                        <h5 className="text-sm font-bold text-amber-800 uppercase tracking-wide">Nguyên nhân</h5>
+                <div className="bg-amber-50 rounded-xl p-5 border border-amber-100">
+                    <div className="flex items-center gap-2 mb-3 text-amber-800">
+                        <QuestionMarkCircleIcon className="w-5 h-5" />
+                        <h5 className="text-sm font-bold uppercase">Nguyên nhân</h5>
                     </div>
-                    <div className="flex-1 bg-white/80 border border-amber-100 rounded-xl p-4 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap shadow-sm">
-                        {report.nguyenNhan || <span className="text-slate-400 italic">Chưa cập nhật thông tin nguyên nhân.</span>}
-                    </div>
+                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {report.nguyenNhan || <span className="text-slate-400 italic">Chưa có thông tin.</span>}
+                    </p>
                 </div>
 
-                {/* Solution Card */}
-                <div className="bg-blue-50/50 rounded-2xl border border-blue-100 p-5 flex flex-col h-full relative group hover:shadow-md transition-all duration-200">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                            <WrenchIcon className="w-5 h-5" />
-                        </div>
-                        <h5 className="text-sm font-bold text-blue-800 uppercase tracking-wide">Hướng khắc phục</h5>
+                <div className="bg-blue-50 rounded-xl p-5 border border-blue-100">
+                    <div className="flex items-center gap-2 mb-3 text-blue-800">
+                        <WrenchIcon className="w-5 h-5" />
+                        <h5 className="text-sm font-bold uppercase">Hướng khắc phục</h5>
                     </div>
-                     <div className="flex-1 bg-white/80 border border-blue-100 rounded-xl p-4 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap shadow-sm">
-                        {report.huongKhacPhuc || <span className="text-slate-400 italic">Chưa cập nhật hướng khắc phục.</span>}
-                    </div>
+                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {report.huongKhacPhuc || <span className="text-slate-400 italic">Chưa có thông tin.</span>}
+                    </p>
                 </div>
             </div>
         </div>
@@ -222,4 +177,4 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
   );
 };
 
-export default React.memo(DefectReportDetail);
+export default DefectReportDetail;
