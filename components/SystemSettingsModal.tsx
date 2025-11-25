@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { SystemSettings } from '../types';
 import { XIcon, CheckCircleIcon, ArrowUpTrayIcon, TrashIcon } from './Icons';
@@ -58,7 +57,7 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                     type="text" 
                     value={settings.appName}
                     onChange={(e) => setSettings({...settings, appName: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
                     placeholder="Nhập tên hiển thị trên tab trình duyệt..."
                 />
             </div>
@@ -70,7 +69,7 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                     type="text" 
                     value={settings.companyName || ''}
                     onChange={(e) => setSettings({...settings, companyName: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
                     placeholder="Công ty Cổ phần..."
                 />
             </div>
@@ -79,7 +78,7 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Logo đăng nhập</label>
                 <div className="flex items-start gap-4">
-                    <div className="w-24 h-24 border border-slate-200 rounded-lg bg-white flex items-center justify-center overflow-hidden p-2 relative group">
+                    <div className="w-24 h-24 border border-slate-200 rounded-lg bg-white flex items-center justify-center overflow-hidden p-2 relative group shadow-sm">
                         {settings.logoUrl ? (
                             <img src={settings.logoUrl} alt="Logo Preview" className="max-w-full max-h-full object-contain" />
                         ) : (
@@ -142,7 +141,7 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                             type="text" 
                             value={settings.backgroundValue}
                             onChange={(e) => setSettings({...settings, backgroundValue: e.target.value})}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm bg-white shadow-sm"
                             placeholder="Dán đường dẫn ảnh (URL) vào đây..."
                         />
                         <p className="text-xs text-slate-500 mt-1">Ví dụ: https://i.ibb.co/...</p>

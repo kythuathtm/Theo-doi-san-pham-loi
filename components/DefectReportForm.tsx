@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
 import { XIcon, CheckCircleIcon, TagIcon, UserIcon, WrenchIcon, CheckCircleIcon as StatusIcon } from './Icons';
@@ -247,11 +245,13 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   };
   
   const getInputClasses = (fieldName: keyof Omit<DefectReport, 'id'>, isReadOnly: boolean = false) => {
-    const base = "transition-all duration-200 mt-1 block w-full rounded-xl text-base py-2.5 px-3 border shadow-sm outline-none";
-    const normal = "bg-white text-slate-900 border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 placeholder-slate-400";
+    // Increased standard styling for all inputs: pure white background and shadow-sm for depth
+    const base = "transition-all duration-200 mt-1 block w-full rounded-xl text-base py-2.5 px-3 border outline-none";
+    const normal = "bg-white text-slate-900 border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 placeholder-slate-400 shadow-sm";
     const errorClass = errors[fieldName] ? "border-red-500 ring-2 ring-red-500/10 bg-red-50" : "";
-    const disabled = isFieldDisabled(fieldName) ? "bg-slate-50 text-slate-500 border-slate-200 cursor-not-allowed shadow-none" : normal;
-    const readonly = isReadOnly ? "bg-slate-50 text-slate-600 border-slate-200 cursor-default focus:ring-0" : "";
+    // Darker gray for disabled to contrast with the bright white active fields
+    const disabled = isFieldDisabled(fieldName) ? "bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed shadow-none" : normal;
+    const readonly = isReadOnly ? "bg-slate-100 text-slate-600 border-slate-200 cursor-default focus:ring-0 shadow-none" : "";
     
     if (isFieldDisabled(fieldName)) return `${base} ${disabled}`;
     if (isReadOnly) return `${base} ${readonly}`;

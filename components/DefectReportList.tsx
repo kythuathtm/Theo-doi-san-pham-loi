@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { DefectReport, UserRole } from '../types';
 import Pagination from './Pagination';
@@ -265,7 +263,7 @@ const DefectReportList: React.FC<Props> = ({
                 </div>
                 <input
                     type="text"
-                    className="block w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all focus:bg-white"
+                    className="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                     placeholder="Tìm kiếm theo mã SP, tên, lô..."
                     value={filters.searchTerm}
                     onChange={(e) => onSearchTermChange(e.target.value)}
@@ -278,7 +276,7 @@ const DefectReportList: React.FC<Props> = ({
                         <FunnelIcon className="h-4 w-4" />
                     </div>
                     <select
-                        className="pl-9 pr-8 py-2.5 text-sm font-medium border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:border-blue-500 hover:bg-slate-50 cursor-pointer appearance-none min-w-[160px]"
+                        className="pl-9 pr-8 py-2.5 text-sm font-medium border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:border-blue-500 hover:bg-slate-50 cursor-pointer appearance-none min-w-[160px] shadow-sm"
                         value={filters.defectTypeFilter}
                         onChange={(e) => onDefectTypeFilterChange(e.target.value)}
                     >
@@ -290,18 +288,18 @@ const DefectReportList: React.FC<Props> = ({
                     </select>
                 </div>
 
-                <div className="flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2">
+                <div className="flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2 shadow-sm">
                     <CalendarIcon className="h-4 w-4 text-slate-400 mr-2" />
                     <input
                         type="date"
-                        className="bg-transparent text-sm text-slate-700 focus:outline-none font-medium w-28"
+                        className="bg-white text-sm text-slate-700 focus:outline-none font-medium w-28 rounded-md border-0 py-0.5 focus:ring-2 focus:ring-blue-500/20"
                         value={filters.dateFilter.start}
                         onChange={(e) => onDateFilterChange({ ...filters.dateFilter, start: e.target.value })}
                     />
                     <span className="text-slate-300 mx-2">-</span>
                     <input
                         type="date"
-                         className="bg-transparent text-sm text-slate-700 focus:outline-none font-medium w-28"
+                         className="bg-white text-sm text-slate-700 focus:outline-none font-medium w-28 rounded-md border-0 py-0.5 focus:ring-2 focus:ring-blue-500/20"
                         value={filters.dateFilter.end}
                         onChange={(e) => onDateFilterChange({ ...filters.dateFilter, end: e.target.value })}
                     />
@@ -311,7 +309,7 @@ const DefectReportList: React.FC<Props> = ({
 
                 <button
                     onClick={onExport}
-                    className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                    className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm"
                     title="Xuất Excel"
                 >
                     <ArrowDownTrayIcon className="h-5 w-5" />
@@ -320,7 +318,7 @@ const DefectReportList: React.FC<Props> = ({
                 <div className="relative" ref={settingsRef}>
                     <button
                         onClick={() => setShowSettings(!showSettings)}
-                        className={`p-2.5 bg-white border border-slate-200 rounded-xl hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all ${showSettings ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-slate-600'}`}
+                        className={`p-2.5 bg-white border border-slate-200 rounded-xl hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm ${showSettings ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-slate-600'}`}
                         title="Cấu hình cột"
                     >
                         <Cog6ToothIcon className="h-5 w-5" />
@@ -347,7 +345,7 @@ const DefectReportList: React.FC<Props> = ({
                 {areFiltersActive && (
                     <button 
                         onClick={resetFilters}
-                        className="p-2.5 ml-1 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-transparent hover:border-red-200"
+                        className="p-2.5 ml-1 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-transparent hover:border-red-200 shadow-sm"
                         title="Xóa bộ lọc"
                     >
                         <XIcon className="h-5 w-5" />

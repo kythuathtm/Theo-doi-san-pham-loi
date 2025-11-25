@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { XIcon, PlusIcon, PencilIcon, TrashIcon } from './Icons';
@@ -67,7 +66,7 @@ const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser,
                         placeholder="Username"
                         value={formData.username}
                         onChange={(e) => setFormData({...formData, username: e.target.value})}
-                        className={`w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 ${isEditing ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-900'}`}
+                        className={`w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm ${isEditing ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-900'}`}
                         required
                         readOnly={isEditing}
                     />
@@ -79,7 +78,7 @@ const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser,
                         placeholder="Họ tên hiển thị"
                         value={formData.fullName || ''}
                         onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900 shadow-sm"
                     />
                 </div>
                 <div className="sm:col-span-2">
@@ -89,7 +88,7 @@ const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser,
                         placeholder="******"
                         value={formData.password}
                         onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900 shadow-sm"
                         required
                     />
                 </div>
@@ -98,7 +97,7 @@ const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser,
                     <select
                         value={formData.role}
                         onChange={(e) => setFormData({...formData, role: e.target.value as UserRole})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900 shadow-sm"
                     >
                         {availableRoles.map((role) => (
                             <option key={role} value={role}>{role}</option>
