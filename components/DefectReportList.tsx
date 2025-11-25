@@ -174,7 +174,6 @@ const DefectReportList: React.FC<Props> = ({
                     <div className="font-bold text-slate-800 text-sm whitespace-normal leading-snug">
                         {report.tenThuongMai}
                     </div>
-                    {/* Removing extra details as requested */}
                 </div>
               );
           case 'tenThietBi':
@@ -368,7 +367,7 @@ const DefectReportList: React.FC<Props> = ({
                                     onMouseEnter={() => handleRowMouseEnter(report)}
                                     onMouseLeave={handleRowMouseLeave}
                                     onMouseMove={handleRowMouseMove}
-                                    className="group flex items-center hover:bg-blue-50/30 transition-colors cursor-pointer relative"
+                                    className="group flex items-center odd:bg-white even:bg-slate-50 hover:bg-blue-100 transition-colors cursor-pointer relative"
                                 >
                                     {visibleColumns.map((col) => (
                                         <div 
