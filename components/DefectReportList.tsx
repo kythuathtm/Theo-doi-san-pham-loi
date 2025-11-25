@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { DefectReport, UserRole } from '../types';
 import Pagination from './Pagination';
@@ -91,14 +92,26 @@ const DefectReportList: React.FC<Props> = ({
 
   const handleRowMouseEnter = (report: DefectReport) => setHoveredReport(report);
   const handleRowMouseLeave = () => setHoveredReport(null);
+  
   const handleRowMouseMove = (e: React.MouseEvent) => {
       if (tooltipRef.current) {
           const tooltip = tooltipRef.current;
           let x = e.clientX + 15;
           let y = e.clientY + 15;
+          
           const rect = tooltip.getBoundingClientRect();
-          if (x + rect.width > window.innerWidth - 20) x = e.clientX - rect.width - 15;
-          if (y + rect.height > window.innerHeight - 20) y = e.clientY - rect.height - 15;
+          const winWidth = window.innerWidth;
+          const winHeight = window.innerHeight;
+
+          // Check right edge
+          if (x + rect.width > winWidth - 20) {
+              x = e.clientX - rect.width - 15;
+          }
+          // Check bottom edge
+          if (y + rect.height > winHeight - 20) {
+              y = e.clientY - rect.height - 15;
+          }
+
           tooltip.style.left = `${x}px`;
           tooltip.style.top = `${y}px`;
       }
@@ -193,7 +206,7 @@ const DefectReportList: React.FC<Props> = ({
                   </span>
               );
           case 'actions':
-              const canDelete = [UserRole.Admin, UserRole.KyThuat].includes(currentUserRole);
+              const canDelete = ([UserRole.Admin, UserRole.KyThuat] as string[]).includes(currentUserRole);
               if (!canDelete) return null;
               return (
                   <button
@@ -448,6 +461,7 @@ const DefectReportList: React.FC<Props> = ({
         </div>
       )}
 
+      {/* Floating Tooltip */}
       <div 
         ref={tooltipRef}
         className={`fixed z-[100] bg-slate-900/95 backdrop-blur text-white p-3.5 rounded-xl shadow-2xl pointer-events-none transition-opacity duration-200 border border-slate-700/50 max-w-[320px] w-full ${hoveredReport ? 'opacity-100' : 'opacity-0'}`}

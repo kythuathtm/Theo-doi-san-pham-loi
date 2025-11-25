@@ -1,7 +1,8 @@
 
+
 import React, { useState } from 'react';
 import { UserRole, RoleConfig, RoleSettings, PermissionField } from '../types';
-import { XIcon, CheckCircleIcon } from './Icons';
+import { XIcon, CheckCircleIcon, PlusIcon, TrashIcon } from './Icons';
 
 interface Props {
   roleSettings: RoleSettings;
@@ -11,6 +12,8 @@ interface Props {
 
 const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onClose }) => {
   const [settings, setSettings] = useState<RoleSettings>(roleSettings);
+  const [newRoleName, setNewRoleName] = useState('');
+  const [isAddingRole, setIsAddingRole] = useState(false);
 
   const defectTypes = [
     'Lỗi Sản xuất',
@@ -29,7 +32,7 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onCl
       { key: 'ngayHoanThanh', label: 'Ngày hoàn thành' },
   ];
 
-  const handleCheckboxChange = (role: UserRole, field: keyof Omit<RoleConfig, 'viewableDefectTypes' | 'editableFields'>) => {
+  const handleCheckboxChange = (role: string, field: keyof Omit<RoleConfig, 'viewableDefectTypes' | 'editableFields'>) => {
     setSettings(prev => ({
       ...prev,
       [role]: {
@@ -39,7 +42,7 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onCl
     }));
   };
 
-  const handleDefectTypeChange = (role: UserRole, type: string) => {
+  const handleDefectTypeChange = (role: string, type: string) => {
     setSettings(prev => {
         const currentTypes = prev[role].viewableDefectTypes;
         let newTypes: string[];
@@ -68,7 +71,7 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onCl
     });
   };
   
-  const handleEditableFieldChange = (role: UserRole, field: PermissionField) => {
+  const handleEditableFieldChange = (role: string, field: PermissionField) => {
       setSettings(prev => {
           const currentFields = prev[role].editableFields || [];
           let newFields: PermissionField[];
@@ -89,6 +92,41 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onCl
       });
   }
 
+  const handleAddRole = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newRoleName.trim()) return;
+      if (settings[newRoleName.trim()]) {
+          alert("Tên vai trò này đã tồn tại.");
+          return;
+      }
+
+      setSettings(prev => ({
+          ...prev,
+          [newRoleName.trim()]: {
+              canCreate: false,
+              canViewDashboard: false,
+              viewableDefectTypes: [],
+              editableFields: []
+          }
+      }));
+      setNewRoleName('');
+      setIsAddingRole(false);
+  }
+
+  const handleDeleteRole = (roleToDelete: string) => {
+      if (Object.values(UserRole).includes(roleToDelete as any)) {
+          alert("Không thể xóa vai trò mặc định của hệ thống.");
+          return;
+      }
+      if (window.confirm(`Bạn có chắc muốn xóa vai trò "${roleToDelete}"? Cấu hình phân quyền cho vai trò này sẽ bị mất.`)) {
+          setSettings(prev => {
+              const newSettings = { ...prev };
+              delete newSettings[roleToDelete];
+              return newSettings;
+          });
+      }
+  }
+
   const handleSave = () => {
     onSave(settings);
     onClose();
@@ -99,12 +137,49 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onCl
       <div className="bg-white rounded-xl shadow-2xl max-w-[1400px] w-full max-h-[90vh] flex flex-col overflow-hidden">
         <div className="flex justify-between items-center p-5 border-b border-slate-200 bg-white">
           <div>
-             <h2 className="text-xl font-bold text-slate-800">Phân quyền Hệ thống</h2>
-             <p className="text-sm text-slate-500 mt-1">Cấu hình quyền hạn chi tiết cho từng nhóm người dùng</p>
+             <h2 className="text-xl font-bold text-slate-800">Quản lý Vai trò & Phân quyền</h2>
+             <p className="text-sm text-slate-500 mt-1">Thêm vai trò mới và cấu hình quyền hạn chi tiết</p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-all active:scale-95">
             <XIcon className="h-6 w-6" />
           </button>
+        </div>
+        
+        {/* Toolbar */}
+        <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center gap-4">
+             {isAddingRole ? (
+                 <form onSubmit={handleAddRole} className="flex items-center gap-2 animate-fade-in">
+                      <input 
+                        type="text" 
+                        value={newRoleName}
+                        onChange={(e) => setNewRoleName(e.target.value)}
+                        placeholder="Nhập tên vai trò..." 
+                        className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                        autoFocus
+                      />
+                      <button 
+                        type="submit" 
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 active:scale-95"
+                      >
+                          Lưu
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setIsAddingRole(false)}
+                        className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50 active:scale-95"
+                      >
+                          Hủy
+                      </button>
+                 </form>
+             ) : (
+                <button 
+                    onClick={() => setIsAddingRole(true)}
+                    className="flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95"
+                >
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Thêm vai trò mới
+                </button>
+             )}
         </div>
         
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
@@ -120,14 +195,26 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onCl
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
-                        {Object.values(UserRole).map((role) => {
+                        {Object.keys(settings).map((role) => {
                             const isAdmin = role === UserRole.Admin;
+                            const isSystemRole = Object.values(UserRole).includes(role as any);
                             const config = settings[role];
                             
                             return (
                                 <tr key={role} className={`hover:bg-slate-50 transition-colors ${isAdmin ? 'bg-blue-50/30' : ''}`}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 sticky left-0 bg-inherit z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)]">
-                                        {role} {isAdmin && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Full</span>}
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 sticky left-0 bg-inherit z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)] group">
+                                        <div className="flex items-center justify-between">
+                                            <span>{role} {isAdmin && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Full</span>}</span>
+                                            {!isSystemRole && (
+                                                <button 
+                                                    onClick={() => handleDeleteRole(role)}
+                                                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-600 transition-opacity"
+                                                    title="Xóa vai trò này"
+                                                >
+                                                    <TrashIcon className="h-4 w-4" />
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center">
                                         <input 

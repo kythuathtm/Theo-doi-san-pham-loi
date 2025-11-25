@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
 import { XIcon, CheckCircleIcon, TagIcon, UserIcon, WrenchIcon, CheckCircleIcon as StatusIcon } from './Icons';
@@ -26,7 +27,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     ngayPhanAnh: getTodayDateString(),
     maSanPham: '', dongSanPham: '', tenThuongMai: '', tenThietBi: '', nhaPhanPhoi: '',
     donViSuDung: '', noiDungPhanAnh: '', soLo: '', maNgaySanXuat: '',
-    soLuongLoi: 0, soLuongDaNhap: 0, soLuongDoi: 0,
+    soLuongLoi: 0, soLuongDaNhap: 0, soLuongDoi: 0, ngayDoiHang: '',
     nguyenNhan: '', huongKhacPhuc: '', trangThai: 'Mới',
     ngayHoanThanh: '', loaiLoi: '' as any, nhanHang: 'HTM', 
   });
@@ -34,6 +35,23 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   const [errors, setErrors] = useState<Partial<Record<keyof Omit<DefectReport, 'id'>, string>>>({});
   const [isProductInfoLocked, setIsProductInfoLocked] = useState(false);
   const productCodeInputRef = useRef<HTMLInputElement>(null);
+
+  // --- AUTO COMPLETE LOGIC ---
+  useEffect(() => {
+    // Logic: Có đầy đủ nguyên nhân + hướng khắc phục + số lượng đổi -> trạng thái chuyển thành Hoàn thành
+    if (
+        formData.nguyenNhan && formData.nguyenNhan.trim() !== '' &&
+        formData.huongKhacPhuc && formData.huongKhacPhuc.trim() !== '' &&
+        formData.soLuongDoi > 0 &&
+        formData.trangThai !== 'Hoàn thành'
+    ) {
+        setFormData(prev => ({
+            ...prev,
+            trangThai: 'Hoàn thành',
+            ngayHoanThanh: prev.ngayHoanThanh || getTodayDateString()
+        }));
+    }
+  }, [formData.nguyenNhan, formData.huongKhacPhuc, formData.soLuongDoi]);
 
   // --- CASCADING SELECT LOGIC ---
 
@@ -84,7 +102,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     else if (['trangThai'].includes(fieldName)) permissionKey = 'trangThai';
     else if (['ngayHoanThanh'].includes(fieldName)) permissionKey = 'ngayHoanThanh';
     else if (['loaiLoi'].includes(fieldName)) permissionKey = 'loaiLoi';
-    else if (['soLuongDoi'].includes(fieldName)) permissionKey = 'soLuongDoi';
+    else if (['soLuongDoi', 'ngayDoiHang'].includes(fieldName)) permissionKey = 'soLuongDoi';
     else permissionKey = 'general';
 
     return !editableFields.includes(permissionKey);
@@ -361,7 +379,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                             <input type="text" name="maNgaySanXuat" value={formData.maNgaySanXuat} onChange={handleChange} className={getInputClasses('maNgaySanXuat')} disabled={isFieldDisabled('maNgaySanXuat')}/>
                         </div>
 
-                        <div className="sm:col-span-2 grid grid-cols-3 gap-3 pt-2">
+                        <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                              <div>
                                 <label className="block text-sm font-bold text-slate-500 ml-1 mb-1">Đã nhập</label>
                                 <input type="number" name="soLuongDaNhap" value={formData.soLuongDaNhap} onChange={handleChange} min="0" className={getInputClasses('soLuongDaNhap')} disabled={isFieldDisabled('soLuongDaNhap')}/>
@@ -373,6 +391,10 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                              <div>
                                 <label className="block text-sm font-bold text-green-600 ml-1 mb-1">Đổi</label>
                                 <input type="number" name="soLuongDoi" value={formData.soLuongDoi} onChange={handleChange} min="0" className={getInputClasses('soLuongDoi')} disabled={isFieldDisabled('soLuongDoi')}/>
+                             </div>
+                             <div>
+                                <label className="block text-sm font-bold text-green-600 ml-1 mb-1">Ngày đổi</label>
+                                <input type="date" name="ngayDoiHang" value={formData.ngayDoiHang || ''} onChange={handleChange} className={getInputClasses('ngayDoiHang')} disabled={isFieldDisabled('ngayDoiHang')}/>
                              </div>
                         </div>
                     </div>
@@ -450,6 +472,9 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                 <option value="Chưa tìm ra nguyên nhân">❓ Chưa rõ nguyên nhân</option>
                                 <option value="Hoàn thành">✅ Hoàn thành</option>
                             </select>
+                            {formData.nguyenNhan && formData.huongKhacPhuc && formData.soLuongDoi > 0 && formData.trangThai === 'Hoàn thành' && (
+                                <p className="text-xs text-emerald-600 mt-1 font-bold">✓ Tự động hoàn thành do đủ điều kiện</p>
+                            )}
                         </div>
                         
                         <div>

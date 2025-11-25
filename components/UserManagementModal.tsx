@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { XIcon, PlusIcon, PencilIcon, TrashIcon } from './Icons';
@@ -7,9 +8,10 @@ interface Props {
   onSaveUser: (user: User, isEdit: boolean) => void;
   onDeleteUser: (username: string) => void;
   onClose: () => void;
+  availableRoles: string[]; // Dynamic roles from settings
 }
 
-const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser, onClose }) => {
+const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser, onClose, availableRoles }) => {
   const [formData, setFormData] = useState<User>({ username: '', fullName: '', role: UserRole.KyThuat, password: '' });
   const [isEditing, setIsEditing] = useState(false);
 
@@ -98,7 +100,7 @@ const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser,
                         onChange={(e) => setFormData({...formData, role: e.target.value as UserRole})}
                         className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900"
                     >
-                        {Object.values(UserRole).map((role) => (
+                        {availableRoles.map((role) => (
                             <option key={role} value={role}>{role}</option>
                         ))}
                     </select>

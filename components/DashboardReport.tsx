@@ -4,9 +4,8 @@ import { DefectReport } from '../types';
 import { 
     CheckCircleIcon, ClockIcon, DocumentDuplicateIcon, SparklesIcon, 
     QuestionMarkCircleIcon, CubeIcon, WrenchIcon, TruckIcon, ShoppingBagIcon,
-    TagIcon, ArrowRightOnRectangleIcon, ChevronLeftIcon
+    TagIcon, ArrowRightOnRectangleIcon, XIcon
 } from './Icons';
-import DefectReportList from './DefectReportList'; 
 
 interface Props {
   reports: DefectReport[];
@@ -197,16 +196,9 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
     };
   }, [reports]);
 
-  // Handle Card Click -> Expand Table
+  // Handle Card Click -> Open Modal Window
   const handleCardClick = (type: 'status' | 'defectType' | 'all' | 'brand', value?: string) => {
-      if (activeFilter?.type === type && activeFilter?.value === value) {
-          setActiveFilter(null); // Toggle off
-      } else {
-          setActiveFilter({ type, value });
-          setTimeout(() => {
-             document.getElementById('expanded-list')?.scrollIntoView({ behavior: 'smooth' });
-          }, 100);
-      }
+      setActiveFilter({ type, value });
   };
 
   const filteredReportsForTable = useMemo(() => {
@@ -311,53 +303,6 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                 </div>
              </div>
 
-             {/* Expanded Table Section */}
-             {activeFilter && (
-                 <div id="expanded-list" className="animate-slide-up bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden ring-4 ring-slate-100 scroll-mt-20">
-                     <div className="flex justify-between items-center px-4 py-3 bg-slate-50 border-b border-slate-200">
-                         <div className="flex items-center gap-2">
-                             <h3 className="text-sm font-bold text-slate-700 uppercase">
-                                 DANH SÁCH: {activeFilter.value || 'TẤT CẢ'}
-                             </h3>
-                             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
-                                 {filteredReportsForTable.length}
-                             </span>
-                         </div>
-                         <button onClick={() => setActiveFilter(null)} className="text-xs text-slate-500 hover:text-red-500 font-bold px-3 py-1 bg-white border border-slate-200 rounded-lg hover:bg-red-50 transition-colors">
-                             Đóng
-                         </button>
-                     </div>
-                     <div className="max-h-[500px] overflow-y-auto">
-                        <table className="min-w-full divide-y divide-slate-100">
-                            <thead className="bg-slate-50 sticky top-0 z-10">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Ngày</th>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Mã SP</th>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Tên SP</th>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Lỗi</th>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-slate-100">
-                                {filteredReportsForTable.map(r => (
-                                    <tr key={r.id} onClick={() => onSelectReport(r)} className="hover:bg-blue-50/50 cursor-pointer">
-                                        <td className="px-4 py-3 text-sm text-slate-600 font-medium">{new Date(r.ngayPhanAnh).toLocaleDateString('en-GB')}</td>
-                                        <td className="px-4 py-3 text-sm font-bold text-slate-700">{r.maSanPham}</td>
-                                        <td className="px-4 py-3 text-sm text-slate-600">{r.tenThuongMai}</td>
-                                        <td className="px-4 py-3 text-sm text-slate-600">{r.loaiLoi}</td>
-                                        <td className="px-4 py-3 text-sm">
-                                            <span className={`px-2 py-0.5 rounded text-xs font-bold border ${r.trangThai === 'Hoàn thành' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                                                {r.trangThai}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                     </div>
-                 </div>
-             )}
-
              {/* SECTION 3: BRANDS & TOP PRODUCTS */}
              <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[300px]">
                   <div className="lg:col-span-8 flex flex-col gap-3 h-full">
@@ -418,8 +363,99 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                   </div>
              </div>
         </div>
+
+        {/* MODAL WINDOW FOR DRILL-DOWN LIST */}
+        {activeFilter && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+                <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-fade-in-up ring-1 ring-slate-900/5">
+                    {/* Modal Header */}
+                    <div className="flex justify-between items-center px-6 py-4 bg-white border-b border-slate-200">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <ListBulletIcon className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900 uppercase">
+                                    DANH SÁCH CHI TIẾT
+                                </h3>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-sm font-medium text-slate-500">Bộ lọc:</span>
+                                    <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 text-xs font-bold uppercase">
+                                        {activeFilter.value || 'TẤT CẢ'}
+                                    </span>
+                                    <span className="text-sm text-slate-400 mx-1">•</span>
+                                    <span className="text-sm font-bold text-slate-700">
+                                        {filteredReportsForTable.length} kết quả
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => setActiveFilter(null)} 
+                            className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-all active:scale-95"
+                        >
+                            <XIcon className="h-6 w-6" />
+                        </button>
+                    </div>
+
+                    {/* Modal Content (Table) */}
+                    <div className="flex-1 overflow-y-auto bg-slate-50">
+                        <table className="min-w-full divide-y divide-slate-200">
+                            <thead className="bg-white sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase w-32">Ngày</th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase w-40">Mã SP</th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Tên Sản phẩm</th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase w-48">Phân loại lỗi</th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase w-40">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-slate-100">
+                                {filteredReportsForTable.map(r => (
+                                    <tr 
+                                        key={r.id} 
+                                        onClick={() => onSelectReport(r)} 
+                                        className="hover:bg-blue-50/50 cursor-pointer transition-colors group"
+                                    >
+                                        <td className="px-6 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">
+                                            {new Date(r.ngayPhanAnh).toLocaleDateString('en-GB')}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm font-bold text-slate-700 whitespace-nowrap group-hover:text-blue-600 transition-colors">
+                                            {r.maSanPham}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-slate-800 font-medium">
+                                            {r.tenThuongMai}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
+                                            {r.loaiLoi || '-'}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm whitespace-nowrap">
+                                            <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${r.trangThai === 'Hoàn thành' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : r.trangThai === 'Mới' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                                                {r.trangThai}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filteredReportsForTable.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12 text-center text-slate-400 italic">
+                                            Không có dữ liệu cho bộ lọc này.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        )}
     </div>
   );
 }
 
 export default DashboardReport;
+const ListBulletIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+  </svg>
+);
