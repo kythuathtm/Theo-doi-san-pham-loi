@@ -444,7 +444,7 @@ export const App: React.FC = () => {
     XLSX.writeFile(workbook, fileName);
   };
   
-  const handleImportProducts = async (newProducts: any[]) => {
+  const handleImportProducts = async (newProducts: Product[]) => {
       try {
           // Chunking logic to avoid Firebase limit
           const chunkSize = 450; // Limit per batch
@@ -474,7 +474,7 @@ export const App: React.FC = () => {
       }
   };
 
-  const handleAddProduct = async (product: any) => {
+  const handleAddProduct = async (product: Product) => {
     try {
         await setDoc(doc(db, "products", product.maSanPham), product);
         showToast('Thêm sản phẩm thành công', 'success');
