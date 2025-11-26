@@ -61,6 +61,7 @@ export type PermissionField = 'general' | 'soLuongDoi' | 'loaiLoi' | 'nguyenNhan
 export interface RoleConfig {
   canCreate: boolean;
   canViewDashboard: boolean;
+  canDelete: boolean; // New permission field
   viewableDefectTypes: string[];
   editableFields: PermissionField[];
 }

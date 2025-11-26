@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { DefectReport, ToastType } from '../types';
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 export const useReports = (showToast: (msg: string, type: ToastType) => void) => {
   const [reports, setReports] = useState<DefectReport[]>([]);
@@ -63,10 +63,28 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
     }
   };
 
+  const deleteMultipleReports = async (ids: string[]) => {
+      try {
+          const batch = writeBatch(db);
+          ids.forEach(id => {
+              const ref = doc(db, "reports", id);
+              batch.delete(ref);
+          });
+          await batch.commit();
+          showToast(`Đã xóa ${ids.length} báo cáo.`, 'success');
+          return true;
+      } catch (error) {
+          console.error("Batch delete error:", error);
+          showToast("Lỗi khi xóa hàng loạt", "error");
+          return false;
+      }
+  }
+
   return {
     reports,
     isLoadingReports,
     saveReport,
-    deleteReport
+    deleteReport,
+    deleteMultipleReports
   };
 };

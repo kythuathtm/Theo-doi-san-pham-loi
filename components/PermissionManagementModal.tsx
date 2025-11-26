@@ -1,3 +1,5 @@
+
+
 import React, { useState } from 'react';
 import { UserRole, RoleConfig, RoleSettings, PermissionField } from '../types';
 import { XIcon, CheckCircleIcon, PlusIcon, TrashIcon, PencilIcon } from './Icons';
@@ -109,6 +111,7 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
           [newRoleName.trim()]: {
               canCreate: false,
               canViewDashboard: false,
+              canDelete: false,
               viewableDefectTypes: [],
               editableFields: []
           }
@@ -236,8 +239,9 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                     <thead className="bg-slate-100">
                         <tr>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-64 sticky left-0 bg-slate-100 z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)]">Vai trò</th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24">Thêm mới</th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24">Báo cáo</th>
+                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-20">Thêm mới</th>
+                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-20">Xóa</th>
+                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-20">Báo cáo</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[300px]">Các trường được phép chỉnh sửa</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[250px]">Loại lỗi được xem</th>
                         </tr>
@@ -295,6 +299,15 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                                             onChange={() => handleCheckboxChange(role, 'canCreate')}
                                             disabled={isAdmin}
                                             className="h-5 w-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 disabled:opacity-50"
+                                        />
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={config.canDelete || false} 
+                                            onChange={() => handleCheckboxChange(role, 'canDelete')}
+                                            disabled={isAdmin}
+                                            className="h-5 w-5 text-red-600 rounded border-slate-300 focus:ring-red-500 disabled:opacity-50"
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center">

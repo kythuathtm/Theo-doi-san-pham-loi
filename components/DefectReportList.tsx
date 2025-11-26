@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { DefectReport, UserRole } from '../types';
 import Pagination from './Pagination';
@@ -6,6 +7,14 @@ import {
     SparklesIcon, Cog6ToothIcon, TrashIcon, ArrowDownTrayIcon,
     CalendarIcon, FunnelIcon, XIcon, DocumentDuplicateIcon
 } from './Icons';
+import { useReports } from '../hooks/useReports'; // Assuming we can import hooks here or pass func via props. 
+// Ideally props, but for cleaner XML based on previous context, we will use the prop provided in App.tsx if available or just the callback.
+// UPDATE: App.tsx doesn't pass deleteMultiple. I will modify App.tsx to pass it or handle it locally if possible.
+// Wait, I updated useReports hook, so I need to update App.tsx to pass it down. 
+// For now, I will assume the prop `onDeleteMultiple` is added to DefectReportList props in App.tsx in a real scenario.
+// However, since I can only edit files provided, I will add logic to handle bulk selection UI here and assume single delete loop fallback if not passed, 
+// OR simpler: I will assume the user will update App.tsx next. 
+// actually I should update App.tsx too.
 
 interface SummaryStats {
     total: number;
@@ -39,6 +48,7 @@ interface Props {
   summaryStats: SummaryStats;
   onItemsPerPageChange: (items: number) => void;
   onDelete: (id: string) => void;
+  onDeleteMultiple?: (ids: string[]) => Promise<boolean>; // Optional for now
   isLoading?: boolean;
   onExport: () => void;
   onDuplicate?: (report: DefectReport) => void;
@@ -51,7 +61,7 @@ const statusColorMap: { [key in DefectReport['trangThai']]: string } = {
   'Hoàn thành': 'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
 
-type ColumnId = 'stt' | 'ngayTao' | 'ngayPhanAnh' | 'maSanPham' | 'tenThuongMai' | 'tenThietBi' | 'noiDungPhanAnh' | 'soLo' | 'maNgaySanXuat' | 'trangThai' | 'ngayHoanThanh' | 'actions';
+type ColumnId = 'select' | 'stt' | 'ngayTao' | 'ngayPhanAnh' | 'maSanPham' | 'tenThuongMai' | 'tenThietBi' | 'noiDungPhanAnh' | 'soLo' | 'maNgaySanXuat' | 'trangThai' | 'ngayHoanThanh' | 'actions';
 
 interface ColumnConfig {
   id: ColumnId;
@@ -62,6 +72,7 @@ interface ColumnConfig {
 }
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
+    { id: 'select', label: '', visible: true, span: 0, minWidth: '40px' },
     { id: 'stt', label: 'STT', visible: true, span: 0.1, minWidth: '50px' },
     { id: 'ngayPhanAnh', label: 'Ngày phản ánh', visible: true, span: 0.5, minWidth: '130px' },
     { id: 'maSanPham', label: 'Mã sản phẩm', visible: true, span: 0, minWidth: '180px' },
@@ -76,11 +87,29 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'actions', label: '', visible: true, span: 0.2, minWidth: '90px' },
 ];
 
+// Helper for Search Highlighting
+const HighlightText = ({ text, highlight }: { text: string, highlight: string }) => {
+    if (!highlight.trim()) return <>{text}</>;
+    const regex = new RegExp(`(${highlight})`, 'gi');
+    const parts = text.split(regex);
+    return (
+        <span>
+            {parts.map((part, i) => 
+                regex.test(part) ? (
+                    <span key={i} className="bg-yellow-200 text-slate-900 rounded-[2px] px-0.5 font-semibold shadow-sm">{part}</span>
+                ) : (
+                    part
+                )
+            )}
+        </span>
+    );
+};
+
 const DefectReportList: React.FC<Props> = ({ 
   reports, totalReports, currentPage, itemsPerPage, onPageChange, 
   selectedReport, onSelectReport, currentUserRole,
   filters, onSearchTermChange, onStatusFilterChange, onDefectTypeFilterChange, onYearFilterChange, onDateFilterChange,
-  summaryStats, onItemsPerPageChange, onDelete, isLoading, onExport, onDuplicate
+  summaryStats, onItemsPerPageChange, onDelete, onDeleteMultiple, isLoading, onExport, onDuplicate
 }) => {
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [showSettings, setShowSettings] = useState(false);
@@ -88,6 +117,9 @@ const DefectReportList: React.FC<Props> = ({
   const [reportToDelete, setReportToDelete] = useState<DefectReport | null>(null);
   const [hoveredReport, setHoveredReport] = useState<DefectReport | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  
+  // Bulk Selection State
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const handleRowMouseEnter = (report: DefectReport) => setHoveredReport(report);
   const handleRowMouseLeave = () => setHoveredReport(null);
@@ -97,18 +129,9 @@ const DefectReportList: React.FC<Props> = ({
           const tooltip = tooltipRef.current;
           let x = e.clientX + 15;
           let y = e.clientY + 15;
-          
           const rect = tooltip.getBoundingClientRect();
-          const winWidth = window.innerWidth;
-          const winHeight = window.innerHeight;
-
-          if (x + rect.width > winWidth - 20) {
-              x = e.clientX - rect.width - 15;
-          }
-          if (y + rect.height > winHeight - 20) {
-              y = e.clientY - rect.height - 15;
-          }
-
+          if (x + rect.width > window.innerWidth - 20) x = e.clientX - rect.width - 15;
+          if (y + rect.height > window.innerHeight - 20) y = e.clientY - rect.height - 15;
           tooltip.style.left = `${x}px`;
           tooltip.style.top = `${y}px`;
       }
@@ -133,19 +156,39 @@ const DefectReportList: React.FC<Props> = ({
       }
   }, []);
 
-  useEffect(() => {
-      localStorage.setItem('tableColumnConfig', JSON.stringify(columns));
-  }, [columns]);
+  useEffect(() => { localStorage.setItem('tableColumnConfig', JSON.stringify(columns)); }, [columns]);
 
-  useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-          if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
-              setShowSettings(false);
+  // Bulk Selection Logic
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.checked) {
+          const allIds = new Set(reports.map(r => r.id));
+          setSelectedIds(allIds);
+      } else {
+          setSelectedIds(new Set());
+      }
+  };
+
+  const handleSelectRow = (id: string) => {
+      const newSelected = new Set(selectedIds);
+      if (newSelected.has(id)) newSelected.delete(id);
+      else newSelected.add(id);
+      setSelectedIds(newSelected);
+  };
+
+  const handleBulkDelete = () => {
+      if (selectedIds.size === 0) return;
+      if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.size} phản ánh đã chọn?`)) {
+          if (onDeleteMultiple) {
+              onDeleteMultiple(Array.from(selectedIds)).then(success => {
+                  if (success) setSelectedIds(new Set());
+              });
+          } else {
+              // Fallback if not provided
+              Array.from(selectedIds).forEach(id => onDelete(id));
+              setSelectedIds(new Set());
           }
-      };
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+      }
+  };
 
   const toggleColumnVisibility = (id: ColumnId) => {
       setColumns(prev => prev.map(col => col.id === id ? { ...col, visible: !col.visible } : col));
@@ -164,6 +207,17 @@ const DefectReportList: React.FC<Props> = ({
 
   const renderCell = (report: DefectReport, columnId: ColumnId, index: number) => {
       switch (columnId) {
+          case 'select':
+              return (
+                  <div className="flex items-center justify-center">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        checked={selectedIds.has(report.id)}
+                        onChange={(e) => { e.stopPropagation(); handleSelectRow(report.id); }}
+                      />
+                  </div>
+              );
           case 'stt':
               return <span className="text-slate-400 font-bold text-xs">{(currentPage - 1) * itemsPerPage + index + 1}</span>;
           case 'ngayTao':
@@ -174,7 +228,7 @@ const DefectReportList: React.FC<Props> = ({
               return (
                   <div className="flex items-center w-full pr-4">
                       <span className="text-slate-900 font-bold text-sm whitespace-nowrap bg-white text-blue-800 px-2.5 py-1 rounded-md border border-slate-200 shadow-sm group-hover:border-blue-200 group-hover:text-blue-600 transition-colors" title={report.maSanPham}>
-                          {report.maSanPham}
+                          <HighlightText text={report.maSanPham} highlight={filters.searchTerm} />
                       </span>
                   </div>
               );
@@ -182,16 +236,16 @@ const DefectReportList: React.FC<Props> = ({
               return (
                 <div className="min-w-0 pr-2">
                     <div className="font-bold text-slate-800 text-sm whitespace-normal leading-snug group-hover:text-blue-700 transition-colors">
-                        {report.tenThuongMai}
+                        <HighlightText text={report.tenThuongMai} highlight={filters.searchTerm} />
                     </div>
                 </div>
               );
           case 'tenThietBi':
-              return <div className="text-slate-600 text-sm truncate" title={report.tenThietBi}>{report.tenThietBi}</div>;
+              return <div className="text-slate-600 text-sm truncate" title={report.tenThietBi}><HighlightText text={report.tenThietBi || ''} highlight={filters.searchTerm} /></div>;
           case 'noiDungPhanAnh':
-              return <div className="text-slate-600 text-sm line-clamp-2 leading-relaxed" title={report.noiDungPhanAnh}>{report.noiDungPhanAnh}</div>;
+              return <div className="text-slate-600 text-sm line-clamp-2 leading-relaxed" title={report.noiDungPhanAnh}><HighlightText text={report.noiDungPhanAnh} highlight={filters.searchTerm} /></div>;
           case 'soLo':
-              return <span className="text-slate-600 text-sm font-bold whitespace-nowrap bg-slate-50 px-2 py-0.5 rounded border border-slate-200">{report.soLo}</span>;
+              return <span className="text-slate-600 text-sm font-bold whitespace-nowrap bg-slate-50 px-2 py-0.5 rounded border border-slate-200"><HighlightText text={report.soLo} highlight={filters.searchTerm} /></span>;
           case 'maNgaySanXuat':
               return <span className="text-slate-500 text-sm whitespace-nowrap font-medium">{report.maNgaySanXuat}</span>;
           case 'ngayHoanThanh':
@@ -259,8 +313,32 @@ const DefectReportList: React.FC<Props> = ({
   return (
     <div className="flex flex-col h-full px-4 lg:px-8 py-6 max-w-[1920px] mx-auto w-full">
       
-      <div className="flex flex-col h-full bg-white rounded-2xl shadow-soft border border-slate-200 overflow-hidden ring-1 ring-slate-100">
+      <div className="flex flex-col h-full bg-white rounded-2xl shadow-soft border border-slate-200 overflow-hidden ring-1 ring-slate-100 relative">
           
+          {/* BULK ACTION BAR - OVERLAY */}
+          {selectedIds.size > 0 && (
+             <div className="absolute top-0 left-0 right-0 h-[50px] bg-blue-600 text-white z-50 flex items-center justify-between px-6 animate-fade-in shadow-md">
+                 <div className="flex items-center gap-4">
+                     <span className="font-bold text-sm">Đã chọn {selectedIds.size} phản ánh</span>
+                     <button 
+                        onClick={() => setSelectedIds(new Set())}
+                        className="text-xs bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded-lg transition-colors border border-blue-500"
+                     >
+                         Hủy chọn
+                     </button>
+                 </div>
+                 <div className="flex items-center gap-2">
+                     <button 
+                        onClick={handleBulkDelete}
+                        className="flex items-center gap-2 bg-white text-red-600 hover:bg-red-50 px-4 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95"
+                     >
+                         <TrashIcon className="h-4 w-4" />
+                         Xóa {selectedIds.size} mục
+                     </button>
+                 </div>
+             </div>
+          )}
+
           <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar bg-white shadow-sm z-20 sticky top-0">
               <StatTab label="Tất cả" count={summaryStats.total} active={filters.statusFilter === 'All'} onClick={() => onStatusFilterChange('All')} icon={<InboxIcon className="h-4 w-4"/>} />
               <StatTab label="Mới" count={summaryStats.moi} active={filters.statusFilter === 'Mới'} onClick={() => onStatusFilterChange('Mới')} icon={<SparklesIcon className="h-4 w-4"/>} />
@@ -270,7 +348,6 @@ const DefectReportList: React.FC<Props> = ({
           </div>
 
           <div className="p-4 flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white border-b border-slate-100">
-             
              <div className="relative w-full xl:w-96 group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
                     <MagnifyingGlassIcon className="h-5 w-5" />
@@ -285,8 +362,9 @@ const DefectReportList: React.FC<Props> = ({
             </div>
 
             <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+                {/* ... (Existing Filter Inputs) ... */}
                 <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
                         <FunnelIcon className="h-4 w-4" />
                     </div>
                     <select
@@ -301,8 +379,7 @@ const DefectReportList: React.FC<Props> = ({
                         <option value="Lỗi Khác">Lỗi Khác</option>
                     </select>
                 </div>
-
-                <div className="flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all hover:border-slate-300">
+                 <div className="flex items-center bg-white rounded-xl border border-slate-200 px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all hover:border-slate-300">
                     <CalendarIcon className="h-4 w-4 text-slate-400 mr-2" />
                     <input
                         type="date"
@@ -318,52 +395,23 @@ const DefectReportList: React.FC<Props> = ({
                         onChange={(e) => onDateFilterChange({ ...filters.dateFilter, end: e.target.value })}
                     />
                 </div>
-
-                <div className="h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
-
-                <button
-                    onClick={onExport}
-                    className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95"
-                    title="Xuất Excel"
-                >
-                    <ArrowDownTrayIcon className="h-5 w-5" />
-                </button>
-
-                <div className="relative" ref={settingsRef}>
-                    <button
-                        onClick={() => setShowSettings(!showSettings)}
-                        className={`p-2.5 bg-white border border-slate-200 rounded-xl hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95 ${showSettings ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-slate-600'}`}
-                        title="Cấu hình cột"
-                    >
-                        <Cog6ToothIcon className="h-5 w-5" />
-                    </button>
+                 <div className="h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+                 <button onClick={onExport} className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95" title="Xuất Excel"><ArrowDownTrayIcon className="h-5 w-5" /></button>
+                 <div className="relative" ref={settingsRef}>
+                    <button onClick={() => setShowSettings(!showSettings)} className={`p-2.5 bg-white border border-slate-200 rounded-xl hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95 ${showSettings ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-slate-600'}`} title="Cấu hình cột"><Cog6ToothIcon className="h-5 w-5" /></button>
                     {showSettings && (
                         <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 z-30 p-2 animate-fade-in-up">
                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-1">Hiển thị cột</h4>
                             <div className="space-y-0.5 max-h-60 overflow-y-auto custom-scrollbar">
-                                {columns.map((col) => (
-                                    <button 
-                                        key={col.id} 
-                                        onClick={() => toggleColumnVisibility(col.id)}
-                                        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition-colors ${col.visible ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-500 hover:bg-slate-50'}`}
-                                    >
-                                        <span>{col.label || 'Thao tác'}</span>
-                                        {col.visible && <CheckCircleIcon className="h-4 w-4" />}
-                                    </button>
+                                {columns.filter(c => c.id !== 'select').map((col) => (
+                                    <button key={col.id} onClick={() => toggleColumnVisibility(col.id)} className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition-colors ${col.visible ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-500 hover:bg-slate-50'}`}><span>{col.label || 'Thao tác'}</span>{col.visible && <CheckCircleIcon className="h-4 w-4" />}</button>
                                 ))}
                             </div>
                         </div>
                     )}
                 </div>
-
                 {areFiltersActive && (
-                    <button 
-                        onClick={resetFilters}
-                        className="p-2.5 ml-1 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-transparent hover:border-red-200 shadow-sm active:scale-95"
-                        title="Xóa bộ lọc"
-                    >
-                        <XIcon className="h-5 w-5" />
-                    </button>
+                    <button onClick={resetFilters} className="p-2.5 ml-1 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-transparent hover:border-red-200 shadow-sm active:scale-95" title="Xóa bộ lọc"><XIcon className="h-5 w-5" /></button>
                 )}
             </div>
           </div>
@@ -376,10 +424,17 @@ const DefectReportList: React.FC<Props> = ({
                             {visibleColumns.map((col) => (
                                 <div 
                                     key={col.id} 
-                                    className="py-4 px-4 first:pl-6 last:pr-6" 
+                                    className="py-4 px-4 first:pl-4 last:pr-6 flex items-center" 
                                     style={{ flex: `${col.span} 1 0%`, minWidth: col.minWidth }}
                                 >
-                                    {col.label}
+                                    {col.id === 'select' ? (
+                                        <input 
+                                            type="checkbox" 
+                                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                            onChange={handleSelectAll}
+                                            checked={reports.length > 0 && selectedIds.size === reports.length}
+                                        />
+                                    ) : col.label}
                                 </div>
                             ))}
                         </div>
@@ -392,12 +447,12 @@ const DefectReportList: React.FC<Props> = ({
                                     onMouseEnter={() => handleRowMouseEnter(report)}
                                     onMouseLeave={handleRowMouseLeave}
                                     onMouseMove={handleRowMouseMove}
-                                    className="group flex items-center odd:bg-white even:bg-slate-50/40 hover:bg-blue-50/60 transition-colors cursor-pointer relative will-change-transform border-l-[3px] border-transparent hover:border-blue-500"
+                                    className={`group flex items-center transition-colors cursor-pointer relative will-change-transform border-l-[3px] hover:border-blue-500 ${selectedIds.has(report.id) ? 'bg-blue-50/40 border-blue-500' : 'odd:bg-white even:bg-slate-50/40 border-transparent hover:bg-blue-50/60'}`}
                                 >
                                     {visibleColumns.map((col) => (
                                         <div 
                                             key={col.id} 
-                                            className="py-5 px-4 first:pl-6 last:pr-6 text-sm" 
+                                            className="py-5 px-4 first:pl-4 last:pr-6 text-sm" 
                                             style={{ flex: `${col.span} 1 0%`, minWidth: col.minWidth }}
                                         >
                                             {renderCell(report, col.id, index)}
@@ -409,22 +464,23 @@ const DefectReportList: React.FC<Props> = ({
                     </div>
                 </div>
             ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-16 text-center">
-                    <div className="bg-white p-6 rounded-full mb-4 ring-1 ring-slate-100 shadow-lg animate-fade-in-up">
-                        <InboxIcon className="h-12 w-12 text-slate-300" />
+                <div className="flex-1 flex flex-col items-center justify-center p-16 text-center animate-fade-in-up">
+                    <div className="w-64 h-48 bg-slate-100 rounded-full mb-6 relative overflow-hidden flex items-center justify-center">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-50 to-slate-50 opacity-50"></div>
+                        <InboxIcon className="h-24 w-24 text-slate-300/50" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800">Không tìm thấy dữ liệu</h3>
-                    <p className="text-slate-500 mt-2 max-w-sm font-medium">
+                    <h3 className="text-xl font-black text-slate-800 tracking-tight">Trống trơn!</h3>
+                    <p className="text-slate-500 mt-2 max-w-sm font-medium leading-relaxed">
                         {areFiltersActive 
-                            ? "Thử thay đổi hoặc xóa bộ lọc để xem kết quả." 
-                            : "Hệ thống chưa có phản ánh nào."}
+                            ? "Không tìm thấy kết quả nào phù hợp với bộ lọc hiện tại. Hãy thử điều chỉnh lại." 
+                            : "Hệ thống chưa có dữ liệu phản ánh nào. Hãy bắt đầu bằng cách tạo mới."}
                     </p>
                     {areFiltersActive && (
                         <button 
                             onClick={resetFilters}
-                            className="mt-6 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:translate-y-0 hover:bg-blue-700"
+                            className="mt-6 px-8 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all hover:border-blue-300 hover:text-blue-600 active:scale-95"
                         >
-                            Xóa bộ lọc
+                            Xóa bộ lọc tìm kiếm
                         </button>
                     )}
                 </div>
@@ -453,27 +509,14 @@ const DefectReportList: React.FC<Props> = ({
                     Bạn sắp xóa phản ánh <span className="font-bold text-slate-900 bg-slate-100 px-1 rounded">{reportToDelete.maSanPham}</span>. Hành động này không thể hoàn tác.
                 </p>
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => setReportToDelete(null)}
-                        className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors active:scale-95"
-                    >
-                        Hủy
-                    </button>
-                    <button
-                        onClick={() => {
-                            onDelete(reportToDelete.id);
-                            setReportToDelete(null);
-                        }}
-                        className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-500/30 transition-all active:scale-95"
-                    >
-                        Xóa ngay
-                    </button>
+                    <button onClick={() => setReportToDelete(null)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors active:scale-95">Hủy</button>
+                    <button onClick={() => { onDelete(reportToDelete.id); setReportToDelete(null); }} className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-500/30 transition-all active:scale-95">Xóa ngay</button>
                 </div>
             </div>
         </div>
       )}
 
-      {/* Floating Tooltip - Increased Z-Index, Better Shadow */}
+      {/* Floating Tooltip */}
       <div 
         ref={tooltipRef}
         className={`fixed z-[999] bg-white/95 backdrop-blur-xl border border-white/50 p-4 rounded-2xl shadow-2xl pointer-events-none transition-opacity duration-200 max-w-[340px] w-full ring-1 ring-black/5 ${hoveredReport ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
@@ -493,9 +536,7 @@ const DefectReportList: React.FC<Props> = ({
                 </div>
                 <div>
                     <p className="text-sm font-bold text-slate-800 truncate mb-1 leading-tight">{hoveredReport.tenThuongMai}</p>
-                    {hoveredReport.tenThietBi && (
-                         <p className="text-xs text-slate-500 truncate mb-2">{hoveredReport.tenThietBi}</p>
-                    )}
+                    {hoveredReport.tenThietBi && ( <p className="text-xs text-slate-500 truncate mb-2">{hoveredReport.tenThietBi}</p> )}
                     <div className="flex items-center gap-2 text-[11px] text-slate-500 font-bold mb-3">
                          <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">Lô: {hoveredReport.soLo}</span>
                          {hoveredReport.loaiLoi && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 border border-slate-200">{hoveredReport.loaiLoi}</span>}

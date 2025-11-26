@@ -32,14 +32,26 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   
   const [errors, setErrors] = useState<Partial<Record<keyof Omit<DefectReport, 'id'>, string>>>({});
   const [isProductInfoLocked, setIsProductInfoLocked] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const productCodeInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to handle closing with confirmation
+  const handleCloseAttempt = () => {
+      if (isDirty) {
+          if (window.confirm("Bạn có thông tin chưa được lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thay đổi?")) {
+              onClose();
+          }
+      } else {
+          onClose();
+      }
+  };
 
   // Keyboard Shortcuts Handler
   useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
           // Esc to Close
           if (e.key === 'Escape') {
-              onClose();
+              handleCloseAttempt();
           }
           // Ctrl + Enter to Save
           if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -51,7 +63,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [formData]); // Dependency on formData to ensure latest state is submitted
+  }, [formData, isDirty]); // Add isDirty to dependency
 
   // --- AUTO COMPLETE LOGIC ---
   useEffect(() => {
@@ -67,6 +79,8 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             trangThai: 'Hoàn thành',
             ngayHoanThanh: prev.ngayHoanThanh || getTodayDateString()
         }));
+        // Note: Auto-updates imply the form is dirty if it wasn't already, but usually 
+        // this is triggered by user input which sets dirty anyway.
     }
   }, [formData.nguyenNhan, formData.huongKhacPhuc, formData.soLuongDoi]);
 
@@ -161,11 +175,14 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
       setFormData(prev => ({ ...prev, ngayPhanAnh: getTodayDateString() }));
       setIsProductInfoLocked(false);
     }
+    setIsDirty(false); // Reset dirty state when initial data loads
   }, [initialData, products]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
+    setIsDirty(true); // Mark form as dirty on any change
+
     setFormData(prev => {
         const newState = { ...prev };
         
@@ -304,7 +321,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline-block text-xs text-slate-400 bg-slate-50 border border-slate-100 px-2 py-1 rounded font-medium">ESC để đóng</span>
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-all active:scale-95">
+            <button onClick={handleCloseAttempt} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-all active:scale-95">
                 <XIcon className="h-6 w-6" />
             </button>
           </div>
@@ -531,7 +548,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
               <span className="font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">Ctrl + Enter</span> để Lưu
           </div>
           <div className="flex gap-3">
-             <button onClick={onClose} className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm active:scale-95">
+             <button onClick={handleCloseAttempt} className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm active:scale-95">
                 Hủy bỏ
             </button>
             <button 

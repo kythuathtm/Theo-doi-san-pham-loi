@@ -1,8 +1,8 @@
 
-import React, { useState, useMemo, useEffect, useTransition, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useTransition, Suspense, useCallback } from 'react';
 import { DefectReport, UserRole, ToastType, PermissionField } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon } from './components/Icons';
-import * as XLSX from 'xlsx';
+// REMOVED STATIC IMPORT: import * as XLSX from 'xlsx'; -> Moved to dynamic import inside handler
 import Loading from './components/Loading';
 
 // Custom Hooks
@@ -57,18 +57,28 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   );
 };
 
+// Specialized Loading for Modals/Lazy Components
+const ModalLoading = () => (
+  <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/20 backdrop-blur-sm transition-opacity">
+     <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-fade-in-up ring-1 ring-black/5">
+         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-3"></div>
+         <span className="text-sm font-bold text-slate-700">Đang tải dữ liệu...</span>
+     </div>
+  </div>
+);
+
 // --- Main App Component ---
 
 export const App: React.FC = () => {
   // Global Toast Handler
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-  const showToast = (message: string, type: ToastType) => {
+  const showToast = useCallback((message: string, type: ToastType) => {
     setToast({ message, type });
-  };
+  }, []);
 
   // --- Using Custom Hooks ---
   const { currentUser, users, login, logout, saveUser, deleteUser } = useAuth(showToast);
-  const { reports, isLoadingReports, saveReport, deleteReport } = useReports(showToast);
+  const { reports, isLoadingReports, saveReport, deleteReport, deleteMultipleReports } = useReports(showToast);
   const { products, addProduct, deleteProduct, deleteAllProducts, importProducts } = useProducts(showToast);
   const { roleSettings, systemSettings, saveRoleSettings, saveSystemSettings, renameRole } = useSettings(showToast);
 
@@ -96,13 +106,12 @@ export const App: React.FC = () => {
   const [isPending, startTransition] = useTransition();
 
   // Safety loading
-  const isLoadingDB = isLoadingReports; // simplified global loading
+  const isLoadingDB = isLoadingReports; 
 
   // Derived State for Permission Checking
   const userPermissions = useMemo(() => {
     if (!currentUser) return { canCreate: false, canEdit: false, canDelete: false };
     const role = currentUser.role;
-    // @ts-ignore
     const config = roleSettings[role]; 
     
     if (!config) {
@@ -111,14 +120,13 @@ export const App: React.FC = () => {
 
     return {
       canCreate: config.canCreate,
-      canEdit: ([UserRole.Admin, UserRole.KyThuat, UserRole.CungUng, UserRole.SanXuat] as string[]).includes(role),
-      canDelete: ([UserRole.Admin, UserRole.KyThuat] as string[]).includes(role),
+      canEdit: config.editableFields && config.editableFields.length > 0,
+      canDelete: config.canDelete || false,
     };
   }, [currentUser, roleSettings]);
 
   const canViewDashboard = useMemo(() => {
      if (!currentUser) return false;
-     // @ts-ignore
      const config = roleSettings[currentUser.role];
      return config ? config.canViewDashboard : false;
   }, [currentUser, roleSettings]);
@@ -130,7 +138,6 @@ export const App: React.FC = () => {
     let result = reports;
 
     if (currentUser) {
-        // @ts-ignore
         const config = roleSettings[currentUser.role];
         if (config && !config.viewableDefectTypes.includes('All')) {
             result = result.filter(r => config.viewableDefectTypes.includes(r.loaiLoi));
@@ -160,20 +167,21 @@ export const App: React.FC = () => {
         result = result.filter((r) => r.loaiLoi === defectTypeFilter);
     }
 
-    if (yearFilter !== 'All') {
+    // Year vs Date Logic: If Date Filter is active, ignore Year Filter
+    if (dateFilter.start || dateFilter.end) {
+        if (dateFilter.start) {
+          result = result.filter((r) => r.ngayPhanAnh >= dateFilter.start);
+        }
+        if (dateFilter.end) {
+          result = result.filter((r) => r.ngayPhanAnh <= dateFilter.end);
+        }
+    } else if (yearFilter !== 'All') {
+        // Only apply Year Filter if no Date Filter
         result = result.filter((r) => {
             if (!r.ngayPhanAnh) return false;
             const year = new Date(r.ngayPhanAnh).getFullYear().toString();
             return year === yearFilter;
         });
-    }
-
-    if (dateFilter.start) {
-      result = result.filter((r) => r.ngayPhanAnh >= dateFilter.start);
-    }
-
-    if (dateFilter.end) {
-      result = result.filter((r) => r.ngayPhanAnh <= dateFilter.end);
     }
 
     return result;
@@ -210,12 +218,12 @@ export const App: React.FC = () => {
 
   // Actions Handlers
 
-  const onLogin = (user: any) => {
+  const onLogin = useCallback((user: any) => {
       login(user);
       setCurrentView('list');
-  };
+  }, [login]);
 
-  const onLogout = () => {
+  const onLogout = useCallback(() => {
       logout();
       setSelectedReport(null);
       setIsFormOpen(false);
@@ -223,29 +231,29 @@ export const App: React.FC = () => {
       setIsProductModalOpen(false);
       setIsPermissionModalOpen(false);
       setIsSystemSettingsModalOpen(false);
-  };
+  }, [logout]);
 
-  const onSaveReport = async (report: DefectReport) => {
+  const onSaveReport = useCallback(async (report: DefectReport) => {
       const success = await saveReport(report, !!(editingReport && report.id && !report.id.startsWith('new_')));
       if(success) {
           setIsFormOpen(false);
           setEditingReport(null);
           setSelectedReport(null);
       }
-  };
+  }, [editingReport, saveReport]);
   
-  const onDeleteReport = async (id: string) => {
+  const onDeleteReport = useCallback(async (id: string) => {
       const success = await deleteReport(id);
       if(success && selectedReport?.id === id) setSelectedReport(null);
-  };
+  }, [deleteReport, selectedReport]);
 
-  const handleEditClick = (report: DefectReport) => {
+  const handleEditClick = useCallback((report: DefectReport) => {
     setEditingReport(report);
     setIsFormOpen(true);
     setSelectedReport(null); 
-  };
+  }, []);
   
-  const handleDuplicateReport = (report: DefectReport) => {
+  const handleDuplicateReport = useCallback((report: DefectReport) => {
       const duplicatedReport: DefectReport = {
           ...report,
           id: 'new_' + Date.now(), 
@@ -260,60 +268,89 @@ export const App: React.FC = () => {
       setEditingReport(duplicatedReport);
       setIsFormOpen(true);
       showToast('Đã sao chép thông tin vào form tạo mới.', 'info');
-  };
+  }, [showToast]);
 
-  const handleCreateClick = () => {
+  const handleCreateClick = useCallback(() => {
     setEditingReport(null);
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const handleExportData = () => {
-    const dataToExport = filteredReports.map(r => ({
-        'ID': r.id,
-        'Ngày tạo': r.ngayTao ? new Date(r.ngayTao).toLocaleDateString('en-GB') + ' ' + new Date(r.ngayTao).toLocaleTimeString('en-GB') : '',
-        'Ngày phản ánh': new Date(r.ngayPhanAnh).toLocaleDateString('en-GB'),
-        'Mã sản phẩm': r.maSanPham,
-        'Dòng sản phẩm': r.dongSanPham,
-        'Tên thương mại': r.tenThuongMai,
-        'Nhãn hàng': r.nhanHang || '',
-        'Nhà phân phối': r.nhaPhanPhoi,
-        'Đơn vị sử dụng': r.donViSuDung,
-        'Nội dung phản ánh': r.noiDungPhanAnh,
-        'Số lô': r.soLo,
-        'Mã ngày sản xuất': r.maNgaySanXuat,
-        'Số lượng lỗi': r.soLuongLoi,
-        'Số lượng đã nhập': r.soLuongDaNhap,
-        'Số lượng đổi': r.soLuongDoi,
-        'Nguyên nhân': r.nguyenNhan || '',
-        'Hướng khắc phục': r.huongKhacPhuc || '',
-        'Trạng thái': r.trangThai,
-        'Ngày hoàn thành': r.ngayHoanThanh ? new Date(r.ngayHoanThanh).toLocaleDateString('en-GB') : '',
-        'Loại lỗi': r.loaiLoi || ''
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "BaoCao");
-    const fileName = `bao_cao_san_pham_loi_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+  // Optimized: Dynamic Import of XLSX
+  const handleExportData = async () => {
+    showToast('Đang xử lý dữ liệu xuất...', 'info');
+    try {
+        // Dynamically import xlsx only when needed to reduce initial bundle size
+        const XLSX = await import('xlsx');
+
+        const dataToExport = filteredReports.map(r => ({
+            'ID': r.id,
+            'Ngày tạo': r.ngayTao ? new Date(r.ngayTao).toLocaleDateString('en-GB') + ' ' + new Date(r.ngayTao).toLocaleTimeString('en-GB') : '',
+            'Ngày phản ánh': new Date(r.ngayPhanAnh).toLocaleDateString('en-GB'),
+            'Mã sản phẩm': r.maSanPham,
+            'Dòng sản phẩm': r.dongSanPham,
+            'Tên thương mại': r.tenThuongMai,
+            'Nhãn hàng': r.nhanHang || '',
+            'Nhà phân phối': r.nhaPhanPhoi,
+            'Đơn vị sử dụng': r.donViSuDung,
+            'Nội dung phản ánh': r.noiDungPhanAnh,
+            'Số lô': r.soLo,
+            'Mã ngày sản xuất': r.maNgaySanXuat,
+            'Số lượng lỗi': r.soLuongLoi,
+            'Số lượng đã nhập': r.soLuongDaNhap,
+            'Số lượng đổi': r.soLuongDoi,
+            'Nguyên nhân': r.nguyenNhan || '',
+            'Hướng khắc phục': r.huongKhacPhuc || '',
+            'Trạng thái': r.trangThai,
+            'Ngày hoàn thành': r.ngayHoanThanh ? new Date(r.ngayHoanThanh).toLocaleDateString('en-GB') : '',
+            'Loại lỗi': r.loaiLoi || ''
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "BaoCao");
+        const fileName = `bao_cao_san_pham_loi_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+    } catch (error) {
+        console.error("Export error:", error);
+        showToast('Lỗi khi xuất dữ liệu. Vui lòng thử lại.', 'error');
+    }
   };
   
-  const handleImportProductsCallback = async (newProducts: any[]) => {
+  const handleImportProductsCallback = useCallback(async (newProducts: any[]) => {
       const success = await importProducts(newProducts);
       if(success) setIsProductModalOpen(false);
-  };
+  }, [importProducts]);
 
-  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+  const handleItemsPerPageChange = useCallback((newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSearchTermChange = (term: string) => startTransition(() => setSearchTerm(term));
-  const handleStatusFilterChange = (status: string) => startTransition(() => setStatusFilter(status));
-  const handleDefectTypeFilterChange = (type: string) => startTransition(() => setDefectTypeFilter(type));
-  const handleYearFilterChange = (year: string) => startTransition(() => setYearFilter(year));
-  const handleDateFilterChange = (dates: {start: string, end: string}) => startTransition(() => setDateFilter(dates));
+  const handleSearchTermChange = useCallback((term: string) => startTransition(() => setSearchTerm(term)), []);
+  const handleStatusFilterChange = useCallback((status: string) => startTransition(() => setStatusFilter(status)), []);
+  const handleDefectTypeFilterChange = useCallback((type: string) => startTransition(() => setDefectTypeFilter(type)), []);
   
-  const handleDashboardFilterSelect = (filterType: 'status' | 'defectType' | 'all' | 'search' | 'brand', value?: string) => {
+  const handleYearFilterChange = useCallback((year: string) => {
+      startTransition(() => {
+          setYearFilter(year);
+          // UX: Choosing a year should reset custom date range
+          if (year !== 'All') {
+            setDateFilter({ start: '', end: '' });
+          }
+      });
+  }, []);
+
+  const handleDateFilterChange = useCallback((dates: {start: string, end: string}) => {
+      startTransition(() => {
+          setDateFilter(dates);
+          // UX: Choosing a specific date range overrides year filter
+          if (dates.start || dates.end) {
+              setYearFilter('All');
+          }
+      });
+  }, []);
+  
+  const handleDashboardFilterSelect = useCallback((filterType: 'status' | 'defectType' | 'all' | 'search' | 'brand', value?: string) => {
       startTransition(() => {
           setYearFilter('All');
           if (filterType === 'search' && value) {
@@ -328,7 +365,7 @@ export const App: React.FC = () => {
               setCurrentView('list');
           }
       });
-  };
+  }, []);
 
   if (!currentUser) {
       return (
@@ -342,7 +379,6 @@ export const App: React.FC = () => {
       );
   }
 
-  // @ts-ignore
   const userRoleConfig = roleSettings[currentUser.role];
 
   return (
@@ -368,7 +404,7 @@ export const App: React.FC = () => {
                     <span className="text-xs font-semibold text-slate-500 mr-1 hidden sm:inline">Năm:</span>
                     <select 
                         value={yearFilter} 
-                        onChange={(e) => setYearFilter(e.target.value)}
+                        onChange={(e) => handleYearFilterChange(e.target.value)}
                         className="text-xs sm:text-sm font-bold text-blue-600 bg-transparent focus:outline-none cursor-pointer hover:text-blue-700"
                     >
                         <option value="All">Tất cả</option>
@@ -501,6 +537,7 @@ export const App: React.FC = () => {
                     selectedReport={selectedReport}
                     onSelectReport={setSelectedReport}
                     onDelete={onDeleteReport}
+                    onDeleteMultiple={userPermissions.canDelete ? deleteMultipleReports : undefined}
                     currentUserRole={currentUser.role}
                     filters={{ searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter }}
                     onSearchTermChange={handleSearchTermChange}
@@ -523,8 +560,8 @@ export const App: React.FC = () => {
         </Suspense>
       </main>
 
-      {/* Modals */}
-      <Suspense fallback={null}>
+      {/* Modals with Specialized Loading State */}
+      <Suspense fallback={<ModalLoading />}>
           {selectedReport && (
             <div className="fixed inset-0 z-50 flex justify-center items-center p-4 sm:p-6">
                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedReport(null)}></div>

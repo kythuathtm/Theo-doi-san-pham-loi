@@ -1,16 +1,17 @@
 
+
 import { useState, useEffect } from 'react';
 import { RoleSettings, SystemSettings, UserRole, ToastType } from '../types';
 import { db } from '../firebaseConfig';
 import { collection, onSnapshot, doc, setDoc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 
 const DEFAULT_ROLE_SETTINGS: RoleSettings = {
-    [UserRole.Admin]: { canCreate: true, canViewDashboard: true, viewableDefectTypes: ['All'], editableFields: ['general', 'soLuongDoi', 'loaiLoi', 'nguyenNhan', 'huongKhacPhuc', 'trangThai', 'ngayHoanThanh'] },
-    [UserRole.KyThuat]: { canCreate: true, canViewDashboard: true, viewableDefectTypes: ['All'], editableFields: ['general', 'soLuongDoi', 'loaiLoi', 'nguyenNhan', 'huongKhacPhuc', 'trangThai', 'ngayHoanThanh'] },
-    [UserRole.CungUng]: { canCreate: false, canViewDashboard: true, viewableDefectTypes: ['All'], editableFields: ['general', 'loaiLoi', 'trangThai'] },
-    [UserRole.TongGiamDoc]: { canCreate: false, canViewDashboard: true, viewableDefectTypes: ['All'], editableFields: [] },
-    [UserRole.SanXuat]: { canCreate: false, canViewDashboard: false, viewableDefectTypes: ['Lỗi Sản xuất', 'Lỗi Hỗn hợp'], editableFields: ['nguyenNhan', 'huongKhacPhuc'] },
-    [UserRole.Kho]: { canCreate: false, canViewDashboard: false, viewableDefectTypes: ['All'], editableFields: [] },
+    [UserRole.Admin]: { canCreate: true, canViewDashboard: true, canDelete: true, viewableDefectTypes: ['All'], editableFields: ['general', 'soLuongDoi', 'loaiLoi', 'nguyenNhan', 'huongKhacPhuc', 'trangThai', 'ngayHoanThanh'] },
+    [UserRole.KyThuat]: { canCreate: true, canViewDashboard: true, canDelete: true, viewableDefectTypes: ['All'], editableFields: ['general', 'soLuongDoi', 'loaiLoi', 'nguyenNhan', 'huongKhacPhuc', 'trangThai', 'ngayHoanThanh'] },
+    [UserRole.CungUng]: { canCreate: false, canViewDashboard: true, canDelete: false, viewableDefectTypes: ['All'], editableFields: ['general', 'loaiLoi', 'trangThai'] },
+    [UserRole.TongGiamDoc]: { canCreate: false, canViewDashboard: true, canDelete: false, viewableDefectTypes: ['All'], editableFields: [] },
+    [UserRole.SanXuat]: { canCreate: false, canViewDashboard: false, canDelete: false, viewableDefectTypes: ['Lỗi Sản xuất', 'Lỗi Hỗn hợp'], editableFields: ['nguyenNhan', 'huongKhacPhuc'] },
+    [UserRole.Kho]: { canCreate: false, canViewDashboard: false, canDelete: false, viewableDefectTypes: ['All'], editableFields: [] },
 };
 
 const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
