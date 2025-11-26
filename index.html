@@ -42,6 +42,7 @@
               'fade-in': 'fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               'fade-in-up': 'fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               'slide-up': 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              'slide-up-fade': 'slideUpFade 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'blob': 'blob 7s infinite',
             },
@@ -56,6 +57,10 @@
               },
               slideUp: {
                 '0%': { transform: 'translateY(20px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              },
+              slideUpFade: {
+                '0%': { transform: 'translateY(40px)', opacity: '0' },
                 '100%': { transform: 'translateY(0)', opacity: '1' },
               },
               blob: {

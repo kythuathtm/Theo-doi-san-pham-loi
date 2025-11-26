@@ -40,7 +40,6 @@ interface Props {
   summaryStats: SummaryStats;
   onItemsPerPageChange: (items: number) => void;
   onDelete: (id: string) => void;
-  onDeleteMultiple?: (ids: string[]) => Promise<boolean>;
   isLoading?: boolean;
   onExport: () => void;
   onDuplicate?: (report: DefectReport) => void;
@@ -61,19 +60,20 @@ interface ColumnConfig {
   visible: boolean;
   width: number;
   align?: 'left' | 'center' | 'right';
+  fixed?: boolean; // Cannot toggle visibility
 }
 
 // Optimized widths for single-page view with 2-line height constraint
 const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'stt', label: 'STT', visible: true, width: 50, align: 'center' },
-    { id: 'ngayPhanAnh', label: 'Ngày P.Ánh', visible: true, width: 100, align: 'left' },
-    { id: 'maSanPham', label: 'Mã SP', visible: true, width: 90, align: 'left' },
+    { id: 'ngayPhanAnh', label: 'Ngày P.Ánh', visible: true, width: 110, align: 'left' },
+    { id: 'maSanPham', label: 'Mã SP', visible: true, width: 120, align: 'left' },
     { id: 'tenThuongMai', label: 'Tên thương mại', visible: true, width: 250, align: 'left' },
     { id: 'noiDungPhanAnh', label: 'Nội dung phản ánh', visible: true, width: 350, align: 'left' },
-    { id: 'soLo', label: 'Số lô', visible: true, width: 90, align: 'left' },
-    { id: 'maNgaySanXuat', label: 'Mã NSX', visible: true, width: 90, align: 'left' },
-    { id: 'trangThai', label: 'Trạng thái', visible: true, width: 130, align: 'left' },
-    { id: 'actions', label: '', visible: true, width: 80, align: 'center' },
+    { id: 'soLo', label: 'Số lô', visible: true, width: 100, align: 'left' },
+    { id: 'maNgaySanXuat', label: 'Mã NSX', visible: true, width: 100, align: 'left' },
+    { id: 'trangThai', label: 'Trạng thái', visible: true, width: 180, align: 'left' },
+    { id: 'actions', label: '', visible: true, width: 80, align: 'center', fixed: true },
 ];
 
 const HighlightText = ({ text, highlight }: { text: string, highlight: string }) => {
@@ -114,7 +114,7 @@ const DefectReportList: React.FC<Props> = ({
   const [scrollTop, setScrollTop] = useState(0);
   const [containerHeight, setContainerHeight] = useState(600);
   
-  // Fixed ROW_HEIGHT for approx 2 lines of text (14px font * 1.5 line-height * 2 lines + padding)
+  // Fixed ROW_HEIGHT for approx 2 lines of text
   const ROW_HEIGHT = 72; 
 
   // --- RESIZING LOGIC ---
@@ -206,7 +206,7 @@ const DefectReportList: React.FC<Props> = ({
   };
 
   useEffect(() => {
-      const savedColumns = localStorage.getItem('tableColumnConfigV6'); // Bump version for layout change
+      const savedColumns = localStorage.getItem('tableColumnConfigV11'); // Bumped version
       if (savedColumns) {
           try {
               const parsedColumns = JSON.parse(savedColumns);
@@ -221,7 +221,7 @@ const DefectReportList: React.FC<Props> = ({
       }
   }, []);
 
-  useEffect(() => { localStorage.setItem('tableColumnConfigV6', JSON.stringify(columns)); }, [columns]);
+  useEffect(() => { localStorage.setItem('tableColumnConfigV11', JSON.stringify(columns)); }, [columns]);
 
   // Close settings on click outside
   useEffect(() => {
@@ -312,7 +312,7 @@ const DefectReportList: React.FC<Props> = ({
               );
           case 'trangThai':
               return (
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold whitespace-nowrap border ${statusColorMap[report.trangThai]}`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap border ${statusColorMap[report.trangThai]}`}>
                       {report.trangThai.toUpperCase()}
                   </span>
               );
@@ -371,7 +371,7 @@ const DefectReportList: React.FC<Props> = ({
   );
 
   return (
-    <div className="flex flex-col h-full px-4 lg:px-8 py-4 max-w-[1920px] mx-auto w-full">
+    <div className="flex flex-col h-full px-4 lg:px-8 py-4 max-w-[1920px] mx-auto w-full relative">
       
       <div className="flex flex-col h-full bg-white rounded-2xl shadow-soft border border-slate-200 overflow-hidden ring-1 ring-slate-100 relative">
           
@@ -440,7 +440,7 @@ const DefectReportList: React.FC<Props> = ({
                         <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 z-30 p-2 animate-fade-in-up">
                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-1">Hiển thị cột</h4>
                             <div className="space-y-0.5 max-h-60 overflow-y-auto custom-scrollbar">
-                                {columns.map((col) => (
+                                {columns.map((col) => !col.fixed && (
                                     <button key={col.id} onClick={() => toggleColumnVisibility(col.id)} className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition-colors ${col.visible ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-500 hover:bg-slate-50'}`}><span>{col.label || 'Thao tác'}</span>{col.visible && <CheckCircleIcon className="h-4 w-4" />}</button>
                                 ))}
                             </div>
@@ -469,7 +469,7 @@ const DefectReportList: React.FC<Props> = ({
                                 return (
                                     <div 
                                         key={col.id} 
-                                        className={`relative flex items-center px-4 h-full border-r border-transparent hover:border-slate-100 ${className}`} 
+                                        className={`relative flex items-center px-3 h-full border-r border-transparent hover:border-slate-100 ${className}`} 
                                         style={style}
                                     >
                                         {col.label}
@@ -504,14 +504,14 @@ const DefectReportList: React.FC<Props> = ({
                                         onMouseEnter={() => handleRowMouseEnter(report)}
                                         onMouseLeave={handleRowMouseLeave}
                                         onMouseMove={handleRowMouseMove}
-                                        className="group flex items-center transition-colors cursor-pointer border-b border-slate-100 hover:border-blue-500 hover:z-10 bg-white hover:bg-blue-50/60"
+                                        className={`group flex items-center transition-colors cursor-pointer border-b hover:z-10 bg-white border-slate-100 hover:border-blue-500 hover:bg-blue-50/60`}
                                     >
                                         {visibleColumns.map((col) => {
                                             const { className, style } = getColumnStyle(col);
                                             return (
                                                 <div 
                                                     key={col.id} 
-                                                    className={`px-4 h-full flex items-center overflow-hidden ${className}`} 
+                                                    className={`px-3 h-full flex items-center overflow-hidden ${className}`} 
                                                     style={style}
                                                 >
                                                     {renderCell(report, col.id, actualIndex)}
@@ -558,7 +558,7 @@ const DefectReportList: React.FC<Props> = ({
             </div>
           </div>
       </div>
-
+      
       {reportToDelete && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
             <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-fade-in-up border border-white/20">

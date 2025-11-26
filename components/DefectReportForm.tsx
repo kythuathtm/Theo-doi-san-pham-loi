@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
-import { XIcon, CheckCircleIcon, TagIcon, UserIcon, WrenchIcon, CheckCircleIcon as StatusIcon } from './Icons';
+import { XIcon, CheckCircleIcon, TagIcon, UserIcon, WrenchIcon, CheckCircleIcon as StatusIcon, LockClosedIcon } from './Icons';
 
 interface Props {
   initialData: DefectReport | null;
@@ -290,10 +290,12 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     const normal = "bg-white text-slate-800 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 placeholder-slate-400 shadow-sm hover:border-blue-300";
     const errorClass = errors[fieldName] ? "border-red-500 ring-2 ring-red-500/10 bg-red-50" : "";
     const disabled = isFieldDisabled(fieldName) ? "bg-slate-50 text-slate-500 border-slate-200 cursor-not-allowed shadow-none" : normal;
-    const readonly = isReadOnly ? "bg-slate-50 text-slate-600 border-slate-200 cursor-default focus:ring-0 shadow-none" : "";
+    
+    // Lock style for Product fields when locked
+    const locked = isReadOnly ? "bg-blue-50/50 text-slate-700 border-blue-200 cursor-not-allowed focus:ring-0 shadow-inner" : "";
     
     if (isFieldDisabled(fieldName)) return `${base} ${disabled}`;
-    if (isReadOnly) return `${base} ${readonly}`;
+    if (isReadOnly) return `${base} ${locked}`;
     return `${base} ${normal} ${errorClass}`;
   };
 
@@ -333,32 +335,46 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             
             {/* Left Column: Product & Customer */}
             <div className="md:col-span-7 space-y-8">
-                 <section className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                 <section className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden">
+                    {/* Visual cue for locked state */}
+                    {isProductInfoLocked && (
+                        <div className="absolute top-0 right-0 p-2 bg-blue-50 rounded-bl-xl border-l border-b border-blue-100 shadow-sm flex items-center gap-1.5 z-10">
+                            <LockClosedIcon className="w-3.5 h-3.5 text-blue-500" />
+                            <span className="text-[10px] font-bold text-blue-600 uppercase">Thông tin SP đã khóa</span>
+                        </div>
+                    )}
+                    
                     <SectionHeader title="Thông tin Sản phẩm" icon={<TagIcon className="h-4 w-4" />} />
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                          
                         <div className="sm:col-span-1">
                             <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Nhãn hàng <span className="text-red-500">*</span></label>
-                            <select name="nhanHang" value={formData.nhanHang} onChange={handleChange} className={getInputClasses('nhanHang')} disabled={isFieldDisabled('nhanHang')}>
-                                <option value="HTM">HTM</option>
-                                <option value="VMA">VMA</option>
-                                <option value="Khác">Khác</option>
-                            </select>
+                            <div className="relative">
+                                <select name="nhanHang" value={formData.nhanHang} onChange={handleChange} className={getInputClasses('nhanHang')} disabled={isFieldDisabled('nhanHang')}>
+                                    <option value="HTM">HTM</option>
+                                    <option value="VMA">VMA</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
                              <ErrorMessage field="nhanHang" />
                         </div>
                         <div className="sm:col-span-1">
                             <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Dòng sản phẩm <span className="text-red-500">*</span></label>
-                            <input 
-                                type="text" 
-                                name="dongSanPham" 
-                                list="product-lines"
-                                value={formData.dongSanPham} 
-                                onChange={handleChange} 
-                                placeholder="Chọn dòng sản phẩm..."
-                                className={getInputClasses('dongSanPham')} 
-                                disabled={isFieldDisabled('dongSanPham')}
-                            />
+                            <div className="relative">
+                                <input 
+                                    type="text" 
+                                    name="dongSanPham" 
+                                    list="product-lines"
+                                    value={formData.dongSanPham} 
+                                    onChange={handleChange} 
+                                    placeholder="Chọn dòng sản phẩm..."
+                                    className={getInputClasses('dongSanPham', isProductInfoLocked)} 
+                                    disabled={isFieldDisabled('dongSanPham')}
+                                    readOnly={isProductInfoLocked}
+                                />
+                                {isProductInfoLocked && <LockClosedIcon className="absolute right-3 top-3 w-4 h-4 text-blue-300" />}
+                            </div>
                             <datalist id="product-lines">
                                 {availableLines.map((line, idx) => <option key={idx} value={line} />)}
                             </datalist>
@@ -367,15 +383,19 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
                         <div className="sm:col-span-2">
                             <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Tên thiết bị y tế</label>
-                            <input 
-                                type="text" 
-                                name="tenThietBi" 
-                                list="device-names"
-                                value={formData.tenThietBi || ''} 
-                                onChange={handleChange} 
-                                className={getInputClasses('tenThietBi', isFieldDisabled('tenThietBi'))}
-                                placeholder="Chọn hoặc nhập tên thiết bị..."
-                            />
+                            <div className="relative">
+                                <input 
+                                    type="text" 
+                                    name="tenThietBi" 
+                                    list="device-names"
+                                    value={formData.tenThietBi || ''} 
+                                    onChange={handleChange} 
+                                    className={getInputClasses('tenThietBi', isProductInfoLocked || isFieldDisabled('tenThietBi'))}
+                                    placeholder="Chọn hoặc nhập tên thiết bị..."
+                                    readOnly={isProductInfoLocked}
+                                />
+                                {isProductInfoLocked && <LockClosedIcon className="absolute right-3 top-3 w-4 h-4 text-blue-300" />}
+                            </div>
                             <datalist id="device-names">
                                 {availableDeviceNames.map((name, idx) => <option key={idx} value={name} />)}
                             </datalist>
@@ -383,15 +403,19 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
                         <div className="sm:col-span-2">
                             <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Tên thương mại <span className="text-red-500">*</span></label>
-                            <input 
-                                type="text" 
-                                list="trade-names"
-                                name="tenThuongMai" 
-                                value={formData.tenThuongMai} 
-                                onChange={handleChange} 
-                                className={getInputClasses('tenThuongMai', isFieldDisabled('tenThuongMai'))}
-                                placeholder="Chọn tên sản phẩm..."
-                            />
+                            <div className="relative">
+                                <input 
+                                    type="text" 
+                                    list="trade-names"
+                                    name="tenThuongMai" 
+                                    value={formData.tenThuongMai} 
+                                    onChange={handleChange} 
+                                    className={getInputClasses('tenThuongMai', isProductInfoLocked || isFieldDisabled('tenThuongMai'))}
+                                    placeholder="Chọn tên sản phẩm..."
+                                    readOnly={isProductInfoLocked}
+                                />
+                                {isProductInfoLocked && <LockClosedIcon className="absolute right-3 top-3 w-4 h-4 text-blue-300" />}
+                            </div>
                             <datalist id="trade-names">
                                 {availableTradeNames.map((name, idx) => <option key={idx} value={name} />)}
                             </datalist>
@@ -400,17 +424,20 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
                          <div className="sm:col-span-1">
                             <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Mã sản phẩm <span className="text-red-500">*</span></label>
-                            <input 
-                                ref={productCodeInputRef} 
-                                type="text" 
-                                name="maSanPham" 
-                                value={formData.maSanPham} 
-                                onChange={handleChange} 
-                                required 
-                                placeholder="Tự động điền" 
-                                className={getInputClasses('maSanPham', isProductInfoLocked)} 
-                                readOnly={isProductInfoLocked || isFieldDisabled('maSanPham')}
-                            />
+                            <div className="relative">
+                                <input 
+                                    ref={productCodeInputRef} 
+                                    type="text" 
+                                    name="maSanPham" 
+                                    value={formData.maSanPham} 
+                                    onChange={handleChange} 
+                                    required 
+                                    placeholder="Tự động điền" 
+                                    className={getInputClasses('maSanPham', isProductInfoLocked)} 
+                                    readOnly={isProductInfoLocked || isFieldDisabled('maSanPham')}
+                                />
+                                {isProductInfoLocked && <LockClosedIcon className="absolute right-3 top-3 w-4 h-4 text-blue-300" />}
+                            </div>
                             <ErrorMessage field="maSanPham" />
                         </div>
                         <div className="sm:col-span-1">

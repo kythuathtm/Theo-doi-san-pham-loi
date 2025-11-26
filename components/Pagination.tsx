@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
 
@@ -161,7 +162,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalItems, itemsP
         {/* Jump To Page Input */}
         {totalPages > 1 && (
             <form onSubmit={handleJumpSubmit} className="flex items-center gap-1 border-l border-slate-200 pl-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase hidden sm:inline">Đến trang</span>
+                <span className="text-xs font-bold text-slate-400 uppercase hidden sm:inline">Đến trang</span>
                 <input 
                     type="text" 
                     inputMode="numeric"
