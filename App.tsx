@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useTransition, Suspense } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
-import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, ArrowUpTrayIcon, CalendarIcon, Cog8ToothIcon } from './components/Icons';
+import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon } from './components/Icons';
 import * as XLSX from 'xlsx';
 import Loading from './components/Loading';
 
@@ -17,8 +17,7 @@ import {
   orderBy,
   setDoc,
   writeBatch,
-  getDocs,
-  where
+  getDocs
 } from 'firebase/firestore';
 
 // Lazy load components
@@ -77,9 +76,6 @@ const INITIAL_USERS: User[] = [
   { username: 'tgd', fullName: 'Nguyễn Tổng', role: UserRole.TongGiamDoc, password: '123' },
 ];
 
-// Empty Initial Products List as requested
-const INITIAL_PRODUCTS: Product[] = [];
-
 const DEFAULT_ROLE_SETTINGS: RoleSettings = {
     [UserRole.Admin]: { canCreate: true, canViewDashboard: true, canDelete: true, viewableDefectTypes: ['All'], editableFields: ['general', 'soLuongDoi', 'loaiLoi', 'nguyenNhan', 'huongKhacPhuc', 'trangThai', 'ngayHoanThanh'] },
     [UserRole.KyThuat]: { canCreate: true, canViewDashboard: true, canDelete: true, viewableDefectTypes: ['All'], editableFields: ['general', 'soLuongDoi', 'loaiLoi', 'nguyenNhan', 'huongKhacPhuc', 'trangThai', 'ngayHoanThanh'] },
@@ -94,7 +90,8 @@ const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   companyName: 'Công ty Cổ phần Vật tư Y tế Hồng Thiện Mỹ',
   logoUrl: '',
   backgroundType: 'default',
-  backgroundValue: ''
+  backgroundValue: '',
+  fontFamily: 'Arial, sans-serif'
 };
 
 // --- Main App Component ---
@@ -158,11 +155,6 @@ export const App: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "users"), async (snapshot) => {
       const usersData = snapshot.docs.map(doc => doc.data()) as User[];
-      
-      // AUTO-SEED: If database is completely empty, create default users and data
-      if (usersData.length === 0 && !isLoadingDB) {
-         console.log("Database empty. Seeding initial data...");
-      } 
       setUsers(usersData);
     });
     return () => unsubscribe();
@@ -187,7 +179,10 @@ export const App: React.FC = () => {
         }
         const systemDoc = snapshot.docs.find(d => d.id === 'systemSettings');
         if (systemDoc) {
-            setSystemSettings(systemDoc.data() as SystemSettings);
+            setSystemSettings({
+                ...DEFAULT_SYSTEM_SETTINGS, // Merge with defaults to ensure new fields like fontFamily exist
+                ...systemDoc.data() as SystemSettings
+            });
         }
       }
     });
@@ -288,7 +283,6 @@ export const App: React.FC = () => {
     return result;
   }, [reports, searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter, currentUser, roleSettings]);
 
-  const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
   const paginatedReports = useMemo(() => {
       const start = (currentPage - 1) * itemsPerPage;
       return filteredReports.slice(start, start + itemsPerPage);
@@ -554,25 +548,6 @@ export const App: React.FC = () => {
           showToast("Lỗi khi lưu cấu hình", "error");
       }
   };
-
-  const handleRenameRole = async (oldName: string, newName: string) => {
-      try {
-          const q = query(collection(db, "users"), where("role", "==", oldName));
-          const snapshot = await getDocs(q);
-          
-          if (!snapshot.empty) {
-              const batch = writeBatch(db);
-              snapshot.docs.forEach(doc => {
-                  batch.update(doc.ref, { role: newName });
-              });
-              await batch.commit();
-              showToast(`Đã cập nhật vai trò cho ${snapshot.size} tài khoản.`, 'success');
-          }
-      } catch (error) {
-          console.error("Rename role error:", error);
-          showToast("Lỗi khi cập nhật tên vai trò cho người dùng", "error");
-      }
-  };
   
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
@@ -620,7 +595,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-slate-100 font-sans text-slate-900">
+    <div className="flex flex-col h-dvh bg-slate-100 font-sans text-slate-900" style={{ fontFamily: systemSettings.fontFamily }}>
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 transition-all">
         <div className="max-w-[1920px] mx-auto px-2 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
@@ -631,9 +606,13 @@ export const App: React.FC = () => {
                <BarChartIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <h1 className="text-sm sm:text-lg font-bold text-slate-800 tracking-tight truncate hidden sm:block uppercase">
-              THEO DÕI LỖI SẢN PHẨM
+              {systemSettings.appName || 'THEO DÕI LỖI SẢN PHẨM'}
             </h1>
-            {isLoadingDB && <span className="text-xs text-blue-500 animate-pulse ml-2">● Đồng bộ...</span>}
+            <h1 className="sm:hidden text-sm font-bold text-slate-800 tracking-tight uppercase">
+                {/* Short title for mobile */}
+                TDL SP
+            </h1>
+            {isLoadingDB && <span className="text-xs text-blue-500 animate-pulse ml-2">●</span>}
           </div>
 
           {/* Center: View Switcher & Global Year Filter */}
@@ -655,30 +634,31 @@ export const App: React.FC = () => {
                     </select>
                  </div>
 
-                 <div className="bg-slate-100/80 p-1 rounded-xl flex items-center gap-1 border border-slate-200/50 hidden md:flex">
+                 {/* View Switcher: Mobile Optimized */}
+                 <div className="bg-slate-100/80 p-1 rounded-xl flex items-center gap-1 border border-slate-200/50">
                     <button
                         onClick={() => setCurrentView('list')}
-                        className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
+                        className={`flex items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
                             currentView === 'list' 
                             ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                         }`}
                         title="Xem danh sách báo cáo"
                     >
-                        <ListBulletIcon className="h-4 w-4 mr-2" />
-                        Danh sách
+                        <ListBulletIcon className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Danh sách</span>
                     </button>
                     <button
                         onClick={() => setCurrentView('dashboard')}
-                        className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
+                        className={`flex items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
                             currentView === 'dashboard' 
                             ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                         }`}
                         title="Xem báo cáo thống kê"
                     >
-                        <ChartPieIcon className="h-4 w-4 mr-2" />
-                        Báo cáo
+                        <ChartPieIcon className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Báo cáo</span>
                     </button>
                 </div>
             </div>
@@ -728,7 +708,7 @@ export const App: React.FC = () => {
                         </button>
                         <button
                             onClick={() => setIsUserModalOpen(true)}
-                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors active:scale-95"
+                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors active:scale-95 hidden sm:block"
                             title="Quản lý Người dùng"
                         >
                             <UserGroupIcon className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -863,7 +843,6 @@ export const App: React.FC = () => {
               <PermissionManagementModal
                 roleSettings={roleSettings}
                 onSave={handleSavePermissions}
-                onRenameRole={handleRenameRole}
                 onClose={() => setIsPermissionModalOpen(false)}
               />
           )}

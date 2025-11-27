@@ -117,7 +117,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity font-sans">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-[1400px] w-full max-h-[90vh] flex flex-col overflow-hidden ring-1 ring-black/5">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden ring-1 ring-black/5">
         
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b border-slate-200 bg-white">
@@ -131,7 +131,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                 placeholder="Tìm kiếm..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-48 sm:w-64 font-sans shadow-sm"
+                className="px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-32 sm:w-64 font-sans shadow-sm"
              />
 
              {/* Hidden File Input */}
@@ -170,7 +170,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
 
         {/* Add New Product Form Area */}
         {isAdding && (
-            <div className="p-5 bg-blue-50 border-b border-blue-100 animate-fade-in-up">
+            <div className="p-5 bg-blue-50 border-b border-blue-100 animate-fade-in-up overflow-y-auto max-h-[300px] sm:max-h-none">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                     <h4 className="text-sm font-bold text-blue-800 uppercase tracking-wide">Thêm sản phẩm mới</h4>
                     
@@ -254,8 +254,8 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
         )}
 
         {/* Product Table */}
-        <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-6">
-          <div className="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5 rounded-xl bg-white border border-slate-200">
+        <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-6 custom-scrollbar">
+          <div className="overflow-x-auto shadow-sm ring-1 ring-black ring-opacity-5 rounded-xl bg-white border border-slate-200 min-w-full">
             <table className="min-w-full divide-y divide-slate-200 table-fixed font-sans">
               <thead className="bg-slate-50">
                 <tr>
@@ -271,7 +271,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
               <tbody className="bg-white divide-y divide-slate-200">
                 {filteredProducts.map((product, index) => (
                   <tr key={`${product.maSanPham}-${index}`} className="hover:bg-blue-50/50 transition-colors group">
-                    <td className="px-4 py-3 text-sm font-bold text-slate-600 align-top">{product.maSanPham}</td>
+                    <td className="px-4 py-3 text-sm font-bold text-slate-600 align-top whitespace-nowrap">{product.maSanPham}</td>
                     <td className="px-4 py-3 text-sm font-medium text-slate-800 whitespace-normal break-words align-top">{product.tenThuongMai}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-normal break-words align-top">{product.tenThietBi}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 whitespace-normal break-words align-top">{product.dongSanPham}</td>
@@ -284,7 +284,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                             {product.nhanHang || 'Khác'}
                         </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-600 text-xs align-top">{product.GPLH}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600 text-xs align-top whitespace-nowrap">{product.GPLH}</td>
                     <td className="px-4 py-3 text-right text-sm align-top">
                         <button 
                             onClick={() => onDelete(product.maSanPham)}

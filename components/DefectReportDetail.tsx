@@ -25,7 +25,7 @@ const DetailItem = ({ label, value, className, fullWidth }: any) => {
 };
 
 const Section = ({ title, icon, children }: any) => (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col">
+    <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col">
         <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5 flex items-center gap-2">
             <span className="p-1.5 bg-slate-50 text-slate-500 rounded-lg border border-slate-100">{icon}</span>
             {title}
@@ -106,7 +106,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
 
   return (
     <>
-      <div className="px-6 py-4 border-b border-slate-100 bg-white flex justify-between items-start sticky top-0 z-30">
+      <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 bg-white flex justify-between items-start sticky top-0 z-30">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded uppercase shadow-sm">{report.maSanPham}</span>
@@ -117,9 +117,9 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
                 </span>
             </div>
             {/* Changed from font-black to font-bold for better rendering */}
-            <h3 className="text-xl font-bold text-slate-900 leading-tight">{report.tenThuongMai}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight line-clamp-2">{report.tenThuongMai}</h3>
           </div>
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-1 sm:gap-2 ml-4">
             {permissions.canEdit && (
               <button onClick={() => onEdit(report)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-95 border border-transparent hover:border-blue-100" title="Chỉnh sửa toàn bộ">
                 <PencilIcon className="h-5 w-5" />
@@ -130,19 +130,19 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
                   <TrashIcon className="h-5 w-5" />
                 </button>
             )}
-            <div className="w-px h-6 bg-slate-200 mx-1"></div>
+            <div className="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
             <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all active:scale-95">
               <XIcon className="h-6 w-6" />
             </button>
           </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto bg-slate-50/50 p-6 space-y-6 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-6 space-y-6 custom-scrollbar">
         
-        {/* TOP ROW: PRODUCT & CUSTOMER */}
+        {/* TOP ROW: PRODUCT & CUSTOMER - Stack on mobile, grid on large */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
              <Section title="Thông tin Sản phẩm" icon={<TagIcon className="h-4 w-4"/>}>
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-6">
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
                     <DetailItem label="Dòng sản phẩm" value={report.dongSanPham} />
                     <DetailItem label="Nhãn hàng" value={report.nhanHang} className="font-semibold text-blue-600"/>
                     <DetailItem label="Tên thiết bị y tế" value={report.tenThietBi} fullWidth />
@@ -169,7 +169,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
              </Section>
 
              <Section title="Khách hàng & Phản ánh" icon={<UserIcon className="h-4 w-4"/>}>
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-6">
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
                     <DetailItem label="Nhà phân phối" value={report.nhaPhanPhoi} fullWidth/>
                     <DetailItem label="Đơn vị sử dụng" value={report.donViSuDung} fullWidth/>
                     <div className="col-span-full mt-2">
@@ -186,12 +186,12 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
              
              {/* Header */}
-             <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-white to-slate-50 flex justify-between items-center relative z-10">
+             <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-white to-slate-50 flex flex-col sm:flex-row justify-between sm:items-center relative z-10 gap-2">
                 <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2 uppercase tracking-wide">
                     <span className="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><ClipboardDocumentListIcon className="w-5 h-5" /></span>
                     Xử lý & Khắc phục
                 </h4>
-                <div className="flex gap-3 items-center">
+                <div className="flex gap-3 items-center justify-between sm:justify-end w-full sm:w-auto">
                      {report.trangThai !== 'Hoàn thành' && permissions.canEdit && (
                         <>
                             {isEditingQuickAction ? (
@@ -223,7 +223,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
                             )}
                         </>
                      )}
-                     <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold border ml-2 shadow-sm ${
+                     <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold border ml-auto sm:ml-2 shadow-sm ${
                         report.trangThai === 'Hoàn thành' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                         report.trangThai === 'Mới' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
                         'bg-amber-50 text-amber-700 border-amber-200'
@@ -233,8 +233,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
                 </div>
             </div>
 
-            {/* Quick Edit Fields */}
-            <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 relative z-10">
+            {/* Quick Edit Fields - Stack on mobile */}
+            <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-12 gap-6 relative z-10">
                  {/* Left: Input Areas */}
                  <div className="md:col-span-8 grid grid-cols-1 gap-4">
                       {/* Cause & Solution Inputs */}

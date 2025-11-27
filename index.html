@@ -12,38 +12,11 @@
             fontFamily: {
               sans: ['Arial', 'sans-serif'],
             },
-            fontSize: {
-              'xs': ['14px', { lineHeight: '1.5' }],
-              'sm': ['15px', { lineHeight: '1.5' }],
-              'base': ['16px', { lineHeight: '1.6' }],
-              'lg': ['18px', { lineHeight: '1.6' }],
-              'xl': ['20px', { lineHeight: '1.4' }],
-              '2xl': ['24px', { lineHeight: '1.3' }],
-              '3xl': ['30px', { lineHeight: '1.2' }],
-              '4xl': ['36px', { lineHeight: '1.1' }],
-              '5xl': ['48px', { lineHeight: '1' }],
-              '6xl': ['60px', { lineHeight: '1' }],
-            },
-            colors: {
-              gray: {
-                50: '#f9fafb',
-                100: '#f3f4f6',
-                200: '#e5e7eb',
-                300: '#d1d5db',
-                400: '#9ca3af',
-                500: '#6b7280',
-                600: '#4b5563',
-                700: '#374151',
-                800: '#1f2937',
-                900: '#111827',
-              },
-            },
             animation: {
               'fade-in': 'fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               'fade-in-up': 'fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               'slide-up': 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-              'slide-up-fade': 'slideUpFade 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
               'blob': 'blob 7s infinite',
             },
             keyframes: {
@@ -59,9 +32,10 @@
                 '0%': { transform: 'translateY(20px)', opacity: '0' },
                 '100%': { transform: 'translateY(0)', opacity: '1' },
               },
-              slideUpFade: {
-                '0%': { transform: 'translateY(40px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
+              shake: {
+                '0%, 100%': { transform: 'translateX(0)' },
+                '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
+                '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' },
               },
               blob: {
                 "0%": {
@@ -87,23 +61,6 @@
       }
     </script>
     <style>
-      :root {
-        --app-font: 'Arial', sans-serif;
-      }
-
-      body {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        font-family: var(--app-font);
-        font-size: 14px;
-        line-height: 1.5;
-      }
-      
-      /* Force all elements to inherit the dynamic font-family */
-      input, button, select, textarea, code, pre, table, th, td, div, span, p, h1, h2, h3, h4, h5, h6 {
-        font-family: var(--app-font) !important;
-      }
-
       /* Modern Scrollbar */
       ::-webkit-scrollbar {
         width: 6px;

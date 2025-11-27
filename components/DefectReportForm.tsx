@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
-import { XIcon, CheckCircleIcon, TagIcon, UserIcon, WrenchIcon, CheckCircleIcon as StatusIcon, LockClosedIcon } from './Icons';
+import { XIcon, CheckCircleIcon, TagIcon, UserIcon, WrenchIcon, CheckCircleIcon as StatusIcon, LockClosedIcon, ShieldCheckIcon, ChartPieIcon } from './Icons';
 
 interface Props {
   initialData: DefectReport | null;
@@ -35,8 +34,8 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   const [isProductInfoLocked, setIsProductInfoLocked] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const productCodeInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
 
-  // Helper to handle closing with confirmation
   const handleCloseAttempt = () => {
       if (isDirty) {
           if (window.confirm("Bạn có thông tin chưa được lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thay đổi?")) {
@@ -47,28 +46,21 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
       }
   };
 
-  // Keyboard Shortcuts Handler
   useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
-          // Esc to Close
           if (e.key === 'Escape') {
               handleCloseAttempt();
           }
-          // Ctrl + Enter to Save
           if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-              // Trigger submit logic programmatically
               const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
               handleSubmit(fakeEvent);
           }
       };
-
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [formData, isDirty]); // Add isDirty to dependency
+  }, [formData, isDirty]); 
 
-  // --- AUTO COMPLETE LOGIC ---
   useEffect(() => {
-    // Logic: Có đầy đủ nguyên nhân + hướng khắc phục + số lượng đổi -> trạng thái chuyển thành Hoàn thành
     if (
         formData.nguyenNhan && formData.nguyenNhan.trim() !== '' &&
         formData.huongKhacPhuc && formData.huongKhacPhuc.trim() !== '' &&
@@ -80,14 +72,9 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             trangThai: 'Hoàn thành',
             ngayHoanThanh: prev.ngayHoanThanh || getTodayDateString()
         }));
-        // Note: Auto-updates imply the form is dirty if it wasn't already, but usually 
-        // this is triggered by user input which sets dirty anyway.
     }
   }, [formData.nguyenNhan, formData.huongKhacPhuc, formData.soLuongDoi]);
 
-  // --- CASCADING SELECT LOGIC ---
-
-  // 1. Lines based on Brand
   const availableLines = useMemo(() => {
       let filtered = products;
       if (formData.nhanHang && formData.nhanHang !== 'Khác') {
@@ -96,7 +83,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
       return Array.from(new Set(filtered.map(p => p.dongSanPham).filter(Boolean))).sort();
   }, [products, formData.nhanHang]);
 
-  // 2. Devices based on Brand & Line
   const availableDeviceNames = useMemo(() => {
       let filtered = products;
       if (formData.nhanHang && formData.nhanHang !== 'Khác') {
@@ -108,7 +94,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
       return Array.from(new Set(filtered.map(p => p.tenThietBi).filter(Boolean))).sort();
   }, [products, formData.nhanHang, formData.dongSanPham]);
 
-  // 3. Trade Names based on Brand, Line & Device
   const availableTradeNames = useMemo(() => {
       let filtered = products;
       if (formData.nhanHang && formData.nhanHang !== 'Khác') {
@@ -145,49 +130,72 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   
   const validate = () => {
     const newErrors: Partial<Record<keyof Omit<DefectReport, 'id'>, string>> = {};
-    if (!formData.ngayPhanAnh) newErrors.ngayPhanAnh = "Vui lòng chọn ngày phản ánh.";
-    if (!formData.maSanPham) newErrors.maSanPham = "Mã sản phẩm là bắt buộc.";
-    if (!formData.soLo) newErrors.soLo = "Vui lòng nhập số lô.";
-    if (!formData.nhaPhanPhoi) newErrors.nhaPhanPhoi = "Vui lòng nhập nhà phân phối.";
-    if (!formData.noiDungPhanAnh) newErrors.noiDungPhanAnh = "Nội dung phản ánh không được để trống.";
-    if (!formData.loaiLoi) newErrors.loaiLoi = "Vui lòng chọn nguồn gốc lỗi.";
-    
-    // New Mandatory Fields
-    if (!formData.tenThuongMai) newErrors.tenThuongMai = "Tên thương mại là bắt buộc.";
-    if (!formData.dongSanPham) newErrors.dongSanPham = "Dòng sản phẩm là bắt buộc.";
-    if (!formData.nhanHang) newErrors.nhanHang = "Nhãn hàng là bắt buộc.";
+    const requireMsg = "Thông tin này là bắt buộc";
+
+    if (!formData.ngayPhanAnh) newErrors.ngayPhanAnh = "Vui lòng chọn ngày phản ánh";
+    if (!formData.maSanPham?.trim()) newErrors.maSanPham = "Mã sản phẩm là bắt buộc";
+    if (!formData.tenThuongMai?.trim()) newErrors.tenThuongMai = "Tên thương mại là bắt buộc";
+    if (!formData.dongSanPham?.trim()) newErrors.dongSanPham = "Dòng sản phẩm là bắt buộc";
+    if (!formData.nhanHang) newErrors.nhanHang = "Vui lòng chọn nhãn hàng";
+    if (!formData.soLo?.trim()) newErrors.soLo = "Vui lòng nhập số lô";
+    if (!formData.nhaPhanPhoi?.trim()) newErrors.nhaPhanPhoi = "Vui lòng nhập nhà phân phối";
+    if (!formData.noiDungPhanAnh?.trim()) newErrors.noiDungPhanAnh = "Nội dung phản ánh không được để trống";
+    if (!formData.loaiLoi) newErrors.loaiLoi = "Vui lòng chọn nguồn gốc lỗi";
     
     if (formData.trangThai === 'Hoàn thành') {
-        if (!formData.ngayHoanThanh) newErrors.ngayHoanThanh = "Cần có ngày hoàn thành.";
-        if (!formData.nguyenNhan || formData.nguyenNhan.trim() === '') newErrors.nguyenNhan = "Phải nhập nguyên nhân.";
-        if (!formData.huongKhacPhuc || formData.huongKhacPhuc.trim() === '') newErrors.huongKhacPhuc = "Phải nhập hướng khắc phục.";
+        if (!formData.ngayHoanThanh) newErrors.ngayHoanThanh = "Cần có ngày hoàn thành";
+        if (!formData.nguyenNhan?.trim()) newErrors.nguyenNhan = "Phải nhập nguyên nhân khi hoàn thành";
+        if (!formData.huongKhacPhuc?.trim()) newErrors.huongKhacPhuc = "Phải nhập hướng khắc phục khi hoàn thành";
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const valStr = typeof value === 'string' ? value.trim() : value;
+    
+    let error = '';
+    const requiredFields = ['maSanPham', 'tenThuongMai', 'dongSanPham', 'nhanHang', 'soLo', 'ngayPhanAnh', 'nhaPhanPhoi', 'noiDungPhanAnh', 'loaiLoi'];
+    
+    if (requiredFields.includes(name) && !valStr) {
+         error = 'Trường này không được để trống';
+    }
+    
+    if (formData.trangThai === 'Hoàn thành') {
+         if (name === 'nguyenNhan' && !valStr) error = 'Bắt buộc khi hoàn thành';
+         if (name === 'huongKhacPhuc' && !valStr) error = 'Bắt buộc khi hoàn thành';
+         if (name === 'ngayHoanThanh' && !valStr) error = 'Bắt buộc khi hoàn thành';
+    }
+
+    setErrors(prev => {
+        if (error) return { ...prev, [name]: error };
+        const { [name as keyof typeof prev]: _, ...rest } = prev;
+        return rest;
+    });
   };
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
       const product = products.find(p => p.maSanPham.toLowerCase() === initialData.maSanPham.toLowerCase());
-      setIsProductInfoLocked(!!product);
+      setIsProductInfoLocked(!!product && !initialData.id.startsWith('new_'));
     } else {
       setFormData(prev => ({ ...prev, ngayPhanAnh: getTodayDateString() }));
       setIsProductInfoLocked(false);
     }
-    setIsDirty(false); // Reset dirty state when initial data loads
+    setIsDirty(false); 
   }, [initialData, products]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
-    setIsDirty(true); // Mark form as dirty on any change
+    setIsDirty(true); 
 
     setFormData(prev => {
         const newState = { ...prev };
         
-        // 1. BRAND CHANGE -> Clear below
         if (name === 'nhanHang') {
             newState.nhanHang = value as any;
             if (value !== 'Khác') {
@@ -198,7 +206,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                 setIsProductInfoLocked(false);
             }
         }
-        // 2. LINE CHANGE -> Clear below
         else if (name === 'dongSanPham') {
             newState.dongSanPham = value;
             newState.tenThietBi = '';
@@ -206,14 +213,12 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             newState.maSanPham = '';
             setIsProductInfoLocked(false);
         }
-        // 3. DEVICE NAME CHANGE -> Clear below
         else if (name === 'tenThietBi') {
             newState.tenThietBi = value;
             newState.tenThuongMai = '';
             newState.maSanPham = '';
             setIsProductInfoLocked(false);
         }
-        // 4. TRADE NAME CHANGE -> Find Code
         else if (name === 'tenThuongMai') {
             newState.tenThuongMai = value;
             
@@ -235,7 +240,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                  setIsProductInfoLocked(false);
             }
         }
-        // 5. CODE CHANGE (Manual) -> Reverse Fill
         else if (name === 'maSanPham') {
             newState.maSanPham = value;
             const product = products.find(p => p.maSanPham.toLowerCase() === value.toLowerCase());
@@ -274,24 +278,35 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
+    const currentErrors = validate();
+    if (Object.keys(currentErrors).length === 0) {
         if (formData.trangThai === 'Hoàn thành') {
             if (!window.confirm("Bạn đang chuyển trạng thái thành 'Hoàn thành'.\n\nHành động này xác nhận việc xử lý đã kết thúc và hồ sơ sẽ được lưu trữ. Bạn có chắc chắn muốn tiếp tục?")) {
                 return;
             }
         }
         onSave({ ...formData, id: initialData?.id || '' });
+    } else {
+        const firstErrorKey = Object.keys(currentErrors)[0];
+        const element = formRef.current?.querySelector(`[name="${firstErrorKey}"]`);
+        
+        if (element) {
+            // Scroll with margin for sticky header
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            if (element instanceof HTMLElement) {
+                element.focus();
+            }
+        }
     }
   };
   
   const getInputClasses = (fieldName: keyof Omit<DefectReport, 'id'>, isReadOnly: boolean = false) => {
-    // Cleaner input style with active white bg and subtle borders
     const base = "transition-all duration-200 mt-1 block w-full rounded-xl text-base py-2.5 px-3 border outline-none font-sans";
     const normal = "bg-white text-slate-800 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 placeholder-slate-400 shadow-sm hover:border-blue-300";
-    const errorClass = errors[fieldName] ? "border-red-500 ring-2 ring-red-500/10 bg-red-50" : "";
-    const disabled = isFieldDisabled(fieldName) ? "bg-slate-50 text-slate-500 border-slate-200 cursor-not-allowed shadow-none" : normal;
+    const errorClass = errors[fieldName] ? "border-red-500 ring-2 ring-red-500/10 bg-red-50 animate-shake" : "";
     
-    // Lock style for Product fields when locked
+    const disabled = isFieldDisabled(fieldName) ? "bg-slate-50 text-slate-500 border-slate-200 cursor-not-allowed shadow-none" : normal;
     const locked = isReadOnly ? "bg-blue-50/50 text-slate-700 border-blue-200 cursor-not-allowed focus:ring-0 shadow-inner" : "";
     
     if (isFieldDisabled(fieldName)) return `${base} ${disabled}`;
@@ -301,7 +316,12 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
   const ErrorMessage = ({ field }: { field: keyof Omit<DefectReport, 'id'> }) => {
       if (!errors[field]) return null;
-      return <p className="mt-1.5 text-xs font-bold text-red-500 flex items-center animate-fade-in"><span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span>{errors[field]}</p>;
+      return (
+        <div className="mt-2 flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg border border-red-100 animate-fade-in-up text-xs font-bold shadow-sm">
+            <ShieldCheckIcon className="w-4 h-4 flex-shrink-0" />
+            <span>{errors[field]}</span>
+        </div>
+      );
   };
 
   const SectionHeader = ({ title, icon }: { title: string, icon: React.ReactNode }) => (
@@ -330,184 +350,272 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
           </div>
         </div>
 
-        <form id="report-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 bg-slate-50/50" noValidate>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-            
-            {/* Left Column: Product & Customer */}
-            <div className="md:col-span-7 space-y-8">
-                 <section className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden">
-                    {/* Visual cue for locked state */}
-                    {isProductInfoLocked && (
-                        <div className="absolute top-0 right-0 p-2 bg-blue-50 rounded-bl-xl border-l border-b border-blue-100 shadow-sm flex items-center gap-1.5 z-10">
-                            <LockClosedIcon className="w-3.5 h-3.5 text-blue-500" />
-                            <span className="text-[10px] font-bold text-blue-600 uppercase">Thông tin SP đã khóa</span>
+        {Object.keys(errors).length > 0 && (
+            <div className="px-6 py-3 bg-red-50 border-b border-red-100 flex items-center justify-center animate-fade-in shadow-inner">
+                <p className="text-sm font-bold text-red-600 flex items-center">
+                    <ShieldCheckIcon className="w-5 h-5 mr-2" />
+                    Vui lòng kiểm tra lại {Object.keys(errors).length} mục thông tin còn thiếu.
+                </p>
+            </div>
+        )}
+
+        <form id="report-form" ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 bg-slate-50/50 space-y-8 custom-scrollbar">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-8">
+                <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <SectionHeader title="Thông tin Chung" icon={<TagIcon className="h-4 w-4" />} />
+                    <div className="space-y-5">
+                         <div>
+                            <label className="block text-sm font-bold text-slate-700">Ngày phản ánh <span className="text-red-500">*</span></label>
+                            <input 
+                                type="date" 
+                                name="ngayPhanAnh" 
+                                value={formData.ngayPhanAnh} 
+                                onChange={handleChange} 
+                                onBlur={handleBlur}
+                                disabled={isFieldDisabled('ngayPhanAnh')}
+                                className={getInputClasses('ngayPhanAnh')}
+                            />
+                            <ErrorMessage field="ngayPhanAnh" />
                         </div>
-                    )}
-                    
-                    <SectionHeader title="Thông tin Sản phẩm" icon={<TagIcon className="h-4 w-4" />} />
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                         
-                        <div className="sm:col-span-1">
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Nhãn hàng <span className="text-red-500">*</span></label>
-                            <div className="relative">
-                                <select name="nhanHang" value={formData.nhanHang} onChange={handleChange} className={getInputClasses('nhanHang')} disabled={isFieldDisabled('nhanHang')}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700">Nhãn hàng <span className="text-red-500">*</span></label>
+                                <select 
+                                    name="nhanHang" 
+                                    value={formData.nhanHang} 
+                                    onChange={handleChange} 
+                                    onBlur={handleBlur}
+                                    disabled={isFieldDisabled('nhanHang')}
+                                    className={getInputClasses('nhanHang')}
+                                >
                                     <option value="HTM">HTM</option>
                                     <option value="VMA">VMA</option>
                                     <option value="Khác">Khác</option>
                                 </select>
+                                <ErrorMessage field="nhanHang" />
                             </div>
-                             <ErrorMessage field="nhanHang" />
-                        </div>
-                        <div className="sm:col-span-1">
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Dòng sản phẩm <span className="text-red-500">*</span></label>
-                            <div className="relative">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700">Mã sản phẩm <span className="text-red-500">*</span></label>
                                 <input 
                                     type="text" 
-                                    name="dongSanPham" 
-                                    list="product-lines"
-                                    value={formData.dongSanPham} 
+                                    name="maSanPham" 
+                                    ref={productCodeInputRef}
+                                    value={formData.maSanPham} 
                                     onChange={handleChange} 
-                                    placeholder="Chọn dòng sản phẩm..."
-                                    className={getInputClasses('dongSanPham', isProductInfoLocked)} 
-                                    disabled={isFieldDisabled('dongSanPham')}
-                                    readOnly={isProductInfoLocked}
+                                    onBlur={handleBlur}
+                                    disabled={isFieldDisabled('maSanPham') || isProductInfoLocked}
+                                    className={getInputClasses('maSanPham', isProductInfoLocked)}
+                                    placeholder="Nhập mã hoặc chọn bên dưới..."
+                                    list="productCodes"
+                                    autoComplete="off"
                                 />
-                                {isProductInfoLocked && <LockClosedIcon className="absolute right-3 top-3 w-4 h-4 text-blue-300" />}
+                                <datalist id="productCodes">
+                                    {products.map(p => <option key={p.maSanPham} value={p.maSanPham}>{p.tenThuongMai}</option>)}
+                                </datalist>
+                                {isProductInfoLocked && !isFieldDisabled('maSanPham') && (
+                                    <p className="text-xs text-blue-500 mt-1 flex items-center"><LockClosedIcon className="w-3 h-3 mr-1"/>Tự động điền từ danh mục</p>
+                                )}
+                                <ErrorMessage field="maSanPham" />
                             </div>
-                            <datalist id="product-lines">
-                                {availableLines.map((line, idx) => <option key={idx} value={line} />)}
-                            </datalist>
-                             <ErrorMessage field="dongSanPham" />
-                        </div>
-
-                        <div className="sm:col-span-2">
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Tên thiết bị y tế</label>
-                            <div className="relative">
-                                <input 
-                                    type="text" 
-                                    name="tenThietBi" 
-                                    list="device-names"
-                                    value={formData.tenThietBi || ''} 
-                                    onChange={handleChange} 
-                                    className={getInputClasses('tenThietBi', isProductInfoLocked || isFieldDisabled('tenThietBi'))}
-                                    placeholder="Chọn hoặc nhập tên thiết bị..."
-                                    readOnly={isProductInfoLocked}
-                                />
-                                {isProductInfoLocked && <LockClosedIcon className="absolute right-3 top-3 w-4 h-4 text-blue-300" />}
-                            </div>
-                            <datalist id="device-names">
-                                {availableDeviceNames.map((name, idx) => <option key={idx} value={name} />)}
-                            </datalist>
                         </div>
 
-                        <div className="sm:col-span-2">
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Tên thương mại <span className="text-red-500">*</span></label>
-                            <div className="relative">
-                                <input 
-                                    type="text" 
-                                    list="trade-names"
-                                    name="tenThuongMai" 
-                                    value={formData.tenThuongMai} 
-                                    onChange={handleChange} 
-                                    className={getInputClasses('tenThuongMai', isProductInfoLocked || isFieldDisabled('tenThuongMai'))}
-                                    placeholder="Chọn tên sản phẩm..."
-                                    readOnly={isProductInfoLocked}
-                                />
-                                {isProductInfoLocked && <LockClosedIcon className="absolute right-3 top-3 w-4 h-4 text-blue-300" />}
-                            </div>
-                            <datalist id="trade-names">
-                                {availableTradeNames.map((name, idx) => <option key={idx} value={name} />)}
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700">Dòng sản phẩm <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                name="dongSanPham" 
+                                value={formData.dongSanPham} 
+                                onChange={handleChange}
+                                onBlur={handleBlur} 
+                                disabled={isFieldDisabled('dongSanPham') || isProductInfoLocked}
+                                className={getInputClasses('dongSanPham', isProductInfoLocked)}
+                                list="lines"
+                                autoComplete="off"
+                            />
+                            <datalist id="lines">
+                                {availableLines.map(l => <option key={l} value={l} />)}
+                            </datalist>
+                            <ErrorMessage field="dongSanPham" />
+                        </div>
+
+                         <div>
+                            <label className="block text-sm font-bold text-slate-700">Tên thiết bị Y tế</label>
+                            <input 
+                                type="text" 
+                                name="tenThietBi" 
+                                value={formData.tenThietBi} 
+                                onChange={handleChange}
+                                onBlur={handleBlur} 
+                                disabled={isFieldDisabled('tenThietBi') || isProductInfoLocked}
+                                className={getInputClasses('tenThietBi', isProductInfoLocked)}
+                                list="devices"
+                                autoComplete="off"
+                            />
+                            <datalist id="devices">
+                                {availableDeviceNames.map(d => <option key={d} value={d} />)}
+                            </datalist>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700">Tên thương mại <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                name="tenThuongMai" 
+                                value={formData.tenThuongMai} 
+                                onChange={handleChange}
+                                onBlur={handleBlur} 
+                                disabled={isFieldDisabled('tenThuongMai') || isProductInfoLocked}
+                                className={getInputClasses('tenThuongMai', isProductInfoLocked)}
+                                list="tradeNames"
+                                autoComplete="off"
+                            />
+                             <datalist id="tradeNames">
+                                {availableTradeNames.map(t => <option key={t} value={t} />)}
                             </datalist>
                             <ErrorMessage field="tenThuongMai" />
                         </div>
-
-                         <div className="sm:col-span-1">
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Mã sản phẩm <span className="text-red-500">*</span></label>
-                            <div className="relative">
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700">Số lô <span className="text-red-500">*</span></label>
                                 <input 
-                                    ref={productCodeInputRef} 
                                     type="text" 
-                                    name="maSanPham" 
-                                    value={formData.maSanPham} 
-                                    onChange={handleChange} 
-                                    required 
-                                    placeholder="Tự động điền" 
-                                    className={getInputClasses('maSanPham', isProductInfoLocked)} 
-                                    readOnly={isProductInfoLocked || isFieldDisabled('maSanPham')}
+                                    name="soLo" 
+                                    value={formData.soLo} 
+                                    onChange={handleChange}
+                                    onBlur={handleBlur} 
+                                    disabled={isFieldDisabled('soLo')}
+                                    className={getInputClasses('soLo')}
                                 />
-                                {isProductInfoLocked && <LockClosedIcon className="absolute right-3 top-3 w-4 h-4 text-blue-300" />}
+                                <ErrorMessage field="soLo" />
                             </div>
-                            <ErrorMessage field="maSanPham" />
-                        </div>
-                        <div className="sm:col-span-1">
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Số lô <span className="text-red-500">*</span></label>
-                            <input type="text" name="soLo" value={formData.soLo} onChange={handleChange} required className={getInputClasses('soLo')} disabled={isFieldDisabled('soLo')}/>
-                            <ErrorMessage field="soLo" />
-                        </div>
-
-                        <div className="sm:col-span-1">
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Mã NSX</label>
-                            <input type="text" name="maNgaySanXuat" value={formData.maNgaySanXuat} onChange={handleChange} className={getInputClasses('maNgaySanXuat')} disabled={isFieldDisabled('maNgaySanXuat')}/>
-                        </div>
-
-                        <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                             <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase ml-1 mb-1">Đã nhập</label>
-                                <input type="number" name="soLuongDaNhap" value={formData.soLuongDaNhap} onChange={handleChange} min="0" className={getInputClasses('soLuongDaNhap')} disabled={isFieldDisabled('soLuongDaNhap')}/>
-                             </div>
-                             <div>
-                                <label className="block text-xs font-bold text-red-500 uppercase ml-1 mb-1">Lỗi</label>
-                                <input type="number" name="soLuongLoi" value={formData.soLuongLoi} onChange={handleChange} min="0" className={getInputClasses('soLuongLoi')} disabled={isFieldDisabled('soLuongLoi')}/>
-                             </div>
-                             <div>
-                                <label className="block text-xs font-bold text-emerald-600 uppercase ml-1 mb-1">Đổi</label>
-                                <input type="number" name="soLuongDoi" value={formData.soLuongDoi} onChange={handleChange} min="0" className={getInputClasses('soLuongDoi')} disabled={isFieldDisabled('soLuongDoi')}/>
-                             </div>
-                             <div>
-                                <label className="block text-xs font-bold text-emerald-600 uppercase ml-1 mb-1">Ngày đổi</label>
-                                <input type="date" name="ngayDoiHang" value={formData.ngayDoiHang || ''} onChange={handleChange} className={getInputClasses('ngayDoiHang')} disabled={isFieldDisabled('ngayDoiHang')}/>
-                             </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700">Mã NSX</label>
+                                <input 
+                                    type="text" 
+                                    name="maNgaySanXuat" 
+                                    value={formData.maNgaySanXuat} 
+                                    onChange={handleChange}
+                                    onBlur={handleBlur} 
+                                    disabled={isFieldDisabled('maNgaySanXuat')}
+                                    className={getInputClasses('maNgaySanXuat')}
+                                />
+                            </div>
                         </div>
                     </div>
-                 </section>
+                </section>
 
-                 <section className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <SectionHeader title="Thông tin Khách hàng & Phản ánh" icon={<UserIcon className="h-4 w-4" />} />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div className="sm:col-span-1">
-                             <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Ngày phản ánh <span className="text-red-500">*</span></label>
-                             <input type="date" name="ngayPhanAnh" value={formData.ngayPhanAnh} onChange={handleChange} required className={getInputClasses('ngayPhanAnh')} disabled={isFieldDisabled('ngayPhanAnh')}/>
-                             <ErrorMessage field="ngayPhanAnh" />
-                        </div>
-                        <div className="sm:col-span-1">
-                             <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Nhà phân phối <span className="text-red-500">*</span></label>
-                             <input type="text" name="nhaPhanPhoi" value={formData.nhaPhanPhoi} onChange={handleChange} required className={getInputClasses('nhaPhanPhoi')} disabled={isFieldDisabled('nhaPhanPhoi')}/>
-                             <ErrorMessage field="nhaPhanPhoi" />
-                        </div>
-                         <div className="sm:col-span-2">
-                             <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Đơn vị sử dụng</label>
-                             <input type="text" name="donViSuDung" value={formData.donViSuDung} onChange={handleChange} className={getInputClasses('donViSuDung')} disabled={isFieldDisabled('donViSuDung')}/>
-                        </div>
-                        <div className="sm:col-span-2">
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Nội dung phản ánh <span className="text-red-500">*</span></label>
-                            <textarea name="noiDungPhanAnh" rows={3} value={formData.noiDungPhanAnh} onChange={handleChange} required className={getInputClasses('noiDungPhanAnh')} disabled={isFieldDisabled('noiDungPhanAnh')}></textarea>
-                            <ErrorMessage field="noiDungPhanAnh" />
-                        </div>
-                    </div>
-                 </section>
+                <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                     <SectionHeader title="Số lượng" icon={<ChartPieIcon className="h-4 w-4" />} />
+                     <div className="grid grid-cols-3 gap-4">
+                         <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Đã nhập</label>
+                            <input 
+                                type="number" 
+                                name="soLuongDaNhap" 
+                                value={formData.soLuongDaNhap} 
+                                onChange={handleChange} 
+                                disabled={isFieldDisabled('soLuongDaNhap')}
+                                className={getInputClasses('soLuongDaNhap')}
+                            />
+                         </div>
+                         <div>
+                            <label className="block text-xs font-bold text-red-500 uppercase mb-1">Lỗi</label>
+                            <input 
+                                type="number" 
+                                name="soLuongLoi" 
+                                value={formData.soLuongLoi} 
+                                onChange={handleChange} 
+                                disabled={isFieldDisabled('soLuongLoi')}
+                                className={getInputClasses('soLuongLoi')}
+                            />
+                         </div>
+                         <div>
+                            <label className="block text-xs font-bold text-emerald-500 uppercase mb-1">Đổi</label>
+                            <input 
+                                type="number" 
+                                name="soLuongDoi" 
+                                value={formData.soLuongDoi} 
+                                onChange={handleChange} 
+                                disabled={isFieldDisabled('soLuongDoi')}
+                                className={getInputClasses('soLuongDoi')}
+                            />
+                         </div>
+                     </div>
+                     <div className="mt-4">
+                         <label className="block text-sm font-bold text-slate-700">Ngày đổi hàng</label>
+                         <input 
+                            type="date" 
+                            name="ngayDoiHang" 
+                            value={formData.ngayDoiHang || ''} 
+                            onChange={handleChange} 
+                            onBlur={handleBlur}
+                            disabled={isFieldDisabled('ngayDoiHang')}
+                            className={getInputClasses('ngayDoiHang')}
+                        />
+                     </div>
+                </section>
             </div>
 
-            {/* Right Column: Processing */}
-            <div className="md:col-span-5 space-y-8">
-                 <section className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <SectionHeader title="Phân tích & Xử lý" icon={<WrenchIcon className="h-4 w-4" />} />
-                    
+            <div className="space-y-8">
+                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <SectionHeader title="Khách hàng & Phản ánh" icon={<UserIcon className="h-4 w-4" />} />
                     <div className="space-y-5">
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Nguồn gốc lỗi <span className="text-red-500">*</span></label>
-                            <select name="loaiLoi" value={formData.loaiLoi} onChange={handleChange} className={getInputClasses('loaiLoi')} required disabled={isFieldDisabled('loaiLoi')}>
-                                <option value="" disabled>-- Chọn --</option>
+                            <label className="block text-sm font-bold text-slate-700">Nhà phân phối <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                name="nhaPhanPhoi" 
+                                value={formData.nhaPhanPhoi} 
+                                onChange={handleChange} 
+                                onBlur={handleBlur}
+                                disabled={isFieldDisabled('nhaPhanPhoi')}
+                                className={getInputClasses('nhaPhanPhoi')}
+                                list="distributors"
+                            />
+                            <datalist id="distributors">
+                                {/* Can populate from existing data later */}
+                            </datalist>
+                            <ErrorMessage field="nhaPhanPhoi" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700">Đơn vị sử dụng</label>
+                            <input 
+                                type="text" 
+                                name="donViSuDung" 
+                                value={formData.donViSuDung} 
+                                onChange={handleChange}
+                                onBlur={handleBlur} 
+                                disabled={isFieldDisabled('donViSuDung')}
+                                className={getInputClasses('donViSuDung')}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700">Nội dung phản ánh <span className="text-red-500">*</span></label>
+                            <textarea 
+                                name="noiDungPhanAnh" 
+                                value={formData.noiDungPhanAnh} 
+                                onChange={handleChange} 
+                                onBlur={handleBlur}
+                                disabled={isFieldDisabled('noiDungPhanAnh')}
+                                className={getInputClasses('noiDungPhanAnh')}
+                                rows={4}
+                            />
+                            <ErrorMessage field="noiDungPhanAnh" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700">Nguồn gốc lỗi <span className="text-red-500">*</span></label>
+                            <select 
+                                name="loaiLoi" 
+                                value={formData.loaiLoi || ''} 
+                                onChange={handleChange}
+                                onBlur={handleBlur} 
+                                disabled={isFieldDisabled('loaiLoi')}
+                                className={getInputClasses('loaiLoi')}
+                            >
+                                <option value="" disabled>-- Chọn nguồn gốc --</option>
                                 <option value="Lỗi Sản xuất">Lỗi Sản xuất</option>
                                 <option value="Lỗi Nhà cung cấp">Lỗi Nhà cung cấp</option>
                                 <option value="Lỗi Hỗn hợp">Lỗi Hỗn hợp</option>
@@ -515,79 +623,100 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                             </select>
                             <ErrorMessage field="loaiLoi" />
                         </div>
-
-                         <div>
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1 flex justify-between">
-                                Nguyên nhân {formData.trangThai === 'Hoàn thành' && <span className="text-red-500">*</span>}
-                            </label>
-                            <textarea name="nguyenNhan" rows={4} value={formData.nguyenNhan} onChange={handleChange} className={getInputClasses('nguyenNhan')} placeholder="Mô tả nguyên nhân..." disabled={isFieldDisabled('nguyenNhan')}></textarea>
-                            <ErrorMessage field="nguyenNhan" />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1 flex justify-between">
-                                Hướng khắc phục {formData.trangThai === 'Hoàn thành' && <span className="text-red-500">*</span>}
-                            </label>
-                            <textarea name="huongKhacPhuc" rows={4} value={formData.huongKhacPhuc} onChange={handleChange} className={getInputClasses('huongKhacPhuc')} placeholder="Đề xuất xử lý..." disabled={isFieldDisabled('huongKhacPhuc')}></textarea>
-                            <ErrorMessage field="huongKhacPhuc" />
-                        </div>
                     </div>
                  </section>
 
-                 <section className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 shadow-inner">
-                    <SectionHeader title="Trạng thái hồ sơ" icon={<StatusIcon className="h-4 w-4" />} />
+                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <SectionHeader title="Xử lý & Khắc phục" icon={<WrenchIcon className="h-4 w-4" />} />
+                    
                     <div className="space-y-5">
+                         <div>
+                            <label className="block text-sm font-bold text-slate-700">Nguyên nhân</label>
+                            <textarea 
+                                name="nguyenNhan" 
+                                value={formData.nguyenNhan} 
+                                onChange={handleChange}
+                                onBlur={handleBlur} 
+                                disabled={isFieldDisabled('nguyenNhan')}
+                                className={getInputClasses('nguyenNhan')}
+                                rows={3}
+                                placeholder="Nhập nguyên nhân..."
+                            />
+                            <ErrorMessage field="nguyenNhan" />
+                        </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">Trạng thái xử lý</label>
-                            <select name="trangThai" value={formData.trangThai} onChange={handleChange} className={getInputClasses('trangThai')} disabled={isFieldDisabled('trangThai')}>
-                                <option value="Mới">✨ Mới</option>
-                                <option value="Đang xử lý">⏳ Đang xử lý</option>
-                                <option value="Chưa tìm ra nguyên nhân">❓ Chưa rõ nguyên nhân</option>
-                                <option value="Hoàn thành">✅ Hoàn thành</option>
-                            </select>
-                            {formData.nguyenNhan && formData.huongKhacPhuc && formData.soLuongDoi > 0 && formData.trangThai === 'Hoàn thành' && (
-                                <p className="text-xs text-emerald-600 mt-2 font-bold bg-emerald-50 p-2 rounded border border-emerald-100">✓ Tự động hoàn thành do đủ điều kiện</p>
-                            )}
+                            <label className="block text-sm font-bold text-slate-700">Hướng khắc phục</label>
+                            <textarea 
+                                name="huongKhacPhuc" 
+                                value={formData.huongKhacPhuc} 
+                                onChange={handleChange} 
+                                onBlur={handleBlur}
+                                disabled={isFieldDisabled('huongKhacPhuc')}
+                                className={getInputClasses('huongKhacPhuc')}
+                                rows={3}
+                                placeholder="Nhập hướng xử lý..."
+                            />
+                             <ErrorMessage field="huongKhacPhuc" />
                         </div>
                         
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 ml-1 mb-1">
-                                Ngày hoàn thành {formData.trangThai === 'Hoàn thành' && <span className="text-red-500">*</span>}
-                            </label>
-                            <input 
-                                type="date" 
-                                name="ngayHoanThanh" 
-                                value={formData.ngayHoanThanh || ''} 
-                                onChange={handleChange} 
-                                className={getInputClasses('ngayHoanThanh')}
-                                disabled={isFieldDisabled('ngayHoanThanh') || (formData.trangThai !== 'Hoàn thành' && !formData.ngayHoanThanh)}
-                            />
-                            <ErrorMessage field="ngayHoanThanh" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700">Trạng thái</label>
+                                <select 
+                                    name="trangThai" 
+                                    value={formData.trangThai} 
+                                    onChange={handleChange} 
+                                    disabled={isFieldDisabled('trangThai')}
+                                    className={getInputClasses('trangThai')}
+                                >
+                                    <option value="Mới">Mới</option>
+                                    <option value="Đang xử lý">Đang xử lý</option>
+                                    <option value="Chưa tìm ra nguyên nhân">Chưa tìm ra nguyên nhân</option>
+                                    <option value="Hoàn thành">Hoàn thành</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700">Ngày hoàn thành</label>
+                                <input 
+                                    type="date" 
+                                    name="ngayHoanThanh" 
+                                    value={formData.ngayHoanThanh || ''} 
+                                    onChange={handleChange}
+                                    onBlur={handleBlur} 
+                                    disabled={isFieldDisabled('ngayHoanThanh')}
+                                    className={getInputClasses('ngayHoanThanh')}
+                                />
+                                <ErrorMessage field="ngayHoanThanh" />
+                            </div>
                         </div>
                     </div>
                  </section>
             </div>
-
           </div>
         </form>
-        
-        <div className="flex justify-between items-center px-6 py-4 bg-white border-t border-slate-200 gap-3">
-          <div className="text-xs text-slate-400 italic hidden sm:block">
-              <span className="font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">Ctrl + Enter</span> để Lưu
-          </div>
-          <div className="flex gap-3">
-             <button onClick={handleCloseAttempt} className="px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm active:scale-95">
-                Hủy bỏ
-            </button>
-            <button 
+
+        <div className="flex justify-between items-center px-6 py-5 bg-white border-t border-slate-200">
+           <div className="text-xs text-slate-400 font-medium">
+                Ctrl + Enter để Lưu • Esc để Đóng
+           </div>
+           <div className="flex gap-3">
+              <button 
+                type="button" 
+                onClick={handleCloseAttempt} 
+                className="px-6 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
+              >
+                Hủy
+              </button>
+              <button 
+                form="report-form"
                 type="submit" 
-                form="report-form" 
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md shadow-blue-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center"
-            >
-                <CheckCircleIcon className="w-5 h-5 mr-2" />
-                {initialData && !initialData.id.startsWith('new_') ? 'CẬP NHẬT' : 'TẠO PHẢN ÁNH'}
-            </button>
-          </div>
+                className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center"
+              >
+                <CheckCircleIcon className="h-5 w-5 mr-2" />
+                Lưu phản ánh
+              </button>
+           </div>
         </div>
       </div>
     </div>

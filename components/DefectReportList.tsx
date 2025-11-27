@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { DefectReport, UserRole } from '../types';
 import Pagination from './Pagination';
@@ -40,6 +39,7 @@ interface Props {
   summaryStats: SummaryStats;
   onItemsPerPageChange: (items: number) => void;
   onDelete: (id: string) => void;
+  onDeleteMultiple?: (ids: string[]) => void;
   isLoading?: boolean;
   onExport: () => void;
   onDuplicate?: (report: DefectReport) => void;
@@ -52,7 +52,7 @@ const statusColorMap: { [key in DefectReport['trangThai']]: string } = {
   'Hoàn thành': 'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
 
-type ColumnId = 'stt' | 'ngayPhanAnh' | 'maSanPham' | 'tenThuongMai' | 'noiDungPhanAnh' | 'soLo' | 'maNgaySanXuat' | 'trangThai' | 'actions';
+type ColumnId = 'select' | 'stt' | 'ngayPhanAnh' | 'maSanPham' | 'tenThuongMai' | 'noiDungPhanAnh' | 'soLo' | 'maNgaySanXuat' | 'trangThai' | 'actions';
 
 interface ColumnConfig {
   id: ColumnId;
@@ -60,11 +60,12 @@ interface ColumnConfig {
   visible: boolean;
   width: number;
   align?: 'left' | 'center' | 'right';
-  fixed?: boolean; // Cannot toggle visibility
+  fixed?: boolean;
 }
 
 // Optimized widths for single-page view with 2-line height constraint
 const DEFAULT_COLUMNS: ColumnConfig[] = [
+    { id: 'select', label: '', visible: true, width: 40, align: 'center', fixed: true },
     { id: 'stt', label: 'STT', visible: true, width: 50, align: 'center' },
     { id: 'ngayPhanAnh', label: 'Ngày P.Ánh', visible: true, width: 110, align: 'left' },
     { id: 'maSanPham', label: 'Mã SP', visible: true, width: 120, align: 'left' },
@@ -72,11 +73,11 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'noiDungPhanAnh', label: 'Nội dung phản ánh', visible: true, width: 350, align: 'left' },
     { id: 'soLo', label: 'Số lô', visible: true, width: 100, align: 'left' },
     { id: 'maNgaySanXuat', label: 'Mã NSX', visible: true, width: 100, align: 'left' },
-    { id: 'trangThai', label: 'Trạng thái', visible: true, width: 180, align: 'left' },
+    { id: 'trangThai', label: 'Trạng thái', visible: true, width: 160, align: 'left' },
     { id: 'actions', label: '', visible: true, width: 80, align: 'center', fixed: true },
 ];
 
-const HighlightText = ({ text, highlight }: { text: string, highlight: string }) => {
+const HighlightText = React.memo(({ text, highlight }: { text: string, highlight: string }) => {
     if (!highlight.trim() || !text) return <>{text}</>;
     const regex = new RegExp(`(${highlight})`, 'gi');
     const parts = text.split(regex);
@@ -91,30 +92,96 @@ const HighlightText = ({ text, highlight }: { text: string, highlight: string })
             )}
         </span>
     );
-};
+});
+
+// Mobile Card Component
+const MobileReportCard = React.memo(({ 
+    report, isSelected, onSelect, onDuplicate, onDelete, canDelete, highlight 
+}: { 
+    report: DefectReport, isSelected: boolean, onSelect: () => void, 
+    onDuplicate: ((r: DefectReport) => void) | undefined, 
+    onDelete: (id: string) => void, canDelete: boolean, highlight: string 
+}) => {
+    return (
+        <div 
+            onClick={onSelect}
+            className={`bg-white p-4 rounded-xl shadow-sm border mb-3 active:scale-[0.98] transition-all ${isSelected ? 'border-blue-500 ring-1 ring-blue-500 bg-blue-50/50' : 'border-slate-200'}`}
+        >
+            <div className="flex justify-between items-start mb-2">
+                 <div className="flex items-center gap-2">
+                     <span className="font-bold text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">
+                        <HighlightText text={report.maSanPham} highlight={highlight} />
+                     </span>
+                     <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                        <CalendarIcon className="w-3 h-3" />
+                        {new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}
+                     </span>
+                 </div>
+                 <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${statusColorMap[report.trangThai]}`}>
+                    {report.trangThai}
+                 </span>
+            </div>
+            
+            <h4 className="font-bold text-slate-800 text-sm mb-1 line-clamp-2">
+                <HighlightText text={report.tenThuongMai} highlight={highlight} />
+            </h4>
+            <p className="text-xs text-slate-500 line-clamp-2 mb-3 italic">
+                 <HighlightText text={report.noiDungPhanAnh} highlight={highlight} />
+            </p>
+            
+            <div className="flex justify-between items-center pt-3 border-t border-slate-100 mt-2">
+                 <div className="text-xs font-semibold text-slate-500">
+                    Lô: <span className="text-slate-800 font-bold"><HighlightText text={report.soLo} highlight={highlight} /></span>
+                 </div>
+                 
+                 <div className="flex items-center gap-2">
+                      {onDuplicate && (
+                          <button 
+                             onClick={(e) => { e.stopPropagation(); onDuplicate(report); }}
+                             className="p-2 bg-slate-50 text-slate-500 rounded-lg hover:bg-blue-50 hover:text-blue-600 border border-slate-200 active:scale-90 transition-transform"
+                          >
+                             <DocumentDuplicateIcon className="h-4 w-4" />
+                          </button>
+                      )}
+                      {canDelete && (
+                          <button 
+                             onClick={(e) => { e.stopPropagation(); onDelete(report.id); }}
+                             className="p-2 bg-slate-50 text-slate-500 rounded-lg hover:bg-red-50 hover:text-red-600 border border-slate-200 active:scale-90 transition-transform"
+                          >
+                             <TrashIcon className="h-4 w-4" />
+                          </button>
+                      )}
+                 </div>
+            </div>
+        </div>
+    );
+});
+
 
 const DefectReportList: React.FC<Props> = ({ 
   reports, totalReports, currentPage, itemsPerPage, onPageChange, 
   onSelectReport, currentUserRole,
   filters, onSearchTermChange, onStatusFilterChange, onDefectTypeFilterChange, onYearFilterChange, onDateFilterChange,
-  summaryStats, onItemsPerPageChange, onDelete, isLoading, onExport, onDuplicate
+  summaryStats, onItemsPerPageChange, onDelete, onDeleteMultiple, isLoading, onExport, onDuplicate
 }) => {
   // Columns State
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [showSettings, setShowSettings] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   
+  // Selection State
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // Interaction State
   const [reportToDelete, setReportToDelete] = useState<DefectReport | null>(null);
   const [hoveredReport, setHoveredReport] = useState<DefectReport | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  // Virtualization State
+  // Virtualization State (Desktop only)
   const parentRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [containerHeight, setContainerHeight] = useState(600);
   
-  // Fixed ROW_HEIGHT for approx 2 lines of text
   const ROW_HEIGHT = 72; 
 
   // --- RESIZING LOGIC ---
@@ -153,14 +220,13 @@ const DefectReportList: React.FC<Props> = ({
       window.removeEventListener('mouseup', handleMouseUp);
   }, [handleMouseMove]);
 
-  // --- VIRTUALIZATION LOGIC ---
+  // --- VIRTUALIZATION LOGIC (Desktop) ---
   useEffect(() => {
       const handleResize = () => {
           if (parentRef.current) {
               setContainerHeight(parentRef.current.clientHeight);
           }
       };
-      // Initial measure
       handleResize();
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
@@ -170,23 +236,57 @@ const DefectReportList: React.FC<Props> = ({
       setScrollTop(e.currentTarget.scrollTop);
   }, []);
 
-  // Scroll to top when page changes
   useEffect(() => {
       if (parentRef.current) {
           parentRef.current.scrollTop = 0;
           setScrollTop(0);
       }
+      setSelectedIds(new Set()); // Reset selection on page change
   }, [currentPage, filters]);
 
-  // Calculations for virtual window
+  // Virtualization calculations (Desktop only)
+  // Note: reports passed here are already paginated (e.g., 10 or 20 items).
+  // So virtualization is mostly just rendering the small list, 
+  // but we keep the structure for potential larger page sizes.
+  // With page size 10-20, virtualization doesn't save much but doesn't hurt.
   const totalContentHeight = reports.length * ROW_HEIGHT;
-  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2); // Buffer top
+  
+  // Since pagination limits items (e.g. 50 max), we can just render all in the table for simplicity 
+  // OR keep virtualization if page size is large.
+  // With page size 10-20, virtualization doesn't save much but doesn't hurt.
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2); 
   const endIndex = Math.min(
       reports.length, 
-      Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + 2 // Buffer bottom
+      Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + 2 
   );
   const visibleReports = reports.slice(startIndex, endIndex);
   const offsetY = startIndex * ROW_HEIGHT;
+
+  // --- SELECTION LOGIC ---
+  const handleSelectOne = (id: string) => {
+      setSelectedIds(prev => {
+          const newSet = new Set(prev);
+          if (newSet.has(id)) newSet.delete(id);
+          else newSet.add(id);
+          return newSet;
+      });
+  };
+
+  const handleSelectAll = () => {
+      if (selectedIds.size === reports.length && reports.length > 0) {
+          setSelectedIds(new Set());
+      } else {
+          setSelectedIds(new Set(reports.map(r => r.id)));
+      }
+  };
+
+  const handleDeleteSelected = () => {
+      if(selectedIds.size === 0) return;
+      if(window.confirm(`Bạn có chắc muốn xóa ${selectedIds.size} báo cáo đã chọn?`)) {
+          if(onDeleteMultiple) onDeleteMultiple(Array.from(selectedIds));
+          setSelectedIds(new Set());
+      }
+  };
 
   // --- MISC HANDLERS ---
   const handleRowMouseEnter = (report: DefectReport) => setHoveredReport(report);
@@ -206,7 +306,7 @@ const DefectReportList: React.FC<Props> = ({
   };
 
   useEffect(() => {
-      const savedColumns = localStorage.getItem('tableColumnConfigV11'); // Bumped version
+      const savedColumns = localStorage.getItem('tableColumnConfigV14'); 
       if (savedColumns) {
           try {
               const parsedColumns = JSON.parse(savedColumns);
@@ -221,7 +321,7 @@ const DefectReportList: React.FC<Props> = ({
       }
   }, []);
 
-  useEffect(() => { localStorage.setItem('tableColumnConfigV11', JSON.stringify(columns)); }, [columns]);
+  useEffect(() => { localStorage.setItem('tableColumnConfigV14', JSON.stringify(columns)); }, [columns]);
 
   // Close settings on click outside
   useEffect(() => {
@@ -254,20 +354,39 @@ const DefectReportList: React.FC<Props> = ({
   const areFiltersActive = filters.searchTerm || filters.statusFilter !== 'All' || filters.defectTypeFilter !== 'All' || filters.yearFilter !== 'All' || filters.dateFilter.start || filters.dateFilter.end;
   const visibleColumns = useMemo(() => columns.filter(c => c.visible), [columns]);
 
-  // Helper to calculate total table min-width
   const totalTableMinWidth = useMemo(() => visibleColumns.reduce((acc, col) => acc + col.width, 0), [visibleColumns]);
 
-  // Helper to get column styles (fluid vs fixed)
   const getColumnStyle = (col: ColumnConfig) => {
-      const isFluid = col.id === 'tenThuongMai' || col.id === 'noiDungPhanAnh';
+      if (col.id === 'tenThuongMai') {
+          return {
+              className: `flex-[1.5] justify-start`,
+              style: { minWidth: `${col.width}px` }
+          };
+      }
+      if (col.id === 'noiDungPhanAnh') {
+           return {
+              className: `flex-[2.5] justify-start`,
+              style: { minWidth: `${col.width}px` }
+          };
+      }
       return {
-          className: `${isFluid ? 'flex-1' : 'flex-none'} ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'}`,
-          style: isFluid ? { minWidth: col.width } : { width: col.width }
+          className: `flex-none ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'}`,
+          style: { width: `${col.width}px` }
       };
   };
 
   const renderCell = (report: DefectReport, columnId: ColumnId, index: number) => {
       switch (columnId) {
+          case 'select':
+              return (
+                  <input 
+                    type="checkbox" 
+                    checked={selectedIds.has(report.id)}
+                    onChange={() => handleSelectOne(report.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                  />
+              );
           case 'stt':
               return <span className="text-slate-500 font-bold text-xs">{(currentPage - 1) * itemsPerPage + index + 1}</span>;
           case 'ngayPhanAnh':
@@ -327,7 +446,7 @@ const DefectReportList: React.FC<Props> = ({
                                 onDuplicate(report);
                             }}
                             className="p-1.5 bg-white text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-lg transition-all shadow-sm active:scale-95"
-                            title="Sao chép"
+                            title="Sao chép (Duplicate)"
                         >
                             <DocumentDuplicateIcon className="h-4 w-4" />
                         </button>
@@ -354,7 +473,7 @@ const DefectReportList: React.FC<Props> = ({
   const StatTab = ({ label, count, active, onClick, icon }: any) => (
       <button 
           onClick={onClick}
-          className={`relative flex items-center gap-2 px-4 py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap z-10 ${
+          className={`relative flex items-center gap-2 px-4 py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap z-10 flex-shrink-0 ${
               active 
               ? 'text-blue-700 border-blue-600 bg-blue-50/40' 
               : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50'
@@ -369,14 +488,16 @@ const DefectReportList: React.FC<Props> = ({
           </span>
       </button>
   );
+  
+  const canDeleteRole = ([UserRole.Admin, UserRole.KyThuat] as string[]).includes(currentUserRole);
 
   return (
-    <div className="flex flex-col h-full px-4 lg:px-8 py-4 max-w-[1920px] mx-auto w-full relative">
+    <div className="flex flex-col h-full w-full relative sm:px-4 lg:px-8 sm:py-4">
       
-      <div className="flex flex-col h-full bg-white rounded-2xl shadow-soft border border-slate-200 overflow-hidden ring-1 ring-slate-100 relative">
+      <div className="flex flex-col h-full bg-slate-50 sm:bg-white sm:rounded-2xl sm:shadow-soft sm:border sm:border-slate-200 overflow-hidden sm:ring-1 sm:ring-slate-100 relative">
           
-          {/* TABS */}
-          <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar bg-white shadow-sm z-20 sticky top-0 h-12">
+          {/* TABS (Scrollable on Mobile) */}
+          <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar bg-white shadow-sm z-20 sticky top-0 h-12 w-full">
               <StatTab label="Tất cả" count={summaryStats.total} active={filters.statusFilter === 'All'} onClick={() => onStatusFilterChange('All')} icon={<InboxIcon className="h-4 w-4"/>} />
               <StatTab label="Mới" count={summaryStats.moi} active={filters.statusFilter === 'Mới'} onClick={() => onStatusFilterChange('Mới')} icon={<SparklesIcon className="h-4 w-4"/>} />
               <StatTab label="Đang xử lý" count={summaryStats.dangXuLy} active={filters.statusFilter === 'Đang xử lý'} onClick={() => onStatusFilterChange('Đang xử lý')} icon={<ClockIcon className="h-4 w-4"/>} />
@@ -384,146 +505,190 @@ const DefectReportList: React.FC<Props> = ({
               <StatTab label="Hoàn thành" count={summaryStats.hoanThanh} active={filters.statusFilter === 'Hoàn thành'} onClick={() => onStatusFilterChange('Hoàn thành')} icon={<CheckCircleIcon className="h-4 w-4"/>} />
           </div>
 
-          {/* FILTER BAR */}
-          <div className="p-3 flex flex-col xl:flex-row gap-3 items-start xl:items-center justify-between bg-white border-b border-slate-100">
-             <div className="relative w-full xl:w-96 group">
+          {/* FILTER BAR (Responsive Stack) */}
+          <div className="p-3 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between bg-white border-b border-slate-100">
+             <div className="relative w-full lg:w-80 xl:w-96 group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
                     <MagnifyingGlassIcon className="h-5 w-5" />
                 </div>
                 <input
                     type="text"
                     className="block w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all shadow-sm hover:border-slate-300"
-                    placeholder="Tìm kiếm theo mã SP, tên, lô..."
+                    placeholder="Tìm theo mã, tên, lô..."
                     value={filters.searchTerm}
                     onChange={(e) => onSearchTermChange(e.target.value)}
                 />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
-                <div className="relative group">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto">
+                <div className="relative group flex-1 sm:flex-none">
                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
                         <FunnelIcon className="h-4 w-4" />
                     </div>
                     <select
-                        className="pl-9 pr-8 py-2 text-sm font-bold border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:border-blue-500 hover:bg-slate-50 cursor-pointer appearance-none min-w-[160px] shadow-sm focus:ring-2 focus:ring-blue-500/20 hover:border-slate-300"
+                        className="w-full sm:w-auto pl-9 pr-8 py-2 text-sm font-bold border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:border-blue-500 hover:bg-slate-50 cursor-pointer appearance-none min-w-[160px] shadow-sm focus:ring-2 focus:ring-blue-500/20 hover:border-slate-300"
                         value={filters.defectTypeFilter}
                         onChange={(e) => onDefectTypeFilterChange(e.target.value)}
                     >
-                        <option value="All">Tất cả nguồn gốc lỗi</option>
+                        <option value="All">Tất cả nguồn gốc</option>
                         <option value="Lỗi Sản xuất">Lỗi Sản xuất</option>
                         <option value="Lỗi Nhà cung cấp">Lỗi Nhà cung cấp</option>
                         <option value="Lỗi Hỗn hợp">Lỗi Hỗn hợp</option>
                         <option value="Lỗi Khác">Lỗi Khác</option>
                     </select>
                 </div>
-                 <div className="flex items-center bg-white rounded-xl border border-slate-200 px-3 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all hover:border-slate-300">
-                    <CalendarIcon className="h-4 w-4 text-slate-400 mr-2" />
-                    <input
-                        type="date"
-                        className="bg-transparent text-sm text-slate-700 focus:outline-none font-bold w-28 py-0.5"
-                        value={filters.dateFilter.start}
-                        onChange={(e) => onDateFilterChange({ ...filters.dateFilter, start: e.target.value })}
-                    />
-                    <span className="text-slate-300 mx-2">-</span>
-                    <input
-                        type="date"
-                         className="bg-transparent text-sm text-slate-700 focus:outline-none font-bold w-28 py-0.5"
-                        value={filters.dateFilter.end}
-                        onChange={(e) => onDateFilterChange({ ...filters.dateFilter, end: e.target.value })}
-                    />
-                </div>
-                 <div className="h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
-                 <button onClick={onExport} className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95" title="Xuất Excel"><ArrowDownTrayIcon className="h-5 w-5" /></button>
-                 <div className="relative" ref={settingsRef}>
-                    <button onClick={() => setShowSettings(!showSettings)} className={`p-2 bg-white border border-slate-200 rounded-xl hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95 ${showSettings ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-slate-600'}`} title="Cấu hình cột"><Cog6ToothIcon className="h-5 w-5" /></button>
-                    {showSettings && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 z-30 p-2 animate-fade-in-up">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-1">Hiển thị cột</h4>
-                            <div className="space-y-0.5 max-h-60 overflow-y-auto custom-scrollbar">
-                                {columns.map((col) => !col.fixed && (
-                                    <button key={col.id} onClick={() => toggleColumnVisibility(col.id)} className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition-colors ${col.visible ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-500 hover:bg-slate-50'}`}><span>{col.label || 'Thao tác'}</span>{col.visible && <CheckCircleIcon className="h-4 w-4" />}</button>
-                                ))}
-                            </div>
-                        </div>
+                 
+                 {/* DATE FILTER RANGE */}
+                 <div className="flex flex-1 sm:flex-none items-center bg-white rounded-xl border border-slate-200 px-3 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all hover:border-slate-300 min-w-[200px]">
+                    <CalendarIcon className="h-4 w-4 text-slate-400 mr-2 flex-shrink-0" />
+                    <div className="flex items-center gap-1 w-full justify-between sm:justify-start">
+                        <input
+                            type="date"
+                            className="bg-transparent text-sm text-slate-700 focus:outline-none font-bold py-0.5 w-[90px] cursor-pointer"
+                            value={filters.dateFilter.start}
+                            max={filters.dateFilter.end}
+                            onChange={(e) => onDateFilterChange({ ...filters.dateFilter, start: e.target.value })}
+                            title="Từ ngày"
+                        />
+                        <span className="text-slate-300 font-medium">–</span>
+                        <input
+                            type="date"
+                            className="bg-transparent text-sm text-slate-700 focus:outline-none font-bold py-0.5 w-[90px] cursor-pointer"
+                            value={filters.dateFilter.end}
+                            min={filters.dateFilter.start}
+                            onChange={(e) => onDateFilterChange({ ...filters.dateFilter, end: e.target.value })}
+                            title="Đến ngày"
+                        />
+                    </div>
+                    {(filters.dateFilter.start || filters.dateFilter.end) && (
+                        <button 
+                            onClick={() => onDateFilterChange({ start: '', end: '' })}
+                            className="ml-1 text-slate-400 hover:text-red-500 p-0.5 rounded-full hover:bg-red-50 transition-colors active:scale-90 flex-shrink-0"
+                            title="Xóa lọc ngày"
+                        >
+                            <XIcon className="h-3.5 w-3.5" />
+                        </button>
                     )}
                 </div>
-                {areFiltersActive && (
-                    <button onClick={resetFilters} className="p-2 ml-1 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-transparent hover:border-red-200 shadow-sm active:scale-95" title="Xóa bộ lọc"><XIcon className="h-5 w-5" /></button>
-                )}
+
+                <div className="flex items-center gap-2 mt-2 sm:mt-0 justify-end w-full sm:w-auto">
+                     <div className="h-8 w-px bg-slate-200 mx-1 hidden lg:block"></div>
+                     <button onClick={onExport} className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95" title="Xuất Excel"><ArrowDownTrayIcon className="h-5 w-5" /></button>
+                     <div className="relative hidden md:block" ref={settingsRef}>
+                        <button onClick={() => setShowSettings(!showSettings)} className={`p-2 bg-white border border-slate-200 rounded-xl hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95 ${showSettings ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-slate-600'}`} title="Cấu hình cột"><Cog6ToothIcon className="h-5 w-5" /></button>
+                        {showSettings && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 z-30 p-2 animate-fade-in-up">
+                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-1">Hiển thị cột</h4>
+                                <div className="space-y-0.5 max-h-60 overflow-y-auto custom-scrollbar">
+                                    {columns.map((col) => !col.fixed && (
+                                        <button key={col.id} onClick={() => toggleColumnVisibility(col.id)} className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition-colors ${col.visible ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-500 hover:bg-slate-50'}`}><span>{col.label || 'Thao tác'}</span>{col.visible && <CheckCircleIcon className="h-4 w-4" />}</button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    {areFiltersActive && (
+                        <button onClick={resetFilters} className="p-2 ml-1 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-transparent hover:border-red-200 shadow-sm active:scale-95 flex-shrink-0" title="Xóa bộ lọc"><XIcon className="h-5 w-5" /></button>
+                    )}
+                </div>
             </div>
           </div>
 
-          {/* TABLE CONTENT (Virtualized + Resizable + Auto Expand) */}
-          <div className={`flex-1 overflow-hidden relative transition-opacity duration-300 flex flex-col bg-slate-50/30 ${isLoading ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
+          {/* LIST CONTENT */}
+          <div className={`flex-1 overflow-hidden relative transition-opacity duration-300 flex flex-col bg-slate-50/50 ${isLoading ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
+            
             {reports.length > 0 ? (
-                <div 
-                    ref={parentRef} 
-                    onScroll={handleScroll}
-                    className="flex-1 overflow-auto custom-scrollbar relative"
-                >
-                    <div className="min-w-full inline-block align-middle" style={{ minWidth: totalTableMinWidth }}>
-                        {/* Table Header (Flex) */}
-                        <div className="flex bg-white/95 backdrop-blur-md border-b border-slate-200 text-left text-xs font-bold text-slate-500 uppercase tracking-wider sticky top-0 z-20 shadow-sm h-[48px]">
-                            {visibleColumns.map((col) => {
-                                const { className, style } = getColumnStyle(col);
-                                return (
-                                    <div 
-                                        key={col.id} 
-                                        className={`relative flex items-center px-3 h-full border-r border-transparent hover:border-slate-100 ${className}`} 
-                                        style={style}
-                                    >
-                                        {col.label}
-                                        
-                                        {/* Resize Handle */}
+                <>
+                    {/* MOBILE CARD VIEW (< md) */}
+                    <div className="md:hidden flex-1 overflow-y-auto p-4 pb-20 custom-scrollbar space-y-3">
+                        {reports.map((report) => (
+                            <MobileReportCard
+                                key={report.id}
+                                report={report}
+                                isSelected={selectedIds.has(report.id)}
+                                onSelect={() => onSelectReport(report)}
+                                onDuplicate={onDuplicate}
+                                onDelete={(id) => setReportToDelete(reports.find(r => r.id === id) || null)}
+                                canDelete={canDeleteRole}
+                                highlight={filters.searchTerm}
+                            />
+                        ))}
+                    </div>
+
+                    {/* DESKTOP TABLE VIEW (>= md) */}
+                    <div 
+                        ref={parentRef} 
+                        onScroll={handleScroll}
+                        className="hidden md:block flex-1 overflow-auto custom-scrollbar relative"
+                    >
+                        <div className="min-w-full inline-block align-middle" style={{ minWidth: totalTableMinWidth }}>
+                            <div className="flex bg-white/95 backdrop-blur-md border-b border-slate-200 text-left text-xs font-bold text-slate-500 uppercase tracking-wider sticky top-0 z-20 shadow-sm h-[48px]">
+                                {visibleColumns.map((col) => {
+                                    const { className, style } = getColumnStyle(col);
+                                    return (
                                         <div 
-                                            className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-400 transition-colors z-30"
-                                            onMouseDown={(e) => startResize(e, col.id, col.width)}
-                                        />
-                                    </div>
-                                )
-                            })}
-                        </div>
-                        
-                        {/* Virtualized List Container */}
-                        <div 
-                            className="relative" 
-                            style={{ height: totalContentHeight }}
-                        >
-                            {visibleReports.map((report, index) => {
-                                const actualIndex = startIndex + index;
-                                return (
-                                    <div 
-                                        key={report.id}
-                                        style={{ 
-                                            transform: `translateY(${offsetY + (index * ROW_HEIGHT)}px)`,
-                                            height: ROW_HEIGHT,
-                                            position: 'absolute',
-                                            top: 0, left: 0, right: 0
-                                        }}
-                                        onClick={() => onSelectReport(report)}
-                                        onMouseEnter={() => handleRowMouseEnter(report)}
-                                        onMouseLeave={handleRowMouseLeave}
-                                        onMouseMove={handleRowMouseMove}
-                                        className={`group flex items-center transition-colors cursor-pointer border-b hover:z-10 bg-white border-slate-100 hover:border-blue-500 hover:bg-blue-50/60`}
-                                    >
-                                        {visibleColumns.map((col) => {
-                                            const { className, style } = getColumnStyle(col);
-                                            return (
-                                                <div 
-                                                    key={col.id} 
-                                                    className={`px-3 h-full flex items-center overflow-hidden ${className}`} 
-                                                    style={style}
-                                                >
-                                                    {renderCell(report, col.id, actualIndex)}
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                );
-                            })}
+                                            key={col.id} 
+                                            className={`relative flex items-center px-3 h-full border-r border-transparent hover:border-slate-100 ${className} whitespace-nowrap`} 
+                                            style={style}
+                                        >
+                                            {col.id === 'select' ? (
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={reports.length > 0 && selectedIds.size === reports.length}
+                                                    onChange={handleSelectAll}
+                                                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            ) : col.label}
+                                            
+                                            <div 
+                                                className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-400 transition-colors z-30"
+                                                onMouseDown={(e) => startResize(e, col.id, col.width)}
+                                            />
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            
+                            <div 
+                                className="relative" 
+                                style={{ height: totalContentHeight }}
+                            >
+                                {visibleReports.map((report, index) => {
+                                    const actualIndex = startIndex + index;
+                                    return (
+                                        <div 
+                                            key={report.id}
+                                            style={{ 
+                                                transform: `translateY(${offsetY + (index * ROW_HEIGHT)}px)`,
+                                                height: ROW_HEIGHT,
+                                                position: 'absolute',
+                                                top: 0, left: 0, right: 0
+                                            }}
+                                            onClick={() => onSelectReport(report)}
+                                            onMouseEnter={() => handleRowMouseEnter(report)}
+                                            onMouseLeave={handleRowMouseLeave}
+                                            onMouseMove={handleRowMouseMove}
+                                            className={`group flex items-center transition-colors cursor-pointer border-b hover:z-10 ${selectedIds.has(report.id) ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100 hover:border-blue-500 hover:bg-blue-50/60'}`}
+                                        >
+                                            {visibleColumns.map((col) => {
+                                                const { className, style } = getColumnStyle(col);
+                                                return (
+                                                    <div 
+                                                        key={col.id} 
+                                                        className={`px-3 h-full flex items-center overflow-hidden ${className}`} 
+                                                        style={style}
+                                                    >
+                                                        {renderCell(report, col.id, actualIndex)}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
-                </div>
+                </>
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-16 text-center animate-fade-in-up">
                     <div className="w-64 h-48 bg-slate-100 rounded-full mb-6 relative overflow-hidden flex items-center justify-center">
@@ -546,6 +711,28 @@ const DefectReportList: React.FC<Props> = ({
                     )}
                 </div>
             )}
+
+            {/* FLOATING ACTION BAR FOR BULK ACTIONS */}
+            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-40 transition-all duration-300 w-full max-w-md px-4 ${selectedIds.size > 0 ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'}`}>
+                 <div className="bg-slate-900/90 backdrop-blur-md text-white rounded-2xl shadow-2xl p-2 pl-5 flex items-center justify-between gap-4 border border-white/10 ring-1 ring-black/20">
+                     <span className="font-bold text-sm">Đã chọn {selectedIds.size}</span>
+                     <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => setSelectedIds(new Set())}
+                            className="px-3 py-1.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                            Hủy
+                        </button>
+                        <button 
+                            onClick={handleDeleteSelected}
+                            className="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-500/30 transition-all active:scale-95 flex items-center"
+                        >
+                            <TrashIcon className="w-4 h-4 mr-2" />
+                            Xóa
+                        </button>
+                     </div>
+                 </div>
+            </div>
 
             <div className="p-3 border-t border-slate-200 bg-white shadow-[0_-5px_15px_rgba(0,0,0,0.01)] relative z-20">
                 <Pagination
@@ -577,10 +764,10 @@ const DefectReportList: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Floating Tooltip */}
+      {/* Floating Tooltip (Desktop Only) */}
       <div 
         ref={tooltipRef}
-        className={`fixed z-[999] bg-white/95 backdrop-blur-xl border border-white/50 p-4 rounded-2xl shadow-2xl pointer-events-none transition-opacity duration-200 max-w-[340px] w-full ring-1 ring-black/5 ${hoveredReport ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
+        className={`hidden md:block fixed z-[999] bg-white/95 backdrop-blur-xl border border-white/50 p-4 rounded-2xl shadow-2xl pointer-events-none transition-opacity duration-200 max-w-[340px] w-full ring-1 ring-black/5 ${hoveredReport ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
         style={{ left: 0, top: 0, transitionProperty: 'opacity, transform' }}
       >
         {hoveredReport && (
