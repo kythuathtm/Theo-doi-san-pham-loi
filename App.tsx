@@ -139,6 +139,8 @@ const DraggableFAB = ({ onClick }: { onClick: () => void }) => {
 export const App: React.FC = () => {
   // Toast State
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  
+  // Define showToast first so it can be passed to hooks
   const showToast = useCallback((message: string, type: ToastType) => {
     setToast({ message, type });
   }, []);
