@@ -25,7 +25,7 @@ interface Props {
   selectedReport: DefectReport | null;
   onSelectReport: (report: DefectReport) => void;
   currentUserRole: UserRole;
-  currentUsername: string; // New prop for user-specific storage
+  currentUsername: string;
   filters: {
     searchTerm: string;
     statusFilter: string;
@@ -73,7 +73,6 @@ interface ColumnConfig {
   fixed?: boolean;
 }
 
-// Default Configuration - Removed 'select' column
 const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'stt', label: 'STT', visible: true, width: 60, align: 'center' },
     { id: 'ngayPhanAnh', label: 'Ngày phản ánh', visible: true, width: 130, align: 'left' },
@@ -88,7 +87,6 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
 
 const HighlightText = React.memo(({ text, highlight }: { text: string, highlight: string }) => {
     if (!highlight.trim() || !text) return <>{text}</>;
-    // Escape special characters for regex to prevent crash
     const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(${escapedHighlight})`, 'gi');
     const parts = text.split(regex);
@@ -119,8 +117,8 @@ const MobileReportCard = React.memo(({
             onClick={onSelect}
             className="absolute left-0 right-0 w-full px-3 py-2 touch-manipulation"
         >
-            <div className={`bg-white rounded-xl shadow-sm border border-slate-100 border-l-4 ${statusBorderMap[report.trangThai]} active:scale-[0.98] transition-transform duration-200 h-full flex flex-col relative overflow-hidden`}>
-                <div className="p-4 flex-1">
+            <div className={`bg-white rounded-xl shadow-sm border border-slate-100 border-l-4 ${statusBorderMap[report.trangThai]} active:scale-[0.98] transition-transform duration-200 h-full flex flex-col justify-between overflow-hidden`}>
+                <div className="p-3 pb-0 flex-1">
                     <div className="flex justify-between items-start mb-2">
                         <div className="flex flex-col flex-1 mr-2">
                             <h4 className="font-bold text-slate-900 text-base leading-tight mb-1.5 line-clamp-1">
@@ -141,18 +139,18 @@ const MobileReportCard = React.memo(({
                     </div>
                     
                     {/* Content Preview */}
-                    <div className="text-sm font-normal text-slate-500 bg-slate-50/80 p-2.5 rounded-lg italic line-clamp-2 border border-slate-50 leading-relaxed">
+                    <div className="text-sm font-normal text-slate-500 bg-slate-50/80 p-2 rounded-lg italic line-clamp-2 border border-slate-50 leading-relaxed mb-2">
                         <HighlightText text={report.noiDungPhanAnh || 'Không có nội dung'} highlight={highlight} />
                     </div>
                 </div>
                 
                 {/* Footer Action Strip */}
-                <div className="flex items-center justify-between px-4 py-2 border-t border-slate-100 bg-slate-50/30">
+                <div className="flex items-center justify-between px-3 py-2 border-t border-slate-100 bg-slate-50/30">
                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">Lô: {report.soLo}</span>
+                        <span className="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 shadow-sm">Lô: {report.soLo}</span>
                      </div>
                      
-                     <div className="flex items-center gap-3">
+                     <div className="flex items-center gap-2">
                           {onDuplicate && (
                               <button 
                                  onClick={(e) => { e.stopPropagation(); onDuplicate(report); }}
@@ -177,7 +175,6 @@ const MobileReportCard = React.memo(({
         </div>
     );
 });
-
 
 const DefectReportList: React.FC<Props> = ({ 
   reports, totalReports, currentPage, itemsPerPage, onPageChange, 
@@ -209,7 +206,7 @@ const DefectReportList: React.FC<Props> = ({
   // Dynamic Row Height Calculation
   const fontSizePx = parseInt(baseFontSize, 10) || 15;
   const ROW_HEIGHT = Math.max(54, fontSizePx * 3.6);        // Scale row height with font
-  const MOBILE_ROW_HEIGHT = 195; // Fixed height for new mobile card design
+  const MOBILE_ROW_HEIGHT = Math.max(200, fontSizePx * 13.5); // Fixed height for new mobile card design
 
   // --- RESIZING LOGIC ---
   const resizingRef = useRef<{ startX: number; startWidth: number; colId: ColumnId } | null>(null);
@@ -223,7 +220,7 @@ const DefectReportList: React.FC<Props> = ({
 
   // Load Columns Config with Order Preservation
   useEffect(() => {
-    if (!currentUsername) return; // Wait for username
+    if (!currentUsername) return; 
     
     const savedColumnsStr = localStorage.getItem(storageKey); 
     if (savedColumnsStr) {
@@ -233,20 +230,18 @@ const DefectReportList: React.FC<Props> = ({
             const newColumns: ColumnConfig[] = [];
             const processedIds = new Set<string>();
 
-            // 1. Add saved columns in their saved order, if they still exist in defaults
             parsedColumns.forEach(savedCol => {
                 const defaultCol = defaultColMap.get(savedCol.id);
                 if (defaultCol) {
                     newColumns.push({
-                        ...defaultCol, // Keep code-defined props (label, fixed status)
-                        width: savedCol.width, // Restore width
-                        visible: savedCol.visible // Restore visibility
+                        ...defaultCol,
+                        width: savedCol.width,
+                        visible: savedCol.visible
                     });
                     processedIds.add(savedCol.id);
                 }
             });
 
-            // 2. Add any new default columns that weren't in storage (e.g. after update)
             DEFAULT_COLUMNS.forEach(defCol => {
                 if (!processedIds.has(defCol.id)) {
                     newColumns.push(defCol);
@@ -260,7 +255,7 @@ const DefectReportList: React.FC<Props> = ({
             setColumns(DEFAULT_COLUMNS);
         }
     } else {
-        setColumns(DEFAULT_COLUMNS); // Reset to default if no saved config for this user
+        setColumns(DEFAULT_COLUMNS);
     }
   }, [currentUsername]);
 
@@ -288,7 +283,7 @@ const DefectReportList: React.FC<Props> = ({
       if (!resizingRef.current) return;
       const { startX, startWidth, colId } = resizingRef.current;
       const deltaX = e.clientX - startX;
-      const newWidth = Math.max(50, startWidth + deltaX); // Min width 50px
+      const newWidth = Math.max(50, startWidth + deltaX);
 
       setColumns(prev => prev.map(col => 
           col.id === colId ? { ...col, width: newWidth } : col
@@ -306,7 +301,6 @@ const DefectReportList: React.FC<Props> = ({
 
   // --- VIRTUALIZATION HANDLERS ---
   
-  // 1. Measure Containers
   useEffect(() => {
       const handleResize = () => {
           if (parentRef.current) {
@@ -322,7 +316,6 @@ const DefectReportList: React.FC<Props> = ({
       return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 2. Scroll Handlers (Throttled with rAF)
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
       const target = e.currentTarget;
       requestAnimationFrame(() => {
@@ -337,7 +330,6 @@ const DefectReportList: React.FC<Props> = ({
       });
   }, []);
 
-  // 3. Reset Scroll on Data Change
   useEffect(() => {
       if (parentRef.current) {
           parentRef.current.scrollTop = 0;
@@ -349,7 +341,7 @@ const DefectReportList: React.FC<Props> = ({
       }
   }, [currentPage, filters]);
 
-  // 4. Calculate Visible Items (Desktop)
+  // Calculate Visible Items
   const totalContentHeight = reports.length * ROW_HEIGHT;
   const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2); 
   const endIndex = Math.min(
@@ -359,7 +351,6 @@ const DefectReportList: React.FC<Props> = ({
   const visibleReports = reports.slice(startIndex, endIndex);
   const offsetY = startIndex * ROW_HEIGHT;
 
-  // 5. Calculate Visible Items (Mobile)
   const totalMobileContentHeight = reports.length * MOBILE_ROW_HEIGHT;
   const mobileStartIndex = Math.max(0, Math.floor(mobileScrollTop / MOBILE_ROW_HEIGHT) - 2);
   const mobileEndIndex = Math.min(
@@ -371,7 +362,6 @@ const DefectReportList: React.FC<Props> = ({
 
   // --- DRAG & DROP COLUMN ORDERING ---
   const handleHeaderDragStart = (e: React.DragEvent, colId: ColumnId) => {
-    // Only allow left click drag
     if (e.button !== 0) {
         e.preventDefault();
         return;
@@ -379,16 +369,14 @@ const DefectReportList: React.FC<Props> = ({
     setDraggedColId(colId);
     e.dataTransfer.setData('colId', colId);
     e.dataTransfer.effectAllowed = 'move';
-    // Transparent ghost image if desired, or let browser handle it
   };
 
   const handleHeaderDragEnter = (e: React.DragEvent, targetColId: ColumnId) => {
       e.preventDefault();
-      // Optional: Add visual indicator for drop target here
   };
   
   const handleHeaderDragOver = (e: React.DragEvent) => {
-      e.preventDefault(); // Necessary to allow dropping
+      e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
   };
 
@@ -396,7 +384,7 @@ const DefectReportList: React.FC<Props> = ({
     e.preventDefault();
     const sourceColId = e.dataTransfer.getData('colId') as ColumnId;
     
-    setDraggedColId(null); // Reset drag state
+    setDraggedColId(null); 
 
     if (!sourceColId || sourceColId === targetColId) return;
 
@@ -404,8 +392,6 @@ const DefectReportList: React.FC<Props> = ({
     const toIndex = columns.findIndex(c => c.id === targetColId);
 
     if (fromIndex !== -1 && toIndex !== -1) {
-        // Prevent moving fixed columns or dropping onto fixed columns if logic requires
-        // Here we allow moving non-fixed columns amongst themselves
         if (columns[fromIndex].fixed || columns[toIndex].fixed) return;
 
         const newCols = [...columns];
@@ -432,7 +418,6 @@ const DefectReportList: React.FC<Props> = ({
       }
   };
 
-  // Close settings on click outside
   useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
           if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
@@ -456,18 +441,13 @@ const DefectReportList: React.FC<Props> = ({
       setColumns(DEFAULT_COLUMNS);
   };
 
-  // Function to move column up or down via menu
   const moveColumn = (index: number, direction: -1 | 1) => {
     const newCols = [...columns];
     const targetIndex = index + direction;
     
-    // Bounds check
     if (targetIndex < 0 || targetIndex >= newCols.length) return;
-    
-    // Fixed check
     if (newCols[targetIndex].fixed) return;
 
-    // Swap
     [newCols[index], newCols[targetIndex]] = [newCols[targetIndex], newCols[index]];
     setColumns(newCols);
   };
@@ -485,13 +465,10 @@ const DefectReportList: React.FC<Props> = ({
 
   const getColumnStyle = (col: ColumnConfig) => {
       return {
-          // Use flex-none for fixed columns, flex-grow for others to fill space
           className: `${col.fixed ? 'sticky right-0 z-10 bg-white/95 backdrop-blur shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] flex-none' : ''} ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'} flex items-center min-w-0`,
           style: { 
-              // Flex grow proportional to width, shrink allowed, basis at width
               flex: col.fixed ? 'none' : `${col.width} 1 ${col.width}px`,
               minWidth: `${col.width}px`,
-              // width only needed for fixed columns to enforce size
               width: col.fixed ? `${col.width}px` : undefined
           }
       };
@@ -602,7 +579,6 @@ const DefectReportList: React.FC<Props> = ({
   );
   
   const canDeleteRole = ([UserRole.Admin, UserRole.KyThuat] as string[]).includes(currentUserRole);
-  // Only show Defect Type filter if NOT 'SanXuat' or 'Kho'
   const showDefectTypeFilter = !([UserRole.SanXuat, UserRole.Kho] as string[]).includes(currentUserRole);
 
   return (
@@ -610,7 +586,7 @@ const DefectReportList: React.FC<Props> = ({
       
       <div className="flex flex-col h-full bg-slate-50 sm:bg-white sm:rounded-2xl sm:shadow-soft sm:border sm:border-slate-200 overflow-hidden sm:ring-1 sm:ring-slate-100 relative">
           
-          {/* TABS (Scrollable on Mobile) */}
+          {/* TABS */}
           <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar bg-white/80 backdrop-blur-sm shadow-sm z-20 sticky top-0 h-12 w-full snap-x">
               <StatTab label="Tất cả" count={summaryStats.total} active={filters.statusFilter === 'All'} onClick={() => onStatusFilterChange('All')} icon={<InboxIcon className="h-4 w-4"/>} />
               <StatTab label="Mới" count={summaryStats.moi} active={filters.statusFilter === 'Mới'} onClick={() => onStatusFilterChange('Mới')} icon={<SparklesIcon className="h-4 w-4"/>} />
@@ -619,7 +595,7 @@ const DefectReportList: React.FC<Props> = ({
               <StatTab label="Hoàn thành" count={summaryStats.hoanThanh} active={filters.statusFilter === 'Hoàn thành'} onClick={() => onStatusFilterChange('Hoàn thành')} icon={<CheckCircleIcon className="h-4 w-4"/>} />
           </div>
 
-          {/* FILTER BAR (Responsive) */}
+          {/* FILTER BAR */}
           <div className="p-2 sm:p-3 flex flex-col lg:flex-row gap-2 sm:gap-3 items-stretch lg:items-center justify-between bg-white border-b border-slate-100">
              
              {/* Mobile Filter Toggle & Search */}
@@ -628,7 +604,6 @@ const DefectReportList: React.FC<Props> = ({
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
                         <MagnifyingGlassIcon className="h-5 w-5" />
                     </div>
-                    {/* Filter Input: Regular + Small */}
                     <input
                         type="text"
                         className="block w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-normal placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all shadow-sm hover:border-slate-300"
@@ -645,7 +620,7 @@ const DefectReportList: React.FC<Props> = ({
                 </button>
              </div>
 
-            {/* Collapsible Filter Area (Hidden on Mobile unless toggled) */}
+            {/* Collapsible Filter Area */}
             <div className={`
                 flex flex-col lg:flex-row gap-2 w-full lg:w-auto overflow-hidden transition-all duration-300 ease-in-out lg:!h-auto lg:!opacity-100
                 ${isMobileFiltersOpen ? 'max-h-[300px] opacity-100 pt-2 lg:pt-0 border-t border-slate-100 lg:border-none' : 'max-h-0 opacity-0 lg:overflow-visible'}
@@ -656,7 +631,6 @@ const DefectReportList: React.FC<Props> = ({
                             <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
                                 <FunnelIcon className="h-4 w-4" />
                             </div>
-                            {/* Filter Select: Regular + Small */}
                             <select
                                 className="w-full pl-8 pr-8 py-2 text-sm font-normal border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:border-blue-500 hover:bg-slate-50 cursor-pointer appearance-none shadow-sm focus:ring-2 focus:ring-blue-500/20"
                                 value={filters.defectTypeFilter}
@@ -675,7 +649,6 @@ const DefectReportList: React.FC<Props> = ({
                     <div className="flex w-full sm:w-auto items-center bg-white rounded-xl border border-slate-200 px-2 sm:px-3 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all hover:border-slate-300">
                         <CalendarIcon className="h-4 w-4 text-slate-400 mr-2 flex-shrink-0" />
                         <div className="flex items-center gap-1 flex-1">
-                            {/* Filter Date Input: Regular + Small */}
                             <input
                                 type="date"
                                 className="bg-transparent text-sm text-slate-700 focus:outline-none font-normal py-0.5 w-[85px] cursor-pointer"
@@ -795,7 +768,7 @@ const DefectReportList: React.FC<Props> = ({
                                     style={{
                                         top: 0,
                                         transform: `translateY(${mobileOffsetY + (index * MOBILE_ROW_HEIGHT)}px)`,
-                                        height: MOBILE_ROW_HEIGHT,
+                                        height: MOBILE_ROW_HEIGHT - 12, // Subtract margin
                                         willChange: 'transform'
                                     }}
                                     report={report}
@@ -833,8 +806,6 @@ const DefectReportList: React.FC<Props> = ({
                                             title={!col.fixed ? "Kéo để sắp xếp lại cột" : undefined}
                                         >
                                             {col.label}
-                                            
-                                            {/* Resize handle */}
                                             {!col.fixed && (
                                                 <div 
                                                     className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-blue-400 z-30 opacity-0 hover:opacity-100 transition-opacity"

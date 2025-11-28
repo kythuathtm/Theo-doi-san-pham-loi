@@ -19,7 +19,7 @@ const StatCard = React.memo(({ title, value, percentage, icon, onClick, gradient
     return (
         <div 
             onClick={onClick}
-            className={`relative p-6 rounded-2xl cursor-pointer transition-all duration-300 h-full min-h-[160px] group overflow-hidden active:scale-[0.98] shadow-soft hover:shadow-xl bg-gradient-to-br ${gradient} ${isActive ? 'ring-4 ring-offset-2 ring-blue-300' : ''} ${className || ''}`}
+            className={`relative p-5 sm:p-6 rounded-2xl cursor-pointer transition-all duration-300 h-full min-h-[140px] sm:min-h-[160px] group overflow-hidden active:scale-[0.98] shadow-soft hover:shadow-xl bg-gradient-to-br ${gradient} ${isActive ? 'ring-4 ring-offset-2 ring-blue-300' : ''} ${className || ''}`}
         >
             {/* Background Decor - Glassmorphism Texture */}
             <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px] pointer-events-none"></div>
@@ -30,21 +30,21 @@ const StatCard = React.memo(({ title, value, percentage, icon, onClick, gradient
             <div className="relative z-10 flex flex-col h-full justify-between">
                 <div className="flex justify-between items-start">
                     <div className="flex flex-col">
-                        <p className="text-xs font-bold text-white/90 uppercase tracking-widest mb-1 drop-shadow-sm">{title}</p>
+                        <p className="text-[10px] sm:text-xs font-bold text-white/90 uppercase tracking-widest mb-1 drop-shadow-sm">{title}</p>
                         {subLabel && <span className="text-[10px] font-bold text-white/80 bg-black/10 px-2 py-0.5 rounded w-fit backdrop-blur-sm">{subLabel}</span>}
                     </div>
-                    <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl shadow-inner border border-white/20 text-white transform group-hover:rotate-12 transition-transform duration-300">
-                        {React.cloneElement(icon, { className: "h-6 w-6" })}
+                    <div className="p-2 sm:p-2.5 bg-white/20 backdrop-blur-md rounded-xl shadow-inner border border-white/20 text-white transform group-hover:rotate-12 transition-transform duration-300">
+                        {React.cloneElement(icon, { className: "h-5 w-5 sm:h-6 sm:w-6" })}
                     </div>
                 </div>
 
                 <div className="flex items-end justify-between mt-4">
-                    <h3 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold text-white tracking-tight leading-none drop-shadow-md">
+                    <h3 className="text-3xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold text-white tracking-tight leading-none drop-shadow-md">
                         {value.toLocaleString('vi-VN')}
                     </h3>
                     {percentage !== undefined && (
                         <div className="flex items-center bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20 mb-1 shadow-sm">
-                            <span className="text-sm font-bold text-white">{percentage}%</span>
+                            <span className="text-xs sm:text-sm font-bold text-white">{percentage}%</span>
                         </div>
                     )}
                 </div>
@@ -53,7 +53,7 @@ const StatCard = React.memo(({ title, value, percentage, icon, onClick, gradient
     );
 });
 
-// 2. Status Donut Chart (Trạng thái xử lý - No 'Total' text)
+// 2. Status Donut Chart
 const StatusDonutChart = ({ data, onFilter }: { data: any, onFilter: any }) => {
     const size = 180;
     const strokeWidth = 22;
@@ -72,7 +72,7 @@ const StatusDonutChart = ({ data, onFilter }: { data: any, onFilter: any }) => {
     const totalCount = segments.reduce((acc, curr) => acc + curr.count, 0);
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-soft h-full flex flex-col">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-soft h-full flex flex-col">
             <div className="flex items-center gap-3 mb-6">
                 <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg">
                     <ClockIcon className="h-5 w-5" />
@@ -81,8 +81,8 @@ const StatusDonutChart = ({ data, onFilter }: { data: any, onFilter: any }) => {
             </div>
 
             <div className="flex-1 flex flex-col sm:flex-row items-center justify-around gap-8">
-                <div className="relative w-48 h-48 shrink-0 group">
-                     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90 drop-shadow-lg">
+                <div className="relative w-40 h-40 sm:w-48 sm:h-48 shrink-0 group">
+                     <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90 drop-shadow-lg">
                         <circle cx={center} cy={center} r={radius} fill="transparent" stroke="#F8FAFC" strokeWidth={strokeWidth} />
                         {segments.map((seg, i) => {
                             const strokeDasharray = `${(seg.percent / 100) * circumference} ${circumference}`;
@@ -108,9 +108,8 @@ const StatusDonutChart = ({ data, onFilter }: { data: any, onFilter: any }) => {
                             );
                         })}
                      </svg>
-                     {/* Center Number ONLY */}
                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                         <span className="text-6xl font-extrabold text-slate-800 leading-none tracking-tight">
+                         <span className="text-5xl sm:text-6xl font-extrabold text-slate-800 leading-none tracking-tight">
                              {totalCount}
                          </span>
                      </div>
@@ -121,7 +120,7 @@ const StatusDonutChart = ({ data, onFilter }: { data: any, onFilter: any }) => {
                         <div 
                             key={seg.key} 
                             onClick={() => onFilter('status', seg.rawKey)}
-                            className="flex items-center justify-between gap-4 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-all group w-full border border-transparent hover:border-slate-200 active:scale-[0.98]"
+                            className="flex items-center justify-between gap-4 p-2 sm:p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-all group w-full border border-transparent hover:border-slate-200 active:scale-[0.98]"
                         >
                             <div className="flex items-center gap-3">
                                 <span className="w-3 h-3 rounded-full shadow-sm ring-2 ring-white" style={{ backgroundColor: seg.color }}></span>
@@ -144,7 +143,7 @@ const StatusDonutChart = ({ data, onFilter }: { data: any, onFilter: any }) => {
     );
 }
 
-// 3. Origin Bar Chart (Nguồn gốc lỗi)
+// 3. Origin Bar Chart
 const OriginBarChart = ({ data, onFilter }: { data: any, onFilter: any }) => {
     const categories = [
         { label: 'Sản xuất', count: data.dProduction.count, percent: Number(data.dProduction.percent), color: 'bg-rose-500', barColor: 'bg-rose-500', rawKey: 'Lỗi Sản xuất' },
@@ -156,7 +155,7 @@ const OriginBarChart = ({ data, onFilter }: { data: any, onFilter: any }) => {
     const maxCount = Math.max(...categories.map(c => c.count)) || 1;
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-soft h-full flex flex-col">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-soft h-full flex flex-col">
             <div className="flex items-center gap-3 mb-6">
                 <div className="p-1.5 bg-rose-100 text-rose-600 rounded-lg">
                     <ChartPieIcon className="h-5 w-5" />
@@ -203,7 +202,7 @@ const OriginBarChart = ({ data, onFilter }: { data: any, onFilter: any }) => {
     );
 };
 
-// 4. Brand Card (Redesigned: 3 Columns)
+// 4. Brand Card
 const BrandPerformanceCard = React.memo(({ data, onClick }: { data: any; onClick: () => void }) => {
     let theme = {
         border: 'border-slate-100',
@@ -236,9 +235,9 @@ const BrandPerformanceCard = React.memo(({ data, onClick }: { data: any; onClick
 
     const StatColumn = ({ title, value, percent, colorClass }: any) => (
         <div className="flex flex-col items-center justify-center p-3 rounded-xl hover:bg-white/50 transition-colors">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">{title}</span>
+            <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">{title}</span>
             <span className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold ${colorClass} leading-tight`}>{value}</span>
-            <span className="text-xs font-bold text-slate-500 bg-white border border-slate-100 px-2 py-0.5 rounded-full mt-1 shadow-sm">
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 bg-white border border-slate-100 px-2 py-0.5 rounded-full mt-1 shadow-sm">
                 {percent}%
             </span>
         </div>
@@ -249,19 +248,19 @@ const BrandPerformanceCard = React.memo(({ data, onClick }: { data: any; onClick
             onClick={onClick}
             className={`flex flex-col rounded-2xl bg-white border ${theme.border} shadow-soft hover:shadow-xl hover:-translate-y-1 hover:ring-2 ${theme.ring} transition-all duration-300 cursor-pointer overflow-hidden group h-full active:scale-[0.98]`}
         >
-             <div className={`px-5 py-4 border-b border-white ${theme.bg} flex items-center justify-between`}>
+             <div className={`px-4 sm:px-5 py-3 sm:py-4 border-b border-white ${theme.bg} flex items-center justify-between`}>
                 <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-xl bg-white shadow-sm ring-1 ring-black/5`}>
-                        <TagIcon className={`h-6 w-6 ${theme.accent}`} />
+                        <TagIcon className={`h-5 w-5 sm:h-6 sm:w-6 ${theme.accent}`} />
                     </div>
-                    <h3 className={`text-xl font-extrabold tracking-tight ${theme.text} uppercase`}>{data.name}</h3>
+                    <h3 className={`text-lg sm:text-xl font-extrabold tracking-tight ${theme.text} uppercase`}>{data.name}</h3>
                 </div>
                 <div className="p-1.5 rounded-lg bg-white/50 hover:bg-white transition-colors">
                     <ListBulletIcon className={`h-5 w-5 ${theme.subText}`} />
                 </div>
              </div>
 
-             <div className="p-4 grid grid-cols-3 gap-0 divide-x divide-slate-100 flex-1 items-center">
+             <div className="p-2 sm:p-4 grid grid-cols-3 gap-0 divide-x divide-slate-100 flex-1 items-center">
                  <StatColumn title="Phản ánh" value={data.reports} percent={data.reportsPercent} colorClass={theme.text} />
                  <StatColumn title="SP Lỗi" value={data.products} percent={data.productsPercent} colorClass="text-amber-600" />
                  <StatColumn title="Đã đổi" value={data.exchange} percent={data.exchangePercent} colorClass="text-rose-600" />
@@ -344,25 +343,21 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
     };
 
     for (const r of reports) {
-        // Aggregate for lists
         if (r.tenThuongMai) productCounts[r.tenThuongMai] = (productCounts[r.tenThuongMai] || 0) + 1;
         if (r.nhaPhanPhoi) supplierCounts[r.nhaPhanPhoi] = (supplierCounts[r.nhaPhanPhoi] || 0) + 1;
         if (r.donViSuDung) unitCounts[r.donViSuDung] = (unitCounts[r.donViSuDung] || 0) + 1;
 
-        // 1.2 Status
         if (r.trangThai === 'Mới') counts.sNew++;
         else if (r.trangThai === 'Đang xử lý') counts.sProcessing++;
         else if (r.trangThai === 'Chưa tìm ra nguyên nhân') counts.sUnknown++;
         else if (r.trangThai === 'Hoàn thành') counts.sCompleted++;
 
-        // 1.3 Defect Type (Updated Nomenclature: Nguồn gốc lỗi)
         const l = (r.loaiLoi || '') as string;
         if (l === 'Lỗi Sản xuất' || l === 'Lỗi bộ phận sản xuất') counts.dProduction++;
         else if (l === 'Lỗi Nhà cung cấp') counts.dSupplier++;
         else if (l === 'Lỗi Hỗn hợp' || l === 'Lỗi vừa sản xuất vừa NCC') counts.dMixed++;
         else if (l === 'Lỗi Khác' || l === 'Lỗi khác') counts.dOther++;
 
-        // 1.4 Brand Data Aggregation
         if (r.nhanHang === 'HTM') {
             counts.brandHTM.r++;
             counts.brandHTM.e += (r.soLuongDoi || 0);
@@ -378,7 +373,6 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
         }
     }
 
-    // Transform Counts to Arrays for Lists
     const productList = Object.entries(productCounts).map(([name, count]) => ({name, count})).sort((a,b) => b.count - a.count);
     const supplierList = Object.entries(supplierCounts).map(([name, count]) => ({name, count})).sort((a,b) => b.count - a.count);
     const unitList = Object.entries(unitCounts).map(([name, count]) => ({name, count})).sort((a,b) => b.count - a.count);
@@ -391,7 +385,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
         reportsPercent: getPct(data.r, totalReports),
         exchange: data.e,
         exchangePercent: getPct(data.e, totalExchange),
-        products: data.pSet.size, // Unique defective products for this brand
+        products: data.pSet.size, 
         productsPercent: getPct(data.pSet.size, totalUniqueProducts)
     });
 
@@ -403,12 +397,11 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
         brands.push(buildBrandStats('Khác', counts.brandOther));
     }
 
-    // 1.5 Top 5 Products (reuse productList)
     const top5 = productList.slice(0, 5).map(p => ({ name: p.name, quantity: p.count }));
 
     return {
         total: totalReports,
-        uniqueProducts: productList.length, // Unique Product Names reported
+        uniqueProducts: productList.length,
         totalSuppliers: supplierList.length,
         totalUnits: unitList.length,
         lists: {
@@ -462,7 +455,6 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
       }).length;
   }, [reports, activeFilter]);
 
-  // Determine Modal Content based on filter type
   const renderModalContent = () => {
       if (!activeFilter) return null;
 
@@ -476,9 +468,8 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
           return <SimpleListView title="Danh sách Đơn vị sử dụng" data={stats.lists.units} type="Unit" />;
       }
 
-      // Default: Report List Table (for Status, Origin, Brand drilldown)
       return (
-        <div className="flex-1 overflow-y-auto bg-slate-50 custom-scrollbar p-6">
+        <div className="flex-1 overflow-y-auto bg-slate-50 custom-scrollbar p-4 sm:p-6">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden ring-1 ring-slate-50">
                 <table className="min-w-full divide-y divide-slate-100">
                     <thead className="bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
@@ -535,8 +526,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
 
   return (
     <div className="flex flex-col h-full bg-slate-50/50">
-         {/* Added pb-24 to handle mobile navigation */}
-         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-8 custom-scrollbar pb-24 md:pb-8">
+         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 custom-scrollbar pb-24 md:pb-8">
              
              {/* 1.1 TỔNG QUAN */}
              <div className="flex flex-col gap-4">
@@ -545,7 +535,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                     <h2 className="text-base font-bold text-slate-800 uppercase tracking-wide">1.1. TỔNG QUAN</h2>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     <StatCard 
                         title="TỔNG PHẢN ÁNH" 
                         value={stats.total} 
@@ -553,7 +543,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                         icon={<DocumentDuplicateIcon/>} 
                         onClick={() => handleCardClick('all')}
                         isActive={false}
-                        className="hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/20"
+                        className="hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/20 col-span-2 sm:col-span-1"
                     />
                     <StatCard 
                         title="SẢN PHẨM LỖI" 
@@ -585,12 +575,10 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
 
              {/* 1.2 & 1.3: CHART SECTION */}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[350px]">
-                 {/* 1.2 Status Chart */}
                  <div className="h-full">
                      <StatusDonutChart data={stats.status} onFilter={handleCardClick} />
                  </div>
                  
-                 {/* 1.3 Origin Chart */}
                  <div className="h-full">
                      <OriginBarChart data={stats.defect} onFilter={handleCardClick} />
                  </div>
@@ -617,7 +605,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                             <div className="w-1.5 h-6 bg-yellow-500 rounded-full"></div>
                             <h2 className="text-base font-bold text-slate-800 uppercase tracking-wide">1.5. TOP 5 SP LỖI</h2>
                         </div>
-                        <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5 flex-1 flex flex-col overflow-hidden h-full ring-1 ring-slate-50">
+                        <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-4 sm:p-5 flex-1 flex flex-col overflow-hidden h-full ring-1 ring-slate-50">
                              <div className="flex flex-col gap-2 h-full overflow-y-auto custom-scrollbar pr-1">
                                 {stats.top5.map((item, index) => (
                                     <div 
@@ -661,11 +649,9 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
              </div>
         </div>
 
-        {/* MODAL WINDOW FOR DRILL-DOWN LIST */}
         {activeFilter && (
             <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-slate-900/60 backdrop-blur-sm transition-opacity">
-                <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-5xl bg-white rounded-none sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up ring-1 ring-white/20">
-                    {/* Modal Header */}
+                <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-5xl bg-white rounded-none sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up ring-1 ring-white/20">
                     <div className="flex justify-between items-center px-6 py-5 bg-white border-b border-slate-100">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shadow-sm border border-blue-100">
@@ -703,7 +689,6 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                         </button>
                     </div>
 
-                    {/* Modal Content */}
                     {renderModalContent()}
                 </div>
             </div>
