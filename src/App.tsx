@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef, useCallback } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon, EllipsisHorizontalIcon } from './components/Icons';
@@ -147,7 +148,7 @@ export const App: React.FC = () => {
 
   // Use Custom Hooks
   const { currentUser, users, login, logout, saveUser, deleteUser } = useAuth(showToast);
-  const { reports, isLoadingReports, saveReport, updateReport, deleteReport } = useReports(showToast);
+  const { reports, isLoadingReports, saveReport, deleteReport, updateReport } = useReports(showToast);
   const { products, addProduct, deleteProduct, deleteAllProducts, importProducts } = useProducts(showToast);
   const { roleSettings, systemSettings, saveRoleSettings, saveSystemSettings, renameRole } = useSettings(showToast);
 
@@ -361,20 +362,6 @@ export const App: React.FC = () => {
           setSelectedReport(null);
       }
   };
-  
-  const handleUpdateReportWrapper = useCallback(async (id: string, updates: Partial<DefectReport>) => {
-      const success = await updateReport(id, updates);
-      if (success) {
-          // Update selectedReport locally to reflect changes immediately
-          setSelectedReport(prev => {
-              if (prev && prev.id === id) {
-                  return { ...prev, ...updates };
-              }
-              return prev;
-          });
-      }
-      return success;
-  }, [updateReport]);
 
   const handleDeleteReportWrapper = useCallback(async (id: string) => {
       const success = await deleteReport(id);
@@ -609,7 +596,7 @@ export const App: React.FC = () => {
                   <DefectReportDetail
                     report={selectedReport}
                     onEdit={handleEditClick}
-                    onUpdate={handleUpdateReportWrapper}
+                    onUpdate={updateReport}
                     onDelete={handleDeleteReportWrapper}
                     permissions={userPermissions}
                     onClose={() => setSelectedReport(null)}
