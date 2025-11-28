@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon, EllipsisHorizontalIcon } from './components/Icons';
@@ -774,7 +775,7 @@ export const App: React.FC = () => {
                  <div className="bg-slate-100/80 p-1 rounded-xl flex items-center gap-1 border border-slate-200/50">
                     <button
                         onClick={() => setCurrentView('list')}
-                        className={`flex items-center justify-center sm:justify-start px-2 sm:px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
+                        className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
                             currentView === 'list' 
                             ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
@@ -786,7 +787,7 @@ export const App: React.FC = () => {
                     </button>
                     <button
                         onClick={() => setCurrentView('dashboard')}
-                        className={`flex items-center justify-center sm:justify-start px-2 sm:px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
+                        className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
                             currentView === 'dashboard' 
                             ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
