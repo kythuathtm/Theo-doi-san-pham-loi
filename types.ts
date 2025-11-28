@@ -40,6 +40,7 @@ export interface DefectReport {
   nhaPhanPhoi: string;
   donViSuDung: string;
   noiDungPhanAnh: string;
+  images?: string[]; // New field: Image URLs
   soLo: string;
   maNgaySanXuat: string;
   soLuongLoi: number;

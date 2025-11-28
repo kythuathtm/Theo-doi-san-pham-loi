@@ -19,29 +19,30 @@ const StatCard = React.memo(({ title, value, percentage, icon, onClick, gradient
     return (
         <div 
             onClick={onClick}
-            className={`relative p-6 rounded-2xl cursor-pointer transition-all duration-300 h-full min-h-[160px] group overflow-hidden active:scale-[0.98] shadow-lg hover:shadow-2xl bg-gradient-to-br ${gradient} ${isActive ? 'ring-4 ring-offset-2 ring-blue-300' : ''} ${className || ''}`}
+            className={`relative p-6 rounded-2xl cursor-pointer transition-all duration-300 h-full min-h-[160px] group overflow-hidden active:scale-[0.98] shadow-soft hover:shadow-xl bg-gradient-to-br ${gradient} ${isActive ? 'ring-4 ring-offset-2 ring-blue-300' : ''} ${className || ''}`}
         >
-            {/* Background Decor */}
+            {/* Background Decor - Glassmorphism Texture */}
+            <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px] pointer-events-none"></div>
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/5 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
 
             <div className="relative z-10 flex flex-col h-full justify-between">
                 <div className="flex justify-between items-start">
                     <div className="flex flex-col">
-                        <p className="text-xs font-bold text-white/80 uppercase tracking-widest mb-1">{title}</p>
-                        {subLabel && <span className="text-xs font-bold text-white/60 bg-black/20 px-2 py-0.5 rounded w-fit">{subLabel}</span>}
+                        <p className="text-xs font-bold text-white/90 uppercase tracking-widest mb-1 drop-shadow-sm">{title}</p>
+                        {subLabel && <span className="text-[10px] font-bold text-white/80 bg-black/10 px-2 py-0.5 rounded w-fit backdrop-blur-sm">{subLabel}</span>}
                     </div>
-                    <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl shadow-inner border border-white/10 text-white">
+                    <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl shadow-inner border border-white/20 text-white">
                         {React.cloneElement(icon, { className: "h-6 w-6" })}
                     </div>
                 </div>
 
                 <div className="flex items-end justify-between mt-4">
-                    <h3 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-none drop-shadow-sm">
+                    <h3 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold text-white tracking-tight leading-none drop-shadow-md">
                         {value.toLocaleString('vi-VN')}
                     </h3>
                     {percentage !== undefined && (
-                        <div className="flex items-center bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 mb-1">
+                        <div className="flex items-center bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20 mb-1 shadow-sm">
                             <span className="text-sm font-bold text-white">{percentage}%</span>
                         </div>
                     )}
@@ -551,7 +552,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                         icon={<DocumentDuplicateIcon/>} 
                         onClick={() => handleCardClick('all')}
                         isActive={false}
-                        className="hover:scale-[1.03] hover:shadow-2xl hover:shadow-blue-500/30"
+                        className="hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/20"
                     />
                     <StatCard 
                         title="SẢN PHẨM LỖI" 

@@ -34,24 +34,17 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   }, [onClose]);
 
   const config = {
-    success: { bg: 'bg-green-500', icon: '✅' },
-    error: { bg: 'bg-red-500', icon: '❌' },
+    success: { bg: 'bg-emerald-500', icon: '✅' },
+    error: { bg: 'bg-rose-500', icon: '❌' },
     info: { bg: 'bg-blue-500', icon: 'ℹ️' },
   };
 
   const { bg, icon } = config[type];
 
   return (
-    <div className={`fixed bottom-5 right-5 ${bg} text-white py-3 px-5 rounded-xl shadow-2xl flex items-center z-[60] animate-fade-in-up`}>
-      <style>{`
-        @keyframes fade-in-up {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up { animation: fade-in-up 0.3s ease-out forwards; }
-      `}</style>
-      <span className="mr-3 text-xl">{icon}</span>
-      <span className="font-medium">{message}</span>
+    <div className={`fixed bottom-6 right-6 ${bg} text-white py-3 px-5 rounded-2xl shadow-xl shadow-black/10 flex items-center z-[70] animate-fade-in-up backdrop-blur-md bg-opacity-95`}>
+      <span className="mr-3 text-lg">{icon}</span>
+      <span className="font-semibold text-sm">{message}</span>
     </div>
   );
 };
@@ -68,16 +61,16 @@ const DraggableFAB = ({ onClick }: { onClick: () => void }) => {
         // Initialize position higher up on mobile to avoid pagination overlap
         const isMobile = window.innerWidth < 640;
         setPosition({ 
-            x: window.innerWidth - 80, 
-            y: window.innerHeight - (isMobile ? 140 : 100)
+            x: window.innerWidth - 72, 
+            y: window.innerHeight - (isMobile ? 120 : 100)
         });
         setIsInitialized(true);
 
         const handleResize = () => {
              const isMobile = window.innerWidth < 640;
              setPosition(prev => ({
-                 x: Math.min(prev.x, window.innerWidth - 80),
-                 y: Math.min(prev.y, window.innerHeight - (isMobile ? 140 : 80))
+                 x: Math.min(prev.x, window.innerWidth - 72),
+                 y: Math.min(prev.y, window.innerHeight - (isMobile ? 120 : 100))
              }));
         };
         window.addEventListener('resize', handleResize);
@@ -123,7 +116,7 @@ const DraggableFAB = ({ onClick }: { onClick: () => void }) => {
     return (
         <button
             style={{ left: position.x, top: position.y, touchAction: 'none' }}
-            className={`fixed z-40 p-4 bg-blue-600 text-white rounded-full shadow-xl shadow-blue-600/40 hover:bg-blue-700 hover:scale-110 transition-transform active:scale-95 flex items-center justify-center cursor-move group ${isDragging ? 'scale-110 cursor-grabbing shadow-2xl' : ''}`}
+            className={`fixed z-40 p-3.5 bg-blue-600 text-white rounded-full shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 flex items-center justify-center cursor-move group ${isDragging ? 'scale-110 cursor-grabbing shadow-xl' : ''}`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -147,7 +140,7 @@ export const App: React.FC = () => {
 
   // Use Custom Hooks
   const { currentUser, users, login, logout, saveUser, deleteUser } = useAuth(showToast);
-  const { reports, isLoadingReports, saveReport, deleteReport } = useReports(showToast);
+  const { reports, isLoadingReports, saveReport, deleteReport, updateReport } = useReports(showToast);
   const { products, addProduct, deleteProduct, deleteAllProducts, importProducts } = useProducts(showToast);
   const { roleSettings, systemSettings, saveRoleSettings, saveSystemSettings, renameRole } = useSettings(showToast);
 
@@ -192,6 +185,17 @@ export const App: React.FC = () => {
         root.style.fontSize = systemSettings.baseFontSize;
     }
   }, [systemSettings.fontFamily, systemSettings.baseFontSize]);
+
+  // Sync selectedReport with reports to ensure realtime updates in modal
+  useEffect(() => {
+    if (selectedReport) {
+        const updatedReport = reports.find(r => r.id === selectedReport.id);
+        // Only update if reference changed (implies data update from Firestore)
+        if (updatedReport && updatedReport !== selectedReport) {
+            setSelectedReport(updatedReport);
+        }
+    }
+  }, [reports, selectedReport]);
 
   // Close menus on outside click
   useEffect(() => {
@@ -353,7 +357,7 @@ export const App: React.FC = () => {
 
   // Memoized Handlers for List to avoid re-renders
   const handleSaveReportWrapper = async (report: DefectReport) => {
-      const isEditing = !!editingReport;
+      const isEditing = !!editingReport && !editingReport.id.startsWith('new_');
       const success = await saveReport(report, isEditing);
       if (success) {
           setIsFormOpen(false);
@@ -379,6 +383,27 @@ export const App: React.FC = () => {
     setEditingReport(null);
     setIsFormOpen(true);
   };
+
+  const handleDuplicateReport = useCallback((report: DefectReport) => {
+      // Create a copy but reset status-related fields
+      const duplicate: DefectReport = {
+          ...report,
+          id: `new_${Date.now()}`, // Temporary ID to indicate new
+          ngayTao: new Date().toISOString(),
+          ngayPhanAnh: new Date().toISOString().split('T')[0],
+          trangThai: 'Mới',
+          soLuongLoi: report.soLuongLoi, // Keep quantities as they might be similar
+          soLuongDaNhap: report.soLuongDaNhap,
+          soLuongDoi: 0,
+          nguyenNhan: '',
+          huongKhacPhuc: '',
+          ngayHoanThanh: '',
+          ngayDoiHang: '',
+          images: [], // Reset images for new report
+      };
+      setEditingReport(duplicate);
+      setIsFormOpen(true);
+  }, []);
 
   const handleItemsPerPageChange = useCallback((newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
@@ -452,51 +477,53 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-slate-100 text-slate-900 relative">
+    <div className="flex flex-col h-dvh bg-slate-50 text-slate-900 relative">
       <header 
-        className="backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 transition-all"
+        className="backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-30 transition-all shadow-sm"
         style={{
-            backgroundColor: systemSettings.headerBackgroundColor || 'rgba(255, 255, 255, 0.9)',
+            backgroundColor: systemSettings.headerBackgroundColor || 'rgba(255, 255, 255, 0.8)',
             color: systemSettings.headerTextColor || '#0f172a'
         }}
       >
-        <div className="max-w-[1920px] mx-auto px-2 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="bg-blue-600 p-1.5 sm:p-2 rounded-xl shadow-lg shadow-blue-600/20 flex-shrink-0">
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-1.5 sm:p-2 rounded-xl shadow-lg shadow-blue-600/20 flex-shrink-0">
                <BarChartIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
-            <h1 className="text-sm sm:text-lg font-bold tracking-tight truncate hidden sm:block uppercase text-inherit">
-              THEO DÕI LỖI SẢN PHẨM
+            <h1 className="text-base sm:text-lg font-extrabold tracking-tight truncate uppercase text-inherit leading-none hidden xs:block">
+              Theo dõi Lỗi SP
             </h1>
-            {isLoadingReports && <span className="text-xs text-blue-500 animate-pulse ml-2">● Đồng bộ...</span>}
+            {isLoadingReports && <span className="text-xs text-blue-500 animate-pulse ml-2 font-semibold">● Loading...</span>}
           </div>
 
           {canViewDashboard && (
-             <div className="flex items-center gap-1 sm:gap-2">
-                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-2 py-1.5 flex items-center active:scale-95 transition-transform">
-                    <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-500 mr-1 sm:mr-2 opacity-80" />
-                    <span className="text-xs font-semibold text-slate-500 mr-1 hidden sm:inline opacity-80">Năm:</span>
+             <div className="flex items-center gap-1 sm:gap-3">
+                 <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm px-2 py-1.5 flex items-center active:scale-95 transition-transform">
+                    <CalendarIcon className="h-4 w-4 text-slate-500 mr-1 opacity-70" />
                     <select 
                         value={yearFilter} 
                         onChange={(e) => setYearFilter(e.target.value)}
-                        className="text-xs sm:text-sm font-bold text-blue-600 bg-transparent focus:outline-none cursor-pointer hover:text-blue-700"
+                        className="text-xs sm:text-sm font-bold text-slate-700 bg-transparent focus:outline-none cursor-pointer hover:text-blue-600 appearance-none pr-1"
                     >
                         <option value="All">Tất cả</option>
                         {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                  </div>
-                 <div className="bg-slate-100/80 p-1 rounded-xl flex items-center gap-1 border border-slate-200/50 hidden md:flex">
+                 
+                 <div className="bg-slate-100/80 p-1 rounded-xl flex items-center gap-1 border border-slate-200/50">
                     <button
                         onClick={() => setCurrentView('list')}
-                        className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${currentView === 'list' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                        className={`flex items-center justify-center p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${currentView === 'list' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                        title="Danh sách"
                     >
-                        <ListBulletIcon className="h-4 w-4 mr-2" /> Danh sách
+                        <ListBulletIcon className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Danh sách</span>
                     </button>
                     <button
                         onClick={() => setCurrentView('dashboard')}
-                        className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${currentView === 'dashboard' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                        className={`flex items-center justify-center p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${currentView === 'dashboard' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                        title="Báo cáo"
                     >
-                        <ChartPieIcon className="h-4 w-4 mr-2" /> Báo cáo
+                        <ChartPieIcon className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Báo cáo</span>
                     </button>
                 </div>
             </div>
@@ -571,6 +598,7 @@ export const App: React.FC = () => {
                     summaryStats={summaryStats}
                     isLoading={isPending}
                     onExport={handleExportData}
+                    onDuplicate={handleDuplicateReport}
                     baseFontSize={systemSettings.baseFontSize}
                 />
             ) : (
@@ -583,7 +611,8 @@ export const App: React.FC = () => {
         </Suspense>
       </main>
 
-      {userPermissions.canCreate && <DraggableFAB onClick={handleCreateClick} />}
+      {/* Conditional FAB rendering */}
+      {userPermissions.canCreate && !isFormOpen && !selectedReport && <DraggableFAB onClick={handleCreateClick} />}
 
       <Suspense fallback={null}>
           {selectedReport && (
@@ -593,6 +622,7 @@ export const App: React.FC = () => {
                   <DefectReportDetail
                     report={selectedReport}
                     onEdit={handleEditClick}
+                    onUpdate={updateReport}
                     onDelete={handleDeleteReportWrapper}
                     permissions={userPermissions}
                     onClose={() => setSelectedReport(null)}

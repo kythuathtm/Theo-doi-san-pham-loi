@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from 'react';
 import { DefectReport, ToastType } from '../types';
 import { db } from '../firebaseConfig';
@@ -51,6 +52,19 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
     }
   };
 
+  const updateReport = async (id: string, updates: Partial<DefectReport>, successMessage: string = 'Cập nhật báo cáo thành công!') => {
+      try {
+          const reportRef = doc(db, "reports", id);
+          await updateDoc(reportRef, updates as any);
+          showToast(successMessage, 'success');
+          return true;
+      } catch (error) {
+          console.error("Error updating report:", error);
+          showToast('Lỗi khi cập nhật báo cáo', 'error');
+          return false;
+      }
+  };
+
   const deleteReport = async (id: string) => {
     try {
         await deleteDoc(doc(db, "reports", id));
@@ -84,6 +98,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
     reports,
     isLoadingReports,
     saveReport,
+    updateReport,
     deleteReport,
     deleteMultipleReports
   };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
-import { XIcon, CheckCircleIcon, TagIcon, WrenchIcon, LockClosedIcon, ShieldCheckIcon, ClipboardDocumentListIcon, CalendarIcon, BuildingStoreIcon } from './Icons';
+import { XIcon, CheckCircleIcon, TagIcon, WrenchIcon, LockClosedIcon, ShieldCheckIcon, ClipboardDocumentListIcon, CalendarIcon, BuildingStoreIcon, PlusIcon, TrashIcon } from './Icons';
 
 interface Props {
   initialData: DefectReport | null;
@@ -28,11 +28,14 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     soLuongLoi: 0, soLuongDaNhap: 0, soLuongDoi: 0, ngayDoiHang: '',
     nguyenNhan: '', huongKhacPhuc: '', trangThai: 'Mới',
     ngayHoanThanh: '', loaiLoi: '' as any, nhanHang: 'HTM', 
+    images: []
   });
   
   const [errors, setErrors] = useState<Partial<Record<keyof Omit<DefectReport, 'id'>, string>>>({});
   const [isProductInfoLocked, setIsProductInfoLocked] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState(''); // State for new image input
+
   const productCodeInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -52,6 +55,9 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
               handleCloseAttempt();
           }
           if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              // Prevent submit if focus is on image input
+              if (document.activeElement?.getAttribute('name') === 'imageUrlInput') return;
+              
               const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
               handleSubmit(fakeEvent);
           }
@@ -177,11 +183,14 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+          ...initialData,
+          images: initialData.images || []
+      });
       const product = products.find(p => p.maSanPham.toLowerCase() === initialData.maSanPham.toLowerCase());
       setIsProductInfoLocked(!!product && !initialData.id.startsWith('new_'));
     } else {
-      setFormData(prev => ({ ...prev, ngayPhanAnh: getTodayDateString() }));
+      setFormData(prev => ({ ...prev, ngayPhanAnh: getTodayDateString(), images: [] }));
       setIsProductInfoLocked(false);
     }
     setIsDirty(false); 
@@ -275,6 +284,25 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     }
   };
 
+  const handleAddImage = () => {
+      if (newImageUrl.trim()) {
+          setFormData(prev => ({
+              ...prev,
+              images: [...(prev.images || []), newImageUrl.trim()]
+          }));
+          setNewImageUrl('');
+          setIsDirty(true);
+      }
+  };
+
+  const handleRemoveImage = (index: number) => {
+      setFormData(prev => ({
+          ...prev,
+          images: (prev.images || []).filter((_, i) => i !== index)
+      }));
+      setIsDirty(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const currentErrors = validate();
@@ -334,7 +362,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4 transition-opacity">
       <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] max-w-6xl rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up ring-1 ring-white/20">
         
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white/95 backdrop-blur z-20">
           <div>
               <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">
                   {initialData && !initialData.id.startsWith('new_') ? 'CHỈNH SỬA PHẢN ÁNH' : 'TẠO PHẢN ÁNH MỚI'}
@@ -358,9 +386,9 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             </div>
         )}
 
-        <form id="report-form" ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/50 space-y-8 custom-scrollbar">
+        <form id="report-form" ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/50 space-y-8 custom-scrollbar relative">
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-20 sm:pb-0">
             {/* COLUMN LEFT: PRODUCT INFO */}
             <div className="space-y-8">
                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -577,6 +605,45 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                             />
                             <ErrorMessage field="noiDungPhanAnh" />
                         </div>
+                        
+                        {/* IMAGE PROOF SECTION */}
+                        <div className="mt-4">
+                             <label className="block text-sm font-bold text-slate-700 mb-2">Hình ảnh minh chứng</label>
+                             <div className="flex gap-2 mb-2">
+                                <input 
+                                    type="text" 
+                                    name="imageUrlInput"
+                                    value={newImageUrl}
+                                    onChange={(e) => setNewImageUrl(e.target.value)}
+                                    placeholder="Dán đường dẫn ảnh (URL) vào đây..."
+                                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                />
+                                <button 
+                                    type="button" 
+                                    onClick={handleAddImage}
+                                    className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg font-bold hover:bg-blue-100 transition-colors"
+                                >
+                                    <PlusIcon className="w-5 h-5" />
+                                </button>
+                             </div>
+                             
+                             {formData.images && formData.images.length > 0 && (
+                                 <div className="grid grid-cols-4 gap-2 mt-2">
+                                     {formData.images.map((img, idx) => (
+                                         <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-slate-200">
+                                             <img src={img} alt="Evidence" className="w-full h-full object-cover" />
+                                             <button 
+                                                type="button"
+                                                onClick={() => handleRemoveImage(idx)}
+                                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                             >
+                                                 <XIcon className="w-3 h-3" />
+                                             </button>
+                                         </div>
+                                     ))}
+                                 </div>
+                             )}
+                        </div>
 
                         {/* QUANTITY SUB-SECTION */}
                         <div className="pt-4 border-t border-slate-100">
@@ -703,17 +770,18 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             </div>
           </div>
           
-          <div className="flex justify-end pt-5 border-t border-slate-200">
+          {/* Sticky Footer for Mobile Actions */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-slate-200 z-30 flex justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
              <button 
                 type="button" 
                 onClick={handleCloseAttempt} 
-                className="px-6 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95 mr-3"
+                className="flex-1 sm:flex-none px-6 py-3 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
              >
                 Hủy bỏ
              </button>
              <button 
                 type="submit" 
-                className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-95 active:translate-y-0 flex items-center"
+                className="flex-1 sm:flex-none px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center"
              >
                 <CheckCircleIcon className="h-5 w-5 mr-2" />
                 Lưu phản ánh

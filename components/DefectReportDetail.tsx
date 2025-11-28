@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+
+
+import React, { useState, useEffect } from 'react';
 import { DefectReport, UserRole } from '../types';
 import { PencilIcon, TrashIcon, XIcon, WrenchIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, TagIcon, UserIcon, CheckCircleIcon, CalendarIcon } from './Icons';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
 
 interface Props {
   report: DefectReport;
   onEdit: (report: DefectReport) => void;
+  onUpdate: (id: string, updates: Partial<DefectReport>, msg?: string) => Promise<boolean>;
   onDelete: (id: string) => void;
   permissions: { canEdit: boolean; canDelete: boolean };
   onClose: () => void;
@@ -35,7 +36,7 @@ const Section = ({ title, icon, children }: any) => (
     </div>
 );
 
-const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permissions, onClose, currentUserRole }) => {
+const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelete, permissions, onClose, currentUserRole }) => {
   const canSeeLoaiLoi = ([UserRole.Admin, UserRole.TongGiamDoc, UserRole.CungUng, UserRole.KyThuat] as string[]).includes(currentUserRole);
   
   const [quickUpdateData, setQuickUpdateData] = useState({
@@ -46,6 +47,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
   });
   
   const [isUpdating, setIsUpdating] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   // Granular edit state
   const [editingSections, setEditingSections] = useState({
@@ -55,6 +57,18 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
   });
 
   const isEditing = Object.values(editingSections).some(Boolean);
+
+  // Sync local state when report updates from parent (Real-time update)
+  useEffect(() => {
+    if (!isEditing) {
+        setQuickUpdateData({
+            nguyenNhan: report.nguyenNhan || '',
+            huongKhacPhuc: report.huongKhacPhuc || '',
+            soLuongDoi: report.soLuongDoi || 0,
+            ngayDoiHang: report.ngayDoiHang || ''
+        });
+    }
+  }, [report, isEditing]);
 
   const getLoaiLoiBadge = (loaiLoi: string) => {
     let style = 'bg-slate-100 text-slate-600 border-slate-200';
@@ -68,7 +82,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
   const handleQuickUpdate = async () => {
       setIsUpdating(true);
       try {
-          const reportRef = doc(db, "reports", report.id);
           const updates: any = {
               nguyenNhan: quickUpdateData.nguyenNhan,
               huongKhacPhuc: quickUpdateData.huongKhacPhuc,
@@ -76,20 +89,21 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
               ngayDoiHang: quickUpdateData.ngayDoiHang
           };
 
+          let message = "Đã cập nhật thông tin xử lý.";
           // Logic: Auto-complete if everything is filled
           if (updates.nguyenNhan && updates.huongKhacPhuc && updates.soLuongDoi > 0 && report.trangThai !== 'Hoàn thành') {
               updates.trangThai = 'Hoàn thành';
               updates.ngayHoanThanh = new Date().toISOString().split('T')[0];
-              alert("Đã cập nhật thông tin và chuyển trạng thái sang HOÀN THÀNH do đủ điều kiện.");
-          } else {
-              alert("Đã cập nhật thông tin xử lý.");
+              message = "Đã cập nhật thông tin và chuyển trạng thái sang HOÀN THÀNH do đủ điều kiện.";
           }
 
-          await updateDoc(reportRef, updates);
-          setEditingSections({ nguyenNhan: false, huongKhacPhuc: false, soLuong: false });
+          const success = await onUpdate(report.id, updates, message);
+          
+          if (success) {
+              setEditingSections({ nguyenNhan: false, huongKhacPhuc: false, soLuong: false });
+          }
       } catch (e) {
           console.error(e);
-          alert("Lỗi khi cập nhật");
       } finally {
           setIsUpdating(false);
       }
@@ -190,6 +204,18 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
                             {report.noiDungPhanAnh}
                         </dd>
                     </div>
+                    {report.images && report.images.length > 0 && (
+                        <div className="col-span-full mt-4">
+                             <dt className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Hình ảnh minh chứng</dt>
+                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                 {report.images.map((img, idx) => (
+                                     <div key={idx} className="cursor-pointer group aspect-square rounded-lg overflow-hidden border border-slate-200 bg-slate-100" onClick={() => setPreviewImage(img)}>
+                                         <img src={img} alt="proof" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"/>
+                                     </div>
+                                 ))}
+                             </div>
+                        </div>
+                    )}
                 </dl>
              </Section>
         </div>
@@ -374,6 +400,16 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onDelete, permiss
         </div>
 
       </div>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+          <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
+              <img src={previewImage} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+              <button className="absolute top-4 right-4 text-white p-2 rounded-full bg-white/20 hover:bg-white/40">
+                  <XIcon className="w-8 h-8" />
+              </button>
+          </div>
+      )}
     </>
   );
 };
