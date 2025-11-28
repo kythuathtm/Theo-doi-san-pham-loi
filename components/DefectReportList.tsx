@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { DefectReport, UserRole } from '../types';
 import Pagination from './Pagination';
@@ -115,32 +116,32 @@ const MobileReportCard = React.memo(({
             <div>
                 <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
-                        <span className="text-base text-slate-600 px-2 py-1 rounded border border-slate-200 bg-slate-50 font-bold">
+                        <span className="text-sm text-slate-600 px-2 py-1 rounded border border-slate-200 bg-slate-50 font-bold">
                             <HighlightText text={report.maSanPham} highlight={highlight} />
                         </span>
-                        <span className="text-sm text-slate-400 flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-slate-100">
+                        <span className="text-xs text-slate-400 flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-slate-100">
                             <CalendarIcon className="w-3 h-3" />
                             {new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}
                         </span>
                     </div>
-                    <span className={`px-2 py-1 rounded text-sm border font-bold shadow-sm ${statusColorMap[report.trangThai]}`}>
+                    <span className={`px-2 py-1 rounded text-xs border font-bold shadow-sm ${statusColorMap[report.trangThai]}`}>
                         {report.trangThai}
                     </span>
                 </div>
                 
                 {/* Title: Bold */}
-                <h4 className="font-bold text-slate-800 text-base mb-1.5 leading-snug line-clamp-2">
+                <h4 className="font-bold text-slate-800 text-sm mb-1.5 leading-snug line-clamp-2">
                     <HighlightText text={report.tenThuongMai} highlight={highlight} />
                 </h4>
                 
                 {/* Content: Regular */}
-                <div className="text-base font-normal text-slate-500 mb-2 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100 italic line-clamp-2 border-l-2 border-l-blue-400">
+                <div className="text-sm font-normal text-slate-500 mb-2 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100 italic line-clamp-2 border-l-2 border-l-blue-400">
                     <HighlightText text={report.noiDungPhanAnh || 'Không có nội dung'} highlight={highlight} />
                 </div>
             </div>
             
             <div className="flex justify-between items-center mt-1">
-                 <div className="text-sm text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-md">
+                 <div className="text-xs text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-md">
                     Lô: <span className="text-slate-900 font-bold"><HighlightText text={report.soLo} highlight={highlight} /></span>
                  </div>
                  
@@ -491,19 +492,19 @@ const DefectReportList: React.FC<Props> = ({
   const renderCell = (report: DefectReport, columnId: ColumnId, index: number) => {
       switch (columnId) {
           case 'stt':
-              return <span className="text-slate-500 font-normal text-base">{(currentPage - 1) * itemsPerPage + index + 1}</span>;
+              return <span className="text-slate-500 font-normal text-sm">{(currentPage - 1) * itemsPerPage + index + 1}</span>;
           case 'ngayPhanAnh':
-              return <span className="text-slate-700 font-normal text-base whitespace-nowrap">{new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}</span>;
+              return <span className="text-slate-700 font-normal text-sm whitespace-nowrap">{new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}</span>;
           case 'maSanPham':
               return (
-                  <span className="text-blue-700 font-normal text-base whitespace-nowrap block truncate" title={report.maSanPham}>
+                  <span className="text-blue-700 font-bold text-sm whitespace-nowrap block truncate" title={report.maSanPham}>
                       <HighlightText text={report.maSanPham} highlight={filters.searchTerm} />
                   </span>
               );
           case 'tenThuongMai':
               return (
                 <div className="w-full pr-2" title={report.tenThuongMai}>
-                    <div className="font-normal text-slate-800 text-base leading-snug line-clamp-2 whitespace-normal break-words">
+                    <div className="font-medium text-slate-800 text-sm leading-snug line-clamp-2 whitespace-normal break-words">
                         <HighlightText text={report.tenThuongMai} highlight={filters.searchTerm} />
                     </div>
                 </div>
@@ -511,7 +512,7 @@ const DefectReportList: React.FC<Props> = ({
           case 'noiDungPhanAnh':
               return (
                 <div className="w-full pr-2" title={report.noiDungPhanAnh}>
-                    <div className="text-slate-600 text-base font-normal leading-snug line-clamp-2 whitespace-normal break-words">
+                    <div className="text-slate-600 text-sm font-normal leading-snug line-clamp-2 whitespace-normal break-words">
                         <HighlightText text={report.noiDungPhanAnh} highlight={filters.searchTerm} />
                     </div>
                 </div>
@@ -519,7 +520,7 @@ const DefectReportList: React.FC<Props> = ({
           case 'soLo':
               return (
                   <div className="w-full pr-1" title={report.soLo}>
-                      <div className="text-slate-700 text-base font-normal leading-snug line-clamp-2 whitespace-normal break-words">
+                      <div className="text-slate-700 text-sm font-normal leading-snug line-clamp-2 whitespace-normal break-words">
                           <HighlightText text={report.soLo} highlight={filters.searchTerm} />
                       </div>
                   </div>
@@ -527,14 +528,14 @@ const DefectReportList: React.FC<Props> = ({
           case 'maNgaySanXuat':
               return (
                   <div className="w-full pr-1" title={report.maNgaySanXuat}>
-                      <div className="text-slate-600 text-base font-normal leading-snug line-clamp-2 whitespace-normal break-words">
+                      <div className="text-slate-600 text-sm font-normal leading-snug line-clamp-2 whitespace-normal break-words">
                           {report.maNgaySanXuat}
                       </div>
                   </div>
               );
           case 'trangThai':
               return (
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-base font-normal whitespace-nowrap border ${statusColorMap[report.trangThai]}`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap border ${statusColorMap[report.trangThai]}`}>
                       {report.trangThai}
                   </span>
               );
@@ -723,7 +724,7 @@ const DefectReportList: React.FC<Props> = ({
                                             <div key={col.id} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg group transition-colors">
                                                 <button 
                                                     onClick={() => toggleColumnVisibility(col.id)} 
-                                                    className="flex items-center flex-1 gap-3 min-w-0"
+                                                    className="flex items-center flex-1 gap-3 min-w-0 justify-start"
                                                 >
                                                     <div className={`flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-all ${col.visible ? 'bg-blue-500 border-blue-500' : 'border-slate-300 bg-white'}`}>
                                                         {col.visible && <CheckCircleIcon className="w-4 h-4 text-white" />}

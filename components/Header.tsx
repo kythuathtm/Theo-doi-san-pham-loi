@@ -150,12 +150,28 @@ export const Header: React.FC<HeaderProps> = ({
                             <Cog8ToothIcon className={`h-5 w-5 ${isAdminMenuOpen ? 'animate-spin-slow' : ''}`} /><span className="hidden sm:inline text-sm font-bold">Cài đặt</span>
                         </button>
                         {isAdminMenuOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in-up origin-top-right text-slate-900">
-                                <div className="px-4 py-2 border-b border-slate-50 mb-1"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Quản trị hệ thống</p></div>
-                                <button onClick={() => { onOpenPermissionModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors"><ShieldCheckIcon className="h-5 w-5 mr-3 text-slate-400" />Phân quyền</button>
-                                <button onClick={() => { onOpenProductModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors"><TableCellsIcon className="h-5 w-5 mr-3 text-slate-400" />Danh sách sản phẩm</button>
-                                <button onClick={() => { onOpenUserModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors"><UserGroupIcon className="h-5 w-5 mr-3 text-slate-400" />Quản lý người dùng</button>
-                                <button onClick={() => { onOpenSystemSettingsModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors"><Cog8ToothIcon className="h-5 w-5 mr-3 text-slate-400" />Cấu hình / Cài đặt web</button>
+                            <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in-up origin-top-right text-slate-900 ring-1 ring-black/5">
+                                <div className="px-4 py-2 border-b border-slate-50 mb-1 text-left">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Quản trị hệ thống</p>
+                                </div>
+                                <div className="flex flex-col">
+                                    <button onClick={() => { onOpenPermissionModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left">
+                                        <ShieldCheckIcon className="h-5 w-5 mr-3 text-slate-400 flex-shrink-0" />
+                                        <span>Phân quyền</span>
+                                    </button>
+                                    <button onClick={() => { onOpenProductModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left">
+                                        <TableCellsIcon className="h-5 w-5 mr-3 text-slate-400 flex-shrink-0" />
+                                        <span>Danh sách sản phẩm</span>
+                                    </button>
+                                    <button onClick={() => { onOpenUserModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left">
+                                        <UserGroupIcon className="h-5 w-5 mr-3 text-slate-400 flex-shrink-0" />
+                                        <span>Quản lý người dùng</span>
+                                    </button>
+                                    <button onClick={() => { onOpenSystemSettingsModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left">
+                                        <Cog8ToothIcon className="h-5 w-5 mr-3 text-slate-400 flex-shrink-0" />
+                                        <span>Cấu hình / Cài đặt web</span>
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -167,13 +183,16 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md border-2 border-white ring-2 ring-transparent hover:ring-blue-200 transition-all text-sm">{getUserInitials(currentUser.fullName || currentUser.username)}</div>
                 </button>
                 {isProfileMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in-up origin-top-right text-slate-900">
-                        <div className="px-4 py-3 border-b border-slate-50">
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in-up origin-top-right text-slate-900 ring-1 ring-black/5">
+                        <div className="px-4 py-3 border-b border-slate-50 text-left">
                             <p className="text-sm font-bold text-slate-800 capitalize truncate">{currentUser.fullName || currentUser.username}</p>
                             <p className="text-xs font-normal text-slate-500 mt-0.5">{currentUser.role}</p>
                         </div>
                         <div className="py-1">
-                            <button onClick={onLogout} className="flex w-full items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"><ArrowRightOnRectangleIcon className="h-5 w-5 mr-3" />Đăng xuất</button>
+                            <button onClick={onLogout} className="flex w-full items-center justify-start px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors text-left">
+                                <ArrowRightOnRectangleIcon className="h-5 w-5 mr-3 flex-shrink-0" />
+                                <span>Đăng xuất</span>
+                            </button>
                         </div>
                     </div>
                 )}
