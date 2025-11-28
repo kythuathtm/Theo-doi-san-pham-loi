@@ -477,7 +477,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-slate-50 text-slate-900 relative">
+    <div className="flex flex-col h-dvh bg-slate-100 text-slate-900 relative">
       <header 
         className="backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-30 transition-all shadow-sm"
         style={{

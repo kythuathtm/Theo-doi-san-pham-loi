@@ -56,7 +56,7 @@
       }
     </script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
       body {
         font-family: 'Inter', sans-serif;
@@ -67,8 +67,8 @@
 
       /* Premium Scrollbar */
       ::-webkit-scrollbar {
-        width: 5px;
-        height: 5px;
+        width: 6px;
+        height: 6px;
       }
       ::-webkit-scrollbar-track {
         background: transparent; 
@@ -76,14 +76,15 @@
       ::-webkit-scrollbar-thumb {
         background: #cbd5e1; 
         border-radius: 10px;
+        transition: background 0.2s;
       }
       ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8; 
       }
       
       .custom-scrollbar::-webkit-scrollbar {
-        width: 4px;
-        height: 4px;
+        width: 5px;
+        height: 5px;
       }
       .no-scrollbar::-webkit-scrollbar {
         display: none;

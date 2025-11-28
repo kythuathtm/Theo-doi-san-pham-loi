@@ -11,7 +11,7 @@ import { useProducts } from './hooks/useProducts';
 import { useSettings } from './hooks/useSettings';
 
 // Lazy load components
-const DefectReportList = React.lazy(() => import('./components/DefectReportList'));
+const DefectReportList = React.lazy(() => import('./components/DefectReportList') as Promise<{ default: React.ComponentType<any> }>);
 const DefectReportDetail = React.lazy(() => import('./components/DefectReportDetail'));
 const DefectReportForm = React.lazy(() => import('./components/DefectReportForm'));
 const ProductListModal = React.lazy(() => import('./components/ProductListModal'));
