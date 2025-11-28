@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DefectReport, UserRole } from '../types';
 import { PencilIcon, TrashIcon, XIcon, WrenchIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, TagIcon, UserIcon, CheckCircleIcon, CalendarIcon } from './Icons';
 
@@ -56,6 +56,18 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
 
   const isEditing = Object.values(editingSections).some(Boolean);
 
+  // Sync local state when report updates from parent (Real-time update)
+  useEffect(() => {
+    if (!isEditing) {
+        setQuickUpdateData({
+            nguyenNhan: report.nguyenNhan || '',
+            huongKhacPhuc: report.huongKhacPhuc || '',
+            soLuongDoi: report.soLuongDoi || 0,
+            ngayDoiHang: report.ngayDoiHang || ''
+        });
+    }
+  }, [report, isEditing]);
+
   const getLoaiLoiBadge = (loaiLoi: string) => {
     let style = 'bg-slate-100 text-slate-600 border-slate-200';
     if (loaiLoi === 'Lỗi Hỗn hợp') style = 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200';
@@ -90,7 +102,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
           }
       } catch (e) {
           console.error(e);
-          // Toast handled by onUpdate hook
       } finally {
           setIsUpdating(false);
       }
@@ -273,8 +284,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                 autoFocus
                               />
                           ) : (
-                              <p className={`text-base font-normal leading-relaxed ${quickUpdateData.nguyenNhan ? 'text-slate-800' : 'text-slate-400 italic'}`}>
-                                  {quickUpdateData.nguyenNhan || 'Click để nhập nguyên nhân...'}
+                              <p className={`text-base font-normal leading-relaxed ${report.nguyenNhan ? 'text-slate-800' : 'text-slate-400 italic'}`}>
+                                  {report.nguyenNhan || 'Click để nhập nguyên nhân...'}
                               </p>
                           )}
                       </div>
@@ -298,8 +309,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                 autoFocus
                               />
                           ) : (
-                               <p className={`text-base font-normal leading-relaxed ${quickUpdateData.huongKhacPhuc ? 'text-slate-800' : 'text-slate-400 italic'}`}>
-                                  {quickUpdateData.huongKhacPhuc || 'Click để nhập hướng khắc phục...'}
+                               <p className={`text-base font-normal leading-relaxed ${report.huongKhacPhuc ? 'text-slate-800' : 'text-slate-400 italic'}`}>
+                                  {report.huongKhacPhuc || 'Click để nhập hướng khắc phục...'}
                                </p>
                           )}
                       </div>
@@ -347,7 +358,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                    />
                                ) : (
                                    <p className="text-center text-sm font-bold text-emerald-800">
-                                       {quickUpdateData.ngayDoiHang ? new Date(quickUpdateData.ngayDoiHang).toLocaleDateString('en-GB') : <span className="text-emerald-400 italic font-normal text-xs">--/--/----</span>}
+                                       {report.ngayDoiHang ? new Date(report.ngayDoiHang).toLocaleDateString('en-GB') : <span className="text-emerald-400 italic font-normal text-xs">--/--/----</span>}
                                    </p>
                                )}
                            </div>
