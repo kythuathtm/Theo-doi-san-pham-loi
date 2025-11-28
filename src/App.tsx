@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef, useCallback } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon, EllipsisHorizontalIcon } from './components/Icons';
 import * as XLSX from 'xlsx';
@@ -772,7 +772,7 @@ export const App: React.FC = () => {
                  </div>
 
                  {/* View Switcher - Updated for Mobile Visibility */}
-                 <div className="bg-slate-100/80 p-1 rounded-xl flex items-center gap-1 border border-slate-200/50">
+                 <div className="bg-slate-100/80 p-1 rounded-xl flex items-center gap-1 border border-slate-200/50 flex">
                     <button
                         onClick={() => setCurrentView('list')}
                         className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
@@ -780,7 +780,7 @@ export const App: React.FC = () => {
                             ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                         }`}
-                        title="Xem danh sách báo cáo"
+                        title="Danh sách"
                     >
                         <ListBulletIcon className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">Danh sách</span>
@@ -792,7 +792,7 @@ export const App: React.FC = () => {
                             ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-200' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                         }`}
-                        title="Xem báo cáo thống kê"
+                        title="Báo cáo"
                     >
                         <ChartPieIcon className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">Báo cáo</span>
