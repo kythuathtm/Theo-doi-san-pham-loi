@@ -155,20 +155,20 @@ export const Header: React.FC<HeaderProps> = ({
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Quản trị hệ thống</p>
                                 </div>
                                 <div className="flex flex-col">
-                                    <button onClick={() => { onOpenPermissionModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left">
-                                        <ShieldCheckIcon className="h-5 w-5 mr-3 text-slate-400 flex-shrink-0" />
+                                    <button onClick={() => { onOpenPermissionModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left group">
+                                        <ShieldCheckIcon className="h-5 w-5 mr-3 text-slate-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
                                         <span>Phân quyền</span>
                                     </button>
-                                    <button onClick={() => { onOpenProductModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left">
-                                        <TableCellsIcon className="h-5 w-5 mr-3 text-slate-400 flex-shrink-0" />
+                                    <button onClick={() => { onOpenProductModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left group">
+                                        <TableCellsIcon className="h-5 w-5 mr-3 text-slate-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
                                         <span>Danh sách sản phẩm</span>
                                     </button>
-                                    <button onClick={() => { onOpenUserModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left">
-                                        <UserGroupIcon className="h-5 w-5 mr-3 text-slate-400 flex-shrink-0" />
+                                    <button onClick={() => { onOpenUserModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left group">
+                                        <UserGroupIcon className="h-5 w-5 mr-3 text-slate-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
                                         <span>Quản lý người dùng</span>
                                     </button>
-                                    <button onClick={() => { onOpenSystemSettingsModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left">
-                                        <Cog8ToothIcon className="h-5 w-5 mr-3 text-slate-400 flex-shrink-0" />
+                                    <button onClick={() => { onOpenSystemSettingsModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left group">
+                                        <Cog8ToothIcon className="h-5 w-5 mr-3 text-slate-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
                                         <span>Cấu hình / Cài đặt web</span>
                                     </button>
                                 </div>
