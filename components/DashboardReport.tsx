@@ -3,7 +3,7 @@ import { DefectReport } from '../types';
 import { 
     CheckCircleIcon, ClockIcon, DocumentDuplicateIcon, SparklesIcon, 
     ShoppingBagIcon, TagIcon, XIcon, ListBulletIcon, UserGroupIcon,
-    TruckIcon, ChartPieIcon
+    TruckIcon, ChartPieIcon, FunnelIcon
 } from './Icons';
 
 interface Props {
@@ -316,7 +316,6 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
   const [activeFilter, setActiveFilter] = useState<{ type: 'status' | 'defectType' | 'all' | 'brand' | 'productList' | 'supplierList' | 'unitList', value?: string } | null>(null);
 
   const stats = useMemo(() => {
-    // ... (rest of logic remains same)
     const totalReports = reports.length;
     
     // Global Totals
@@ -652,6 +651,29 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
 
         {activeFilter && (
             <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+                {/* Active Filter Banner - Visible immediately when active */}
+                <div className="absolute top-0 left-0 right-0 p-4 z-50 flex justify-center pointer-events-none">
+                    <div className="bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-slide-up pointer-events-auto ring-4 ring-blue-600/30">
+                        <div className="flex items-center gap-2">
+                            <FunnelIcon className="h-5 w-5" />
+                            <span className="font-medium">Đang lọc:</span>
+                            <span className="font-bold bg-white/20 px-2 py-0.5 rounded text-sm uppercase">
+                                {activeFilter.value || (
+                                    activeFilter.type === 'productList' ? 'SẢN PHẨM' :
+                                    activeFilter.type === 'supplierList' ? 'NHÀ PHÂN PHỐI' :
+                                    activeFilter.type === 'unitList' ? 'ĐƠN VỊ' : 'TẤT CẢ'
+                                )}
+                            </span>
+                        </div>
+                        <button 
+                            onClick={() => setActiveFilter(null)}
+                            className="bg-white/20 hover:bg-white/40 p-1 rounded-full transition-colors"
+                        >
+                            <XIcon className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+
                 <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-5xl bg-white rounded-none sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up ring-1 ring-white/20">
                     <div className="flex justify-between items-center px-6 py-5 bg-white border-b border-slate-100">
                         <div className="flex items-center gap-4">
@@ -663,22 +685,10 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                                     DANH SÁCH CHI TIẾT
                                 </h3>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-sm font-bold text-slate-500">Bộ lọc:</span>
-                                    <span className="px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-700 text-xs font-bold uppercase shadow-sm border border-blue-200">
-                                        {activeFilter.value || (
-                                            activeFilter.type === 'productList' ? 'SẢN PHẨM LỖI' :
-                                            activeFilter.type === 'supplierList' ? 'NHÀ PHÂN PHỐI' :
-                                            activeFilter.type === 'unitList' ? 'ĐƠN VỊ SỬ DỤNG' : 'TẤT CẢ'
-                                        )}
+                                    <span className="text-sm font-bold text-slate-500">Kết quả:</span>
+                                    <span className="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                                        {totalFilteredCount} bản ghi
                                     </span>
-                                    {['status', 'defectType', 'brand'].includes(activeFilter.type) && (
-                                        <>
-                                            <span className="text-sm text-slate-300 mx-1">•</span>
-                                            <span className="text-sm font-bold text-slate-700">
-                                                {totalFilteredCount} kết quả
-                                            </span>
-                                        </>
-                                    )}
                                 </div>
                             </div>
                         </div>

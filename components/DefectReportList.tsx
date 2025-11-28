@@ -5,7 +5,7 @@ import {
     MagnifyingGlassIcon, InboxIcon, ClockIcon, CheckCircleIcon, 
     SparklesIcon, Cog6ToothIcon, TrashIcon, ArrowDownTrayIcon,
     CalendarIcon, FunnelIcon, XIcon, DocumentDuplicateIcon,
-    ArrowUpIcon, ArrowDownIcon, AdjustmentsIcon
+    ArrowUpIcon, ArrowDownIcon, AdjustmentsIcon, PlusIcon
 } from './Icons';
 
 interface SummaryStats {
@@ -110,20 +110,20 @@ const MobileReportCard = React.memo(({
         <div 
             style={style}
             onClick={onSelect}
-            className={`absolute left-0 right-0 w-full px-4 py-3 border-b border-slate-100 active:bg-slate-100 transition-colors touch-manipulation flex flex-col justify-between bg-white`}
+            className={`absolute left-0 right-0 w-full px-4 py-3 border-b border-slate-100 active:bg-slate-100 transition-colors touch-manipulation flex flex-col justify-between bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]`}
         >
             <div>
                 <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
-                        <span className="text-base text-slate-600 px-2 py-1 rounded border border-slate-200 bg-slate-100">
+                        <span className="text-base text-slate-600 px-2 py-1 rounded border border-slate-200 bg-slate-50 font-bold">
                             <HighlightText text={report.maSanPham} highlight={highlight} />
                         </span>
-                        <span className="text-sm text-slate-400 flex items-center gap-1">
+                        <span className="text-sm text-slate-400 flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-slate-100">
                             <CalendarIcon className="w-3 h-3" />
                             {new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}
                         </span>
                     </div>
-                    <span className={`px-2 py-1 rounded text-sm border ${statusColorMap[report.trangThai]}`}>
+                    <span className={`px-2 py-1 rounded text-sm border font-bold shadow-sm ${statusColorMap[report.trangThai]}`}>
                         {report.trangThai}
                     </span>
                 </div>
@@ -134,14 +134,14 @@ const MobileReportCard = React.memo(({
                 </h4>
                 
                 {/* Content: Regular */}
-                <div className="text-base font-normal text-slate-500 mb-2 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100 italic line-clamp-2">
+                <div className="text-base font-normal text-slate-500 mb-2 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100 italic line-clamp-2 border-l-2 border-l-blue-400">
                     <HighlightText text={report.noiDungPhanAnh || 'Không có nội dung'} highlight={highlight} />
                 </div>
             </div>
             
             <div className="flex justify-between items-center mt-1">
-                 <div className="text-base text-slate-500">
-                    Lô: <span className="text-slate-800"><HighlightText text={report.soLo} highlight={highlight} /></span>
+                 <div className="text-sm text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-md">
+                    Lô: <span className="text-slate-900 font-bold"><HighlightText text={report.soLo} highlight={highlight} /></span>
                  </div>
                  
                  <div className="flex items-center gap-3">
@@ -882,22 +882,28 @@ const DefectReportList: React.FC<Props> = ({
                 </>
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-16 text-center animate-fade-in-up">
-                    <div className="w-64 h-48 bg-slate-100 rounded-full mb-6 relative overflow-hidden flex items-center justify-center">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-50 to-slate-50 opacity-50"></div>
-                        <InboxIcon className="h-24 w-24 text-slate-300/50" />
+                    <div className="w-64 h-48 bg-slate-100 rounded-full mb-6 relative overflow-hidden flex items-center justify-center group">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-50 to-slate-50 opacity-50 group-hover:scale-110 transition-transform duration-700"></div>
+                        {areFiltersActive ? (
+                            <MagnifyingGlassIcon className="h-24 w-24 text-slate-300/50" />
+                        ) : (
+                            <InboxIcon className="h-24 w-24 text-slate-300/50" />
+                        )}
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800 tracking-tight">Trống trơn!</h3>
+                    <h3 className="text-xl font-bold text-slate-800 tracking-tight">
+                        {areFiltersActive ? "Không tìm thấy kết quả" : "Danh sách trống"}
+                    </h3>
                     <p className="text-slate-500 mt-2 max-w-sm font-medium leading-relaxed">
                         {areFiltersActive 
-                            ? "Không tìm thấy kết quả nào phù hợp với bộ lọc hiện tại. Hãy thử điều chỉnh lại." 
-                            : "Hệ thống chưa có dữ liệu phản ánh nào. Hãy bắt đầu bằng cách tạo mới."}
+                            ? "Không có phản ánh nào khớp với bộ lọc hiện tại. Hãy thử thay đổi từ khóa hoặc bộ lọc." 
+                            : "Hệ thống chưa ghi nhận phản ánh nào. Bắt đầu bằng cách tạo mới ngay bây giờ."}
                     </p>
                     {areFiltersActive && (
                         <button 
                             onClick={resetFilters}
-                            className="mt-6 px-8 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all hover:border-blue-300 hover:text-blue-600 active:scale-95"
+                            className="mt-6 px-8 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all hover:border-blue-300 hover:text-blue-600 hover:shadow-md active:scale-95 flex items-center gap-2 mx-auto"
                         >
-                            Xóa bộ lọc tìm kiếm
+                            <XIcon className="h-4 w-4" /> Xóa bộ lọc tìm kiếm
                         </button>
                     )}
                 </div>
@@ -983,5 +989,4 @@ const DefectReportList: React.FC<Props> = ({
   );
 };
 
-const MemoizedDefectReportList = React.memo(DefectReportList);
-export default MemoizedDefectReportList;
+export default React.memo(DefectReportList);
