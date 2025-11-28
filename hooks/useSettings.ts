@@ -4,6 +4,8 @@
 
 
 
+
+
 import { useState, useEffect } from 'react';
 import { RoleSettings, SystemSettings, UserRole, ToastType } from '../types';
 import { db } from '../firebaseConfig';
@@ -24,7 +26,7 @@ const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   logoUrl: '',
   backgroundType: 'default',
   backgroundValue: '',
-  fontFamily: 'Arial, sans-serif',
+  fontFamily: "'Inter', sans-serif", // Changed default to Inter
   baseFontSize: '15px',
   headerBackgroundColor: 'rgba(255, 255, 255, 0.9)',
   headerTextColor: '#0f172a'

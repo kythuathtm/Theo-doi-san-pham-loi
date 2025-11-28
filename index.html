@@ -10,7 +10,7 @@
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
+              sans: ['var(--app-font)', 'Inter', 'system-ui', 'sans-serif'],
             },
             animation: {
               'fade-in': 'fadeIn 0.3s ease-out',
@@ -58,8 +58,12 @@
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+      :root {
+        --app-font: 'Inter', sans-serif;
+      }
+
       body {
-        font-family: 'Inter', sans-serif;
+        font-family: var(--app-font);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         -webkit-tap-highlight-color: transparent;
@@ -95,7 +99,8 @@
       }
 
       /* Fix inputs */
-      input, textarea, select {
+      input, textarea, select, button {
+        font-family: inherit !important;
         font-size: 16px !important; /* Prevents zoom on iOS */
       }
       

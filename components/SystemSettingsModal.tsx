@@ -13,7 +13,8 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const fontOptions = [
-      { label: 'Arial (Mặc định)', value: "'Arial', sans-serif" },
+      { label: 'Inter (Mặc định)', value: "'Inter', sans-serif" },
+      { label: 'Arial', value: "'Arial', sans-serif" },
       { label: 'Times New Roman', value: "'Times New Roman', serif" },
       { label: 'Tahoma', value: "'Tahoma', sans-serif" },
       { label: 'Verdana', value: "'Verdana', sans-serif" },
@@ -98,7 +99,7 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                 <div>
                      <label className="block text-sm font-bold text-slate-700 mb-1.5">Font chữ hệ thống</label>
                      <select 
-                        value={settings.fontFamily || "'Arial', sans-serif"}
+                        value={settings.fontFamily || "'Inter', sans-serif"}
                         onChange={(e) => setSettings({...settings, fontFamily: e.target.value})}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white text-base font-normal shadow-sm cursor-pointer"
                      >

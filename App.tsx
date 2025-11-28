@@ -11,15 +11,15 @@ import { useReports } from './hooks/useReports';
 import { useProducts } from './hooks/useProducts';
 import { useSettings } from './hooks/useSettings';
 
-// Lazy load components
-const DefectReportList = React.lazy(() => import('./components/DefectReportList').then(module => ({ default: module.default })));
+// Lazy load components - Standard syntax to avoid React Error #306
+const DefectReportList = React.lazy(() => import('./components/DefectReportList'));
 const DefectReportDetail = React.lazy(() => import('./components/DefectReportDetail'));
 const DefectReportForm = React.lazy(() => import('./components/DefectReportForm'));
 const ProductListModal = React.lazy(() => import('./components/ProductListModal'));
 const UserManagementModal = React.lazy(() => import('./components/UserManagementModal'));
 const PermissionManagementModal = React.lazy(() => import('./components/PermissionManagementModal'));
 const Login = React.lazy(() => import('./components/Login'));
-const DashboardReport = React.lazy(() => import('./components/DashboardReport').then(module => ({ default: module.default })));
+const DashboardReport = React.lazy(() => import('./components/DashboardReport'));
 const SystemSettingsModal = React.lazy(() => import('./components/SystemSettingsModal'));
 
 interface ToastProps {
@@ -176,7 +176,8 @@ export const App: React.FC = () => {
   useEffect(() => {
     const root = document.documentElement;
     if (systemSettings.fontFamily) {
-        root.style.setProperty('font-family', systemSettings.fontFamily);
+        // Use CSS Variable for font family to ensure compatibility with Tailwind
+        root.style.setProperty('--app-font', systemSettings.fontFamily);
     }
     if (systemSettings.baseFontSize) {
         root.style.fontSize = systemSettings.baseFontSize;
