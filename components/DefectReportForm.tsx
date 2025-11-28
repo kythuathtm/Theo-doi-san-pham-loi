@@ -362,7 +362,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4 transition-opacity">
       <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] max-w-6xl rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up ring-1 ring-white/20">
         
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white/95 backdrop-blur z-20">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
           <div>
               <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">
                   {initialData && !initialData.id.startsWith('new_') ? 'CHỈNH SỬA PHẢN ÁNH' : 'TẠO PHẢN ÁNH MỚI'}
