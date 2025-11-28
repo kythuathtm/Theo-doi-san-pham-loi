@@ -6,7 +6,7 @@ import { PencilIcon, TrashIcon, XIcon, WrenchIcon, QuestionMarkCircleIcon, Clipb
 interface Props {
   report: DefectReport;
   onEdit: (report: DefectReport) => void;
-  onUpdate: (id: string, updates: Partial<DefectReport>) => Promise<boolean>;
+  onUpdate: (id: string, updates: Partial<DefectReport>, msg?: string) => Promise<boolean>;
   onDelete: (id: string) => void;
   permissions: { canEdit: boolean; canDelete: boolean };
   onClose: () => void;
@@ -83,15 +83,14 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
               message = "Đã cập nhật thông tin và chuyển trạng thái sang HOÀN THÀNH do đủ điều kiện.";
           }
 
-          const success = await onUpdate(report.id, updates);
+          const success = await onUpdate(report.id, updates, message);
           
           if (success) {
-              alert(message);
               setEditingSections({ nguyenNhan: false, huongKhacPhuc: false, soLuong: false });
           }
       } catch (e) {
           console.error(e);
-          alert("Lỗi khi cập nhật");
+          // Toast handled by onUpdate hook
       } finally {
           setIsUpdating(false);
       }

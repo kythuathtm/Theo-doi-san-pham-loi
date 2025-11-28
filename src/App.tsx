@@ -194,6 +194,17 @@ export const App: React.FC = () => {
     }
   }, [systemSettings.fontFamily, systemSettings.baseFontSize]);
 
+  // Sync selectedReport with reports to ensure realtime updates in modal
+  useEffect(() => {
+    if (selectedReport) {
+        const updatedReport = reports.find(r => r.id === selectedReport.id);
+        // Only update if reference changed (implies data update from Firestore)
+        if (updatedReport && updatedReport !== selectedReport) {
+            setSelectedReport(updatedReport);
+        }
+    }
+  }, [reports, selectedReport]);
+
   // Close menus on outside click
   useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {

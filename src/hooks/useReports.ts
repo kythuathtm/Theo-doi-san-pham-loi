@@ -51,10 +51,11 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
     }
   };
 
-  const updateReport = async (id: string, updates: Partial<DefectReport>) => {
+  const updateReport = async (id: string, updates: Partial<DefectReport>, successMessage: string = 'Cập nhật báo cáo thành công!') => {
       try {
           const reportRef = doc(db, "reports", id);
           await updateDoc(reportRef, updates as any);
+          showToast(successMessage, 'success');
           return true;
       } catch (error) {
           console.error("Error updating report:", error);
