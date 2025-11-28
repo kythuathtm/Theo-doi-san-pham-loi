@@ -25,6 +25,7 @@ interface Props {
   selectedReport: DefectReport | null;
   onSelectReport: (report: DefectReport) => void;
   currentUserRole: UserRole;
+  currentUsername: string; // New prop for user-specific storage
   filters: {
     searchTerm: string;
     statusFilter: string;
@@ -44,7 +45,7 @@ interface Props {
   isLoading?: boolean;
   onExport: () => void;
   onDuplicate?: (report: DefectReport) => void;
-  baseFontSize?: string; // Prop for dynamic font scaling
+  baseFontSize?: string; 
 }
 
 const statusColorMap: { [key in DefectReport['trangThai']]: string } = {
@@ -171,7 +172,7 @@ const MobileReportCard = React.memo(({
 
 const DefectReportList: React.FC<Props> = ({ 
   reports, totalReports, currentPage, itemsPerPage, onPageChange, 
-  onSelectReport, currentUserRole,
+  onSelectReport, currentUserRole, currentUsername,
   filters, onSearchTermChange, onStatusFilterChange, onDefectTypeFilterChange, onYearFilterChange, onDateFilterChange,
   summaryStats, onItemsPerPageChange, onDelete, isLoading, onExport, onDuplicate, baseFontSize = '15px'
 }) => {
@@ -208,9 +209,14 @@ const DefectReportList: React.FC<Props> = ({
   // --- DRAG AND DROP STATE ---
   const [draggedColId, setDraggedColId] = useState<ColumnId | null>(null);
 
+  // Use dynamic storage key based on username
+  const storageKey = `tableColumnConfigV17_${currentUsername}`;
+
   // Load Columns Config with Order Preservation
   useEffect(() => {
-    const savedColumnsStr = localStorage.getItem('tableColumnConfigV16'); 
+    if (!currentUsername) return; // Wait for username
+    
+    const savedColumnsStr = localStorage.getItem(storageKey); 
     if (savedColumnsStr) {
         try {
             const parsedColumns = JSON.parse(savedColumnsStr) as ColumnConfig[];
@@ -244,13 +250,17 @@ const DefectReportList: React.FC<Props> = ({
             console.error("Failed to load column config", e);
             setColumns(DEFAULT_COLUMNS);
         }
+    } else {
+        setColumns(DEFAULT_COLUMNS); // Reset to default if no saved config for this user
     }
-  }, []);
+  }, [currentUsername]);
 
   // Save Config on Change
   useEffect(() => { 
-      localStorage.setItem('tableColumnConfigV16', JSON.stringify(columns)); 
-  }, [columns]);
+      if (currentUsername) {
+          localStorage.setItem(storageKey, JSON.stringify(columns)); 
+      }
+  }, [columns, currentUsername]);
 
   // --- RESIZE HANDLERS ---
   const startResize = (e: React.MouseEvent, colId: ColumnId, currentWidth: number) => {
