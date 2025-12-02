@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { DefectReport, UserRole } from '../types';
 import { PencilIcon, TrashIcon, XIcon, WrenchIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, TagIcon, UserIcon, CheckCircleIcon, CalendarIcon, CompanyLogo, ListBulletIcon } from './Icons';
-import { useReactToPrint } from 'react-to-print';
+import ReactToPrint from 'react-to-print';
 
 interface Props {
   report: DefectReport;
@@ -59,9 +60,12 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
 
   const printRef = useRef<HTMLDivElement>(null);
   
-  // Use contentRef as required by newer react-to-print types where content is deprecated/removed
+  // Fix for react-to-print import issue on ESM environments
+  // We access useReactToPrint from the default export or the named export depending on build
+  const { useReactToPrint } = ReactToPrint as any;
+  
   const handlePrint = useReactToPrint({
-      contentRef: printRef,
+      content: () => printRef.current, // Use 'content' for v2
       documentTitle: `Phieu_Phan_Anh_${report.maSanPham}_${report.id.slice(0, 6)}`,
       bodyClass: 'bg-white',
   });
