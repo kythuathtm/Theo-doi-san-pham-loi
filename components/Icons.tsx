@@ -286,10 +286,10 @@ export const CompanyLogo: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <rect x="220" y="380" width="60" height="60" rx="10" fill="#C5003E" />
     <path d="M250 390 V430 M230 410 H270" stroke="white" strokeWidth="6" strokeLinecap="round" />
 
-    {/* Company Name Curved */}
+    {/* Company Name Curved - Added font-sans class for correct inheritance */}
     <path id="curve" d="M 100 420 Q 250 480 400 420" fill="transparent" />
     <text width="500">
-        <textPath href="#curve" startOffset="50%" textAnchor="middle" className="font-bold uppercase" fontSize="28" fill="#003DA5" letterSpacing="1">
+        <textPath href="#curve" startOffset="50%" textAnchor="middle" className="font-bold font-sans uppercase" fontSize="28" fill="#003DA5" letterSpacing="1">
             Hồng Thiện Mỹ
         </textPath>
     </text>

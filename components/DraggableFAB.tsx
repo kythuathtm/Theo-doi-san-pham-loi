@@ -52,7 +52,7 @@ const DraggableFAB: React.FC<DraggableFABProps> = ({ onClick }) => {
         const clampedX = Math.max(10, Math.min(window.innerWidth - 70, newX));
         const clampedY = Math.max(10, Math.min(window.innerHeight - 70, newY));
 
-        // Check if moved significantly (threshold 5px)
+        // Check if moved significantly (threshold 2px) to distinguish click from drag
         if (Math.abs(clampedX - position.x) > 2 || Math.abs(clampedY - position.y) > 2) {
             hasMovedRef.current = true;
         }
@@ -68,12 +68,13 @@ const DraggableFAB: React.FC<DraggableFABProps> = ({ onClick }) => {
         }
     };
 
-    if (!isInitialized) return null;
+    // Safety check: Ensure document.body exists before creating portal to avoid Error #306
+    if (!isInitialized || typeof document === 'undefined' || !document.body) return null;
 
     return createPortal(
         <button
             style={{ left: position.x, top: position.y, touchAction: 'none' }}
-            className={`fixed z-50 p-4 bg-[#003DA5] text-white rounded-full shadow-xl shadow-blue-900/30 hover:bg-[#002a70] hover:scale-110 transition-transform active:scale-95 flex items-center justify-center cursor-move group ${isDragging ? 'scale-110 cursor-grabbing shadow-2xl' : ''}`}
+            className={`fixed z-50 p-4 bg-[#003DA5] text-white rounded-full shadow-xl shadow-blue-900/30 hover:bg-[#002a70] hover:scale-110 transition-transform active:scale-95 flex items-center justify-center cursor-move group font-sans ${isDragging ? 'scale-110 cursor-grabbing shadow-2xl' : ''}`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}

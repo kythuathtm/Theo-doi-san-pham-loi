@@ -322,7 +322,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             // Scroll with margin for sticky header
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
-            // Safe focus check
             if (element instanceof HTMLElement) {
                 element.focus();
             }
@@ -331,13 +330,12 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   };
   
   const getInputClasses = (fieldName: keyof Omit<DefectReport, 'id'>, isReadOnly: boolean = false) => {
-    const base = "transition-all duration-200 mt-1 block w-full rounded-xl text-sm py-2.5 px-3 border outline-none font-medium";
-    // Brand Blue Focus Ring
-    const normal = "bg-white text-slate-800 border-slate-200 focus:border-[#003DA5] focus:ring-4 focus:ring-[#003DA5]/10 placeholder-slate-400 shadow-sm hover:border-blue-300";
+    const base = "transition-all duration-200 mt-1 block w-full rounded-xl text-base py-2.5 px-3 border outline-none font-medium";
+    const normal = "bg-white text-slate-800 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 placeholder-slate-400 shadow-sm hover:border-blue-300";
     const errorClass = errors[fieldName] ? "border-red-500 ring-2 ring-red-500/10 bg-red-50 animate-shake" : "";
     
     const disabled = isFieldDisabled(fieldName) ? "bg-slate-50 text-slate-500 border-slate-200 cursor-not-allowed shadow-none" : normal;
-    const locked = isReadOnly ? "bg-blue-50/30 text-slate-700 border-blue-100 cursor-not-allowed focus:ring-0 shadow-inner" : "";
+    const locked = isReadOnly ? "bg-blue-50/50 text-slate-700 border-blue-200 cursor-not-allowed focus:ring-0 shadow-inner" : "";
     
     if (isFieldDisabled(fieldName)) return `${base} ${disabled}`;
     if (isReadOnly) return `${base} ${locked}`;
@@ -347,16 +345,16 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   const ErrorMessage = ({ field }: { field: keyof Omit<DefectReport, 'id'> }) => {
       if (!errors[field]) return null;
       return (
-        <div className="mt-1.5 flex items-center gap-1.5 text-red-600 animate-fade-in-up text-xs font-bold">
-            <ShieldCheckIcon className="w-3.5 h-3.5 flex-shrink-0" />
+        <div className="mt-2 flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg border border-red-100 animate-fade-in-up text-xs font-bold shadow-sm">
+            <ShieldCheckIcon className="w-4 h-4 flex-shrink-0" />
             <span>{errors[field]}</span>
         </div>
       );
   };
 
   const SectionHeader = ({ title, icon }: { title: string, icon: React.ReactNode }) => (
-      <div className="flex items-center gap-2 mb-5 pb-2 border-b border-slate-100">
-          <div className="p-1.5 bg-[#003DA5]/5 text-[#003DA5] rounded-lg border border-blue-50/50 shadow-sm">{icon}</div>
+      <div className="flex items-center gap-2 mb-5 pb-2 border-b border-slate-200">
+          <div className="p-1.5 bg-slate-50 text-slate-500 rounded-lg border border-slate-200 shadow-sm">{icon}</div>
           <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">{title}</h3>
       </div>
   );
@@ -394,11 +392,11 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* COLUMN LEFT: PRODUCT INFO */}
             <div className="space-y-8">
-                <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <SectionHeader title="Thông tin Sản phẩm" icon={<TagIcon className="h-4 w-4" />} />
                     <div className="space-y-5">
                          <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mã sản phẩm <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-bold text-slate-700">Mã sản phẩm <span className="text-red-500">*</span></label>
                             <input 
                                 type="text" 
                                 name="maSanPham" 
@@ -421,7 +419,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                             <ErrorMessage field="maSanPham" />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tên thương mại <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-bold text-slate-700">Tên thương mại <span className="text-red-500">*</span></label>
                             <input 
                                 type="text" 
                                 name="tenThuongMai" 
@@ -441,7 +439,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nhãn hàng <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold text-slate-700">Nhãn hàng <span className="text-red-500">*</span></label>
                                 <select 
                                     name="nhanHang" 
                                     value={formData.nhanHang} 
@@ -457,7 +455,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                 <ErrorMessage field="nhanHang" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Dòng sản phẩm <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold text-slate-700">Dòng sản phẩm <span className="text-red-500">*</span></label>
                                 <input 
                                     type="text" 
                                     name="dongSanPham" 
@@ -477,7 +475,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tên thiết bị Y tế</label>
+                            <label className="block text-sm font-bold text-slate-700">Tên thiết bị Y tế</label>
                             <input 
                                 type="text" 
                                 name="tenThietBi" 
@@ -496,7 +494,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Số lô <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold text-slate-700">Số lô <span className="text-red-500">*</span></label>
                                 <input 
                                     type="text" 
                                     name="soLo" 
@@ -509,7 +507,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                 <ErrorMessage field="soLo" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mã NSX</label>
+                                <label className="block text-sm font-bold text-slate-700">Mã NSX</label>
                                 <input 
                                     type="text" 
                                     name="maNgaySanXuat" 
@@ -523,7 +521,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nhà phân phối <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-bold text-slate-700">Nhà phân phối <span className="text-red-500">*</span></label>
                             <input 
                                 type="text" 
                                 name="nhaPhanPhoi" 
@@ -545,12 +543,12 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
 
             {/* COLUMN RIGHT: REPORT DETAILS & RESOLUTION */}
             <div className="space-y-8">
-                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <SectionHeader title="Chi tiết Phản ánh" icon={<ClipboardDocumentListIcon className="h-4 w-4" />} />
                     <div className="space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ngày phản ánh <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold text-slate-700">Ngày phản ánh <span className="text-red-500">*</span></label>
                                 <input 
                                     type="date" 
                                     name="ngayPhanAnh" 
@@ -563,7 +561,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                 <ErrorMessage field="ngayPhanAnh" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Đơn vị sử dụng</label>
+                                <label className="block text-sm font-bold text-slate-700">Đơn vị sử dụng</label>
                                 <input 
                                     type="text" 
                                     name="donViSuDung" 
@@ -577,7 +575,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                         </div>
                         
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nguồn gốc lỗi <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-bold text-slate-700">Nguồn gốc lỗi <span className="text-red-500">*</span></label>
                             <select 
                                 name="loaiLoi" 
                                 value={formData.loaiLoi || ''} 
@@ -596,7 +594,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nội dung phản ánh <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-bold text-slate-700">Nội dung phản ánh <span className="text-red-500">*</span></label>
                             <textarea 
                                 name="noiDungPhanAnh" 
                                 value={formData.noiDungPhanAnh} 
@@ -609,41 +607,39 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                             <ErrorMessage field="noiDungPhanAnh" />
                         </div>
                         
-                        {/* IMAGE PROOF SECTION - IMPROVED UI */}
+                        {/* IMAGE PROOF SECTION */}
                         <div className="mt-4">
-                             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Hình ảnh minh chứng</label>
-                             <div className="flex gap-2 mb-2 p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                             <label className="block text-sm font-bold text-slate-700 mb-2">Hình ảnh minh chứng</label>
+                             <div className="flex gap-2 mb-2">
                                 <input 
                                     type="text" 
                                     name="imageUrlInput"
                                     value={newImageUrl}
                                     onChange={(e) => setNewImageUrl(e.target.value)}
                                     placeholder="Dán đường dẫn ảnh (URL) vào đây..."
-                                    className="flex-1 bg-transparent text-sm outline-none placeholder-slate-400"
+                                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500/20 outline-none"
                                 />
                                 <button 
                                     type="button" 
                                     onClick={handleAddImage}
-                                    className="px-3 py-1.5 bg-[#003DA5] text-white rounded-lg text-xs font-bold hover:bg-[#002a70] transition-colors shadow-sm"
+                                    className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg font-bold hover:bg-blue-100 transition-colors"
                                 >
-                                    Thêm
+                                    <PlusIcon className="w-5 h-5" />
                                 </button>
                              </div>
                              
                              {formData.images && formData.images.length > 0 && (
-                                 <div className="grid grid-cols-4 gap-3 mt-3">
+                                 <div className="grid grid-cols-4 gap-2 mt-2">
                                      {formData.images.map((img, idx) => (
-                                         <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-white">
+                                         <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-slate-200">
                                              <img src={img} alt="Evidence" className="w-full h-full object-cover" />
-                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                 <button 
-                                                    type="button"
-                                                    onClick={() => handleRemoveImage(idx)}
-                                                    className="bg-white text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors shadow-sm"
-                                                 >
-                                                     <XIcon className="w-4 h-4" />
-                                                 </button>
-                                             </div>
+                                             <button 
+                                                type="button"
+                                                onClick={() => handleRemoveImage(idx)}
+                                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                             >
+                                                 <XIcon className="w-3 h-3" />
+                                             </button>
                                          </div>
                                      ))}
                                  </div>
@@ -658,7 +654,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                              </div>
                              <div className="grid grid-cols-3 gap-4">
                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Đã nhập</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Đã nhập</label>
                                     <input 
                                         type="number" 
                                         name="soLuongDaNhap" 
@@ -669,7 +665,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                     />
                                  </div>
                                  <div>
-                                    <label className="block text-[10px] font-bold text-red-500 uppercase mb-1">Lỗi</label>
+                                    <label className="block text-xs font-bold text-red-500 uppercase mb-1">Lỗi</label>
                                     <input 
                                         type="number" 
                                         name="soLuongLoi" 
@@ -680,7 +676,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                     />
                                  </div>
                                  <div>
-                                    <label className="block text-[10px] font-bold text-emerald-500 uppercase mb-1">Đổi</label>
+                                    <label className="block text-xs font-bold text-emerald-500 uppercase mb-1">Đổi</label>
                                     <input 
                                         type="number" 
                                         name="soLuongDoi" 
@@ -692,7 +688,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                  </div>
                              </div>
                              <div className="mt-3">
-                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ngày đổi hàng</label>
+                                 <label className="block text-sm font-bold text-slate-700">Ngày đổi hàng</label>
                                  <input 
                                     type="date" 
                                     name="ngayDoiHang" 
@@ -707,13 +703,13 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                     </div>
                  </section>
 
-                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-[#003DA5]"></div>
+                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                     <div className="relative pl-2">
                         <SectionHeader title="Xử lý & Khắc phục" icon={<WrenchIcon className="h-4 w-4" />} />
                         <div className="space-y-5">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nguyên nhân</label>
+                                <label className="block text-sm font-bold text-slate-700">Nguyên nhân</label>
                                 <textarea 
                                     name="nguyenNhan" 
                                     value={formData.nguyenNhan} 
@@ -726,7 +722,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                 <ErrorMessage field="nguyenNhan" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hướng khắc phục</label>
+                                <label className="block text-sm font-bold text-slate-700">Hướng khắc phục</label>
                                 <textarea 
                                     name="huongKhacPhuc" 
                                     value={formData.huongKhacPhuc} 
@@ -740,7 +736,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Trạng thái <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-slate-700">Trạng thái <span className="text-red-500">*</span></label>
                                     <select 
                                         name="trangThai" 
                                         value={formData.trangThai} 
@@ -756,7 +752,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ngày hoàn thành</label>
+                                    <label className="block text-sm font-bold text-slate-700">Ngày hoàn thành</label>
                                     <input 
                                         type="date" 
                                         name="ngayHoanThanh" 
@@ -785,7 +781,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
              </button>
              <button 
                 type="submit" 
-                className="px-8 py-2.5 bg-[#003DA5] hover:bg-[#002a70] text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-95 active:translate-y-0 flex items-center"
+                className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-95 active:translate-y-0 flex items-center"
              >
                 <CheckCircleIcon className="h-5 w-5 mr-2" />
                 Lưu phản ánh

@@ -191,7 +191,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                         placeholder="Tìm kiếm mã, tên..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-3 py-2 w-full border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] shadow-sm outline-none"
+                        className="pl-10 pr-3 py-2 w-full border border-slate-300 rounded-xl text-base font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] shadow-sm outline-none"
                     />
                 </div>
                 <div className="relative w-32 sm:w-40">
@@ -201,7 +201,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                     <select 
                         value={brandFilter}
                         onChange={(e) => setBrandFilter(e.target.value)}
-                        className="pl-8 pr-8 py-2 w-full border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] shadow-sm outline-none appearance-none bg-white cursor-pointer"
+                        className="pl-8 pr-8 py-2 w-full border border-slate-300 rounded-xl text-base font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] shadow-sm outline-none appearance-none bg-white cursor-pointer"
                     >
                         <option value="All">Tất cả hãng</option>
                         <option value="HTM">HTM</option>
@@ -278,7 +278,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                             type="text" required placeholder="VD: SP001"
                             value={newProduct.maSanPham}
                             onChange={(e) => setNewProduct({...newProduct, maSanPham: e.target.value})}
-                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
+                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-base font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
                         />
                     </div>
                     <div className="sm:col-span-2">
@@ -287,7 +287,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                             type="text" required placeholder="Tên sản phẩm..."
                             value={newProduct.tenThuongMai}
                             onChange={(e) => setNewProduct({...newProduct, tenThuongMai: e.target.value})}
-                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
+                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-base font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
                         />
                     </div>
                      <div className="sm:col-span-1">
@@ -296,7 +296,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                             type="text" placeholder="Tên thiết bị..."
                             value={newProduct.tenThietBi}
                             onChange={(e) => setNewProduct({...newProduct, tenThietBi: e.target.value})}
-                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
+                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-base font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
                         />
                     </div>
                     <div className="sm:col-span-1">
@@ -305,14 +305,14 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                             type="text" placeholder="Loại..."
                             value={newProduct.dongSanPham}
                             onChange={(e) => setNewProduct({...newProduct, dongSanPham: e.target.value})}
-                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
+                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-base font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
                         />
                     </div>
                      <div className="sm:col-span-1">
                         <label className="block text-xs font-bold text-[#003DA5] mb-1.5 uppercase">Nhãn hàng</label>
                          <select 
                             value={newProduct.nhanHang} onChange={(e) => setNewProduct({...newProduct, nhanHang: e.target.value})}
-                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none cursor-pointer"
+                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-base font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none cursor-pointer"
                         >
                             <option value="HTM">HTM</option>
                             <option value="VMA">VMA</option>
@@ -325,7 +325,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                             type="text" placeholder="Số đăng ký..."
                             value={newProduct.GPLH}
                             onChange={(e) => setNewProduct({...newProduct, GPLH: e.target.value})}
-                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
+                            className="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-base font-medium focus:border-[#003DA5] focus:ring-2 focus:ring-blue-200 bg-white shadow-sm outline-none"
                         />
                     </div>
                     <div className="sm:col-span-5 hidden sm:block"></div>
@@ -348,44 +348,50 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
             <>
                 {/* TABLE VIEW (Desktop) */}
                 <div className="hidden md:block overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5 rounded-xl bg-white border border-slate-200">
-                    <table className="min-w-full divide-y divide-slate-200 table-fixed">
+                    <table 
+                        className="min-w-full divide-y divide-slate-200 table-fixed"
+                        style={{
+                            fontFamily: 'var(--list-font, inherit)',
+                            fontSize: 'var(--list-size, 1rem)'
+                        }}
+                    >
                     <thead className="bg-slate-50/80 backdrop-blur">
                         <tr>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase w-28 sticky top-0 bg-slate-50 z-10">Mã SP</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase sticky top-0 bg-slate-50 z-10">Tên thương mại</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase w-48 sticky top-0 bg-slate-50 z-10">Tên thiết bị YT</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase w-32 sticky top-0 bg-slate-50 z-10">Dòng SP</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase w-24 sticky top-0 bg-slate-50 z-10">Nhãn hàng</th>
-                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase w-32 sticky top-0 bg-slate-50 z-10">GPLH</th>
-                        <th className="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase w-16 sticky top-0 bg-slate-50 z-10"></th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-28 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Mã SP</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Tên thương mại</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-48 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Tên thiết bị YT</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-32 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Dòng SP</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-24 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Nhãn hàng</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-32 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>GPLH</th>
+                        <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase w-16 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}></th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-100">
                         {filteredProducts.map((product, index) => (
                         <tr key={`${product.maSanPham}-${index}`} className="hover:bg-blue-50/50 transition-colors group">
                             <td className="px-4 py-3 align-top">
-                                <span className="font-bold text-sm text-[#003DA5] bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{product.maSanPham}</span>
+                                <span className="font-bold text-[#003DA5] bg-blue-50 px-2 py-0.5 rounded border border-blue-100" style={{ fontSize: 'inherit' }}>{product.maSanPham}</span>
                             </td>
                             <td className="px-4 py-3 align-top">
-                                <div className="text-sm font-medium text-slate-800 line-clamp-2" title={product.tenThuongMai}>{product.tenThuongMai}</div>
+                                <div className="font-medium text-slate-800 line-clamp-2" title={product.tenThuongMai} style={{ fontSize: 'inherit' }}>{product.tenThuongMai}</div>
                             </td>
                             <td className="px-4 py-3 align-top">
-                                <div className="text-sm text-slate-500 line-clamp-1" title={product.tenThietBi}>{product.tenThietBi}</div>
+                                <div className="text-slate-500 line-clamp-1" title={product.tenThietBi} style={{ fontSize: 'inherit' }}>{product.tenThietBi}</div>
                             </td>
                             <td className="px-4 py-3 align-top">
-                                <div className="text-sm text-slate-500 line-clamp-1" title={product.dongSanPham}>{product.dongSanPham}</div>
+                                <div className="text-slate-500 line-clamp-1" title={product.dongSanPham} style={{ fontSize: 'inherit' }}>{product.dongSanPham}</div>
                             </td>
                             <td className="px-4 py-3 align-top">
-                                <span className={`px-2 py-1 rounded text-xs font-bold border ${
+                                <span className={`px-2 py-1 rounded font-bold border ${
                                     product.nhanHang === 'HTM' ? 'bg-[#003DA5]/10 text-[#003DA5] border-[#003DA5]/20' :
                                     product.nhanHang === 'VMA' ? 'bg-[#009183]/10 text-[#009183] border-[#009183]/20' :
                                     'bg-slate-100 text-slate-600 border-slate-200'
-                                }`}>
+                                }`} style={{ fontSize: '0.85em' }}>
                                     {product.nhanHang || 'Khác'}
                                 </span>
                             </td>
                             <td className="px-4 py-3 align-top">
-                                <div className="text-xs text-slate-400">{product.GPLH}</div>
+                                <div className="text-slate-400" style={{ fontSize: '0.85em' }}>{product.GPLH}</div>
                             </td>
                             <td className="px-4 py-3 align-top text-right">
                                 <button 
@@ -470,3 +476,5 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
     </div>
   );
 };
+
+export default ProductListModal;

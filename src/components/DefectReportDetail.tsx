@@ -6,11 +6,13 @@ import { useReactToPrint } from 'react-to-print';
 interface Props {
   report: DefectReport;
   onEdit: (report: DefectReport) => void;
-  onUpdate: (id: string, updates: Partial<DefectReport>, msg?: string) => Promise<boolean>;
+  onUpdate: (id: string, updates: Partial<DefectReport>, msg?: string, user?: { username: string, role: string }) => Promise<boolean>;
   onDelete: (id: string) => void;
   permissions: { canEdit: boolean; canDelete: boolean };
   onClose: () => void;
   currentUserRole: UserRole;
+  currentUsername: string;
+  onAddComment: (reportId: string, content: string, user: { username: string, role: string }) => Promise<boolean>;
 }
 
 const DetailItem = ({ label, value, className, fullWidth }: any) => {
@@ -35,7 +37,7 @@ const Section = ({ title, icon, children }: any) => (
     </div>
 );
 
-const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelete, permissions, onClose, currentUserRole }) => {
+const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelete, permissions, onClose, currentUserRole, currentUsername, onAddComment }) => {
   const canSeeLoaiLoi = ([UserRole.Admin, UserRole.TongGiamDoc, UserRole.CungUng, UserRole.KyThuat] as string[]).includes(currentUserRole);
   
   const [quickUpdateData, setQuickUpdateData] = useState({
@@ -105,7 +107,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
               message = "Đã cập nhật thông tin và chuyển trạng thái sang HOÀN THÀNH do đủ điều kiện.";
           }
 
-          const success = await onUpdate(report.id, updates, message);
+          const success = await onUpdate(report.id, updates, message, { username: currentUsername, role: currentUserRole });
           
           if (success) {
               setEditingSections({ nguyenNhan: false, huongKhacPhuc: false, soLuong: false });

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef, useCallback } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon, EllipsisHorizontalIcon } from './components/Icons';
@@ -147,7 +148,7 @@ export const App: React.FC = () => {
 
   // Use Custom Hooks
   const { currentUser, users, login, logout, saveUser, deleteUser } = useAuth(showToast);
-  const { reports, isLoadingReports, saveReport, deleteReport, updateReport } = useReports(showToast);
+  const { reports, isLoadingReports, saveReport, deleteReport, updateReport, addComment } = useReports(showToast);
   const { products, addProduct, deleteProduct, deleteAllProducts, importProducts } = useProducts(showToast);
   const { roleSettings, systemSettings, saveRoleSettings, saveSystemSettings, renameRole } = useSettings(showToast);
 
@@ -634,6 +635,8 @@ export const App: React.FC = () => {
                     permissions={userPermissions}
                     onClose={() => setSelectedReport(null)}
                     currentUserRole={currentUser.role}
+                    currentUsername={currentUser.username}
+                    onAddComment={addComment}
                   />
                </div>
             </div>

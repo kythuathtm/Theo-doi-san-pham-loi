@@ -1,4 +1,10 @@
 
+
+
+
+
+
+
 import React, { useState, useRef, useEffect } from 'react';
 import { User, SystemSettings, UserRole } from '../types';
 import { 
@@ -72,7 +78,8 @@ export const Header: React.FC<HeaderProps> = ({
         className="backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-30 transition-all shadow-sm"
         style={{
             backgroundColor: systemSettings.headerBackgroundColor || 'rgba(255, 255, 255, 0.8)',
-            color: systemSettings.headerTextColor || '#0f172a'
+            color: systemSettings.headerTextColor || '#0f172a',
+            fontFamily: 'var(--header-font, inherit)'
         }}
       >
         <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
@@ -84,11 +91,17 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* Desktop Title: Company Name Large, App Name Small */}
             <div className="hidden md:flex flex-col justify-center">
-               <span className="text-lg lg:text-xl font-extrabold uppercase tracking-tight leading-none text-slate-800">
-                 CÔNG TY CỔ PHẦN VẬT TƯ Y TẾ HỒNG THIỆN MỸ
+               <span 
+                  className="font-extrabold uppercase tracking-tight leading-none text-slate-800"
+                  style={{ fontSize: 'var(--header-size, 1.1rem)' }}
+               >
+                 {systemSettings.companyName || 'CÔNG TY CỔ PHẦN VẬT TƯ Y TẾ HỒNG THIỆN MỸ'}
                </span>
-               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">
-                 HỆ THỐNG THEO DÕI PHẢN ÁNH CHẤT LƯỢNG SẢN PHẨM
+               <span 
+                  className="font-bold text-slate-500 uppercase tracking-widest mt-0.5"
+                  style={{ fontSize: 'calc(var(--header-size, 1.1rem) * 0.65)' }}
+               >
+                 {systemSettings.appName || 'HỆ THỐNG THEO DÕI PHẢN ÁNH CHẤT LƯỢNG SẢN PHẨM'}
                </span>
             </div>
             

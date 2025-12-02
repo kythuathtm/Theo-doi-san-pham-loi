@@ -129,14 +129,20 @@ const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser,
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           <h3 className="text-sm font-bold text-slate-700 mb-2">Danh sách tài khoản ({users.length})</h3>
           <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-            <table className="min-w-full divide-y divide-slate-200">
+            <table 
+                className="min-w-full divide-y divide-slate-200"
+                style={{
+                    fontFamily: 'var(--list-font, inherit)',
+                    fontSize: 'var(--list-size, 1rem)'
+                }}
+            >
                 <thead className="bg-slate-100">
                 <tr>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Username</th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Họ và tên</th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Mật khẩu</th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Vai trò</th>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Thao tác</th>
+                    <th scope="col" className="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap" style={{ fontSize: 'inherit' }}>Username</th>
+                    <th scope="col" className="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap" style={{ fontSize: 'inherit' }}>Họ và tên</th>
+                    <th scope="col" className="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap" style={{ fontSize: 'inherit' }}>Mật khẩu</th>
+                    <th scope="col" className="px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap" style={{ fontSize: 'inherit' }}>Vai trò</th>
+                    <th scope="col" className="px-4 py-3 text-right font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap" style={{ fontSize: 'inherit' }}>Thao tác</th>
                 </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
@@ -144,10 +150,10 @@ const UserManagementModal: React.FC<Props> = ({ users, onSaveUser, onDeleteUser,
                     const isRoleValid = availableRoles.includes(user.role);
                     return (
                         <tr key={index} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
-                        <td className="px-4 py-3 whitespace-nowrap text-base font-normal text-slate-900">{user.username}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-base font-normal text-slate-700">{user.fullName || '-'}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-base font-normal text-slate-500">******</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-base font-normal text-slate-500">
+                        <td className="px-4 py-3 whitespace-nowrap font-normal text-slate-900" style={{ fontSize: 'inherit' }}>{user.username}</td>
+                        <td className="px-4 py-3 whitespace-nowrap font-normal text-slate-700" style={{ fontSize: 'inherit' }}>{user.fullName || '-'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap font-normal text-slate-500" style={{ fontSize: 'inherit' }}>******</td>
+                        <td className="px-4 py-3 whitespace-nowrap font-normal text-slate-500" style={{ fontSize: 'inherit' }}>
                             {isRoleValid ? (
                                 user.role
                             ) : (

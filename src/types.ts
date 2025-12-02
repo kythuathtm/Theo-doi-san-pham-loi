@@ -1,5 +1,6 @@
 
 
+
 // Change from enum to const object to support dynamic roles
 export const UserRole = {
   Admin: 'Admin',
@@ -29,6 +30,15 @@ export interface Product {
   GPLH: string;
 }
 
+export interface ActivityLog {
+  id: string;
+  type: 'log' | 'comment';
+  content: string;
+  timestamp: string;
+  user: string;
+  role?: string;
+}
+
 export interface DefectReport {
   id: string;
   ngayTao: string;
@@ -53,6 +63,7 @@ export interface DefectReport {
   ngayHoanThanh?: string;
   loaiLoi: 'Lỗi Sản xuất' | 'Lỗi Nhà cung cấp' | 'Lỗi Hỗn hợp' | 'Lỗi Khác';
   nhanHang: 'HTM' | 'VMA' | 'Khác';
+  activityLog?: ActivityLog[];
 }
 
 export type ToastType = 'success' | 'error' | 'info';

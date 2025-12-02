@@ -6,6 +6,9 @@
 
 
 
+
+
+
 import { useState, useEffect } from 'react';
 import { RoleSettings, SystemSettings, UserRole, ToastType } from '../types';
 import { db } from '../firebaseConfig';
@@ -21,8 +24,8 @@ const DEFAULT_ROLE_SETTINGS: RoleSettings = {
 };
 
 const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
-  appName: 'Theo dõi lỗi SP',
-  companyName: 'Công ty Cổ phần Vật tư Y tế Hồng Thiện Mỹ',
+  appName: 'HỆ THỐNG THEO DÕI PHẢN ÁNH CHẤT LƯỢNG SẢN PHẨM',
+  companyName: 'CÔNG TY CỔ PHẦN VẬT TƯ Y TẾ HỒNG THIỆN MỸ',
   logoUrl: '',
   backgroundType: 'default',
   backgroundValue: '',

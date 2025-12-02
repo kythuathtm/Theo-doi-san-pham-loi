@@ -206,7 +206,7 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                         value={newRoleName}
                         onChange={(e) => setNewRoleName(e.target.value)}
                         placeholder="Nhập tên vai trò..." 
-                        className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
+                        className="px-3 py-1.5 border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
                         autoFocus
                       />
                       <button 
@@ -236,15 +236,21 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
         
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
             <div className="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5 rounded-lg bg-white overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
+                <table 
+                    className="min-w-full divide-y divide-slate-200"
+                    style={{
+                        fontFamily: 'var(--list-font, inherit)',
+                        fontSize: 'var(--list-size, 1rem)'
+                    }}
+                >
                     <thead className="bg-slate-100">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-64 sticky left-0 bg-slate-100 z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)]">Vai trò</th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-20">Thêm mới</th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-20">Xóa</th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-20">Báo cáo</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[300px]">Các trường được phép chỉnh sửa</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[250px]">Nguồn gốc lỗi được xem</th>
+                            <th scope="col" className="px-6 py-3 text-left font-bold text-slate-500 uppercase tracking-wider w-64 sticky left-0 bg-slate-100 z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)]" style={{ fontSize: 'inherit' }}>Vai trò</th>
+                            <th scope="col" className="px-6 py-3 text-center font-bold text-slate-500 uppercase tracking-wider w-20" style={{ fontSize: 'inherit' }}>Thêm mới</th>
+                            <th scope="col" className="px-6 py-3 text-center font-bold text-slate-500 uppercase tracking-wider w-20" style={{ fontSize: 'inherit' }}>Xóa</th>
+                            <th scope="col" className="px-6 py-3 text-center font-bold text-slate-500 uppercase tracking-wider w-20" style={{ fontSize: 'inherit' }}>Báo cáo</th>
+                            <th scope="col" className="px-6 py-3 text-left font-bold text-slate-500 uppercase tracking-wider min-w-[300px]" style={{ fontSize: 'inherit' }}>Các trường được phép chỉnh sửa</th>
+                            <th scope="col" className="px-6 py-3 text-left font-bold text-slate-500 uppercase tracking-wider min-w-[250px]" style={{ fontSize: 'inherit' }}>Nguồn gốc lỗi được xem</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-200">
@@ -256,14 +262,14 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                             
                             return (
                                 <tr key={role} className={`hover:bg-slate-50 transition-colors ${isAdmin ? 'bg-blue-50/30' : ''}`}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 sticky left-0 bg-inherit z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)] group">
+                                    <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-800 sticky left-0 bg-inherit z-10 shadow-[1px_0_0_0_rgba(0,0,0,0.05)] group" style={{ fontSize: 'inherit' }}>
                                         {isEditing ? (
                                             <div className="flex items-center gap-1">
                                                 <input 
                                                     type="text" 
                                                     value={renameValue}
                                                     onChange={(e) => setRenameValue(e.target.value)}
-                                                    className="w-full px-2 py-1 border border-blue-400 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                                    className="w-full px-2 py-1 border border-blue-400 rounded text-base focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                                                     autoFocus
                                                 />
                                                 <button onClick={handleSaveRename} className="p-1 text-green-600 hover:bg-green-100 rounded"><CheckCircleIcon className="w-4 h-4"/></button>
@@ -299,7 +305,7 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                                             checked={config.canCreate} 
                                             onChange={() => handleCheckboxChange(role, 'canCreate')}
                                             disabled={isAdmin}
-                                            className="h-5 w-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 disabled:opacity-50"
+                                            className="h-5 w-5 accent-[#003DA5] cursor-pointer rounded border-slate-300 focus:ring-blue-500 disabled:opacity-50"
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -308,7 +314,7 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                                             checked={config.canDelete || false} 
                                             onChange={() => handleCheckboxChange(role, 'canDelete')}
                                             disabled={isAdmin}
-                                            className="h-5 w-5 text-red-600 rounded border-slate-300 focus:ring-red-500 disabled:opacity-50"
+                                            className="h-5 w-5 accent-red-600 cursor-pointer rounded border-slate-300 focus:ring-red-500 disabled:opacity-50"
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -317,10 +323,10 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                                             checked={config.canViewDashboard} 
                                             onChange={() => handleCheckboxChange(role, 'canViewDashboard')}
                                             disabled={isAdmin}
-                                            className="h-5 w-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 disabled:opacity-50"
+                                            className="h-5 w-5 accent-[#003DA5] cursor-pointer rounded border-slate-300 focus:ring-blue-500 disabled:opacity-50"
                                         />
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600">
+                                    <td className="px-6 py-4 text-slate-600" style={{ fontSize: 'inherit' }}>
                                         <div className="grid grid-cols-2 gap-2 gap-x-4">
                                             {editableFieldOptions.map(option => (
                                                 <label key={option.key} className="inline-flex items-center cursor-pointer group">
@@ -329,14 +335,14 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                                                         checked={(config.editableFields || []).includes(option.key)}
                                                         onChange={() => handleEditableFieldChange(role, option.key)}
                                                         disabled={isAdmin}
-                                                        className="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:opacity-50"
+                                                        className="rounded border-slate-300 accent-[#003DA5] cursor-pointer shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:opacity-50"
                                                     />
-                                                    <span className="ml-2 text-xs group-hover:text-slate-900 transition-colors">{option.label}</span>
+                                                    <span className="ml-2 group-hover:text-slate-900 transition-colors" style={{ fontSize: '0.85em' }}>{option.label}</span>
                                                 </label>
                                             ))}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600">
+                                    <td className="px-6 py-4 text-slate-600" style={{ fontSize: 'inherit' }}>
                                         <div className="space-y-2">
                                             <label className="inline-flex items-center mr-4 cursor-pointer">
                                                 <input 
@@ -344,9 +350,9 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                                                     checked={config.viewableDefectTypes.includes('All')}
                                                     onChange={() => handleDefectTypeChange(role, 'All')}
                                                     disabled={isAdmin}
-                                                    className="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:opacity-50"
+                                                    className="rounded border-slate-300 accent-[#003DA5] cursor-pointer shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:opacity-50"
                                                 />
-                                                <span className="ml-2 font-semibold text-slate-700 text-xs">Tất cả</span>
+                                                <span className="ml-2 font-semibold text-slate-700" style={{ fontSize: '0.85em' }}>Tất cả</span>
                                             </label>
                                             
                                             <div className={`grid grid-cols-1 gap-1 mt-1 transition-opacity ${config.viewableDefectTypes.includes('All') ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -357,9 +363,9 @@ const PermissionManagementModal: React.FC<Props> = ({ roleSettings, onSave, onRe
                                                             checked={config.viewableDefectTypes.includes(type)}
                                                             onChange={() => handleDefectTypeChange(role, type)}
                                                             disabled={isAdmin || config.viewableDefectTypes.includes('All')}
-                                                            className="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:opacity-50"
+                                                            className="rounded border-slate-300 accent-[#003DA5] cursor-pointer shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:opacity-50"
                                                         />
-                                                        <span className="ml-2 text-xs">{type}</span>
+                                                        <span className="ml-2" style={{ fontSize: '0.85em' }}>{type}</span>
                                                     </label>
                                                 ))}
                                             </div>

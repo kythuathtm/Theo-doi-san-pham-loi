@@ -1,8 +1,10 @@
 
+
+
 import { useState, useEffect } from 'react';
-import { DefectReport, ToastType } from '../types';
+import { DefectReport, ToastType, ActivityLog } from '../types';
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, addDoc, deleteDoc, writeBatch, arrayUnion } from 'firebase/firestore';
 
 export const useReports = (showToast: (msg: string, type: ToastType) => void) => {
   const [reports, setReports] = useState<DefectReport[]>([]);
@@ -64,6 +66,29 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
       }
   };
 
+  const addComment = async (reportId: string, content: string, user: { username: string, role: string }) => {
+      try {
+          const reportRef = doc(db, "reports", reportId);
+          const newComment: ActivityLog = {
+              id: `cmt_${Date.now()}`,
+              type: 'comment',
+              content: content,
+              timestamp: new Date().toISOString(),
+              user: user.username,
+              role: user.role
+          };
+          
+          await updateDoc(reportRef, {
+              activityLog: arrayUnion(newComment)
+          });
+          return true;
+      } catch (error) {
+          console.error("Error adding comment:", error);
+          showToast('Lỗi khi gửi bình luận', 'error');
+          return false;
+      }
+  };
+
   const deleteReport = async (id: string) => {
     try {
         await deleteDoc(doc(db, "reports", id));
@@ -98,6 +123,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
     isLoadingReports,
     saveReport,
     updateReport,
+    addComment,
     deleteReport,
     deleteMultipleReports
   };
