@@ -60,15 +60,26 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
 
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Fix for react-to-print import issue on ESM environments
-  // We access useReactToPrint from the default export object if named export fails
-  const useReactToPrint = (ReactToPrint as any).useReactToPrint || ReactToPrint;
+  // Robustly retrieve useReactToPrint hook from the imported module.
+  // Some ESM builds (like esm.sh) might export it as a named export, 
+  // others (CJS interop) might stash it in default.
+  // We check all locations.
+  const getUseReactToPrint = () => {
+      const lib = ReactToPrint as any;
+      if (lib.useReactToPrint) return lib.useReactToPrint;
+      if (lib.default && lib.default.useReactToPrint) return lib.default.useReactToPrint;
+      // If the default export itself is the hook (unlikely for v2 but possible in v3 beta?)
+      // If the default export is the component (class), we can't use it as a hook.
+      return null;
+  };
 
-  const handlePrint = useReactToPrint({
+  const useReactToPrint = getUseReactToPrint();
+
+  const handlePrint = useReactToPrint ? useReactToPrint({
       content: () => printRef.current,
       documentTitle: `Phieu_Phan_Anh_${report.maSanPham}_${report.id.slice(0, 6)}`,
       bodyClass: 'bg-white',
-  });
+  }) : () => { console.warn("Printing is not available: library not loaded correctly."); };
 
   const isEditing = Object.values(editingSections).some(Boolean);
 
