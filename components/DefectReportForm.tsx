@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
 import { XIcon, CheckCircleIcon, TagIcon, WrenchIcon, LockClosedIcon, ShieldCheckIcon, ClipboardDocumentListIcon, CalendarIcon, BuildingStoreIcon, PlusIcon, TrashIcon } from './Icons';
@@ -617,7 +618,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                     value={newImageUrl}
                                     onChange={(e) => setNewImageUrl(e.target.value)}
                                     placeholder="Dán đường dẫn ảnh (URL) vào đây..."
-                                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
                                 />
                                 <button 
                                     type="button" 
@@ -746,6 +747,8 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                         className={getInputClasses('trangThai')}
                                     >
                                         <option value="Mới">Mới</option>
+                                        <option value="Đang tiếp nhận">Đang tiếp nhận</option>
+                                        <option value="Đang xác minh">Đang xác minh</option>
                                         <option value="Đang xử lý">Đang xử lý</option>
                                         <option value="Chưa tìm ra nguyên nhân">Chưa tìm ra nguyên nhân</option>
                                         <option value="Hoàn thành">Hoàn thành</option>

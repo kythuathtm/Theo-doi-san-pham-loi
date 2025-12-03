@@ -5,12 +5,14 @@ import {
     MagnifyingGlassIcon, InboxIcon, ClockIcon, CheckCircleIcon, 
     SparklesIcon, Cog6ToothIcon, TrashIcon, ArrowDownTrayIcon,
     CalendarIcon, FunnelIcon, XIcon, DocumentDuplicateIcon,
-    ArrowUpIcon, ArrowDownIcon, AdjustmentsIcon
+    ArrowUpIcon, ArrowDownIcon, AdjustmentsIcon, EyeIcon
 } from './Icons';
 
 interface SummaryStats {
     total: number;
     moi: number;
+    dangTiepNhan: number;
+    dangXacMinh: number;
     dangXuLy: number;
     chuaTimRaNguyenNhan: number;
     hoanThanh: number;
@@ -49,10 +51,21 @@ interface Props {
 }
 
 const statusColorMap: { [key in DefectReport['trangThai']]: string } = {
-  'Mới': 'bg-blue-50 text-blue-700 border-blue-200',
-  'Đang xử lý': 'bg-amber-50 text-amber-700 border-amber-200',
-  'Chưa tìm ra nguyên nhân': 'bg-purple-50 text-purple-700 border-purple-200',
-  'Hoàn thành': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Mới': 'bg-blue-50 text-blue-700 border-blue-200 ring-blue-500/30',
+  'Đang tiếp nhận': 'bg-indigo-50 text-indigo-700 border-indigo-200 ring-indigo-500/30',
+  'Đang xác minh': 'bg-cyan-50 text-cyan-700 border-cyan-200 ring-cyan-500/30',
+  'Đang xử lý': 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-500/30',
+  'Chưa tìm ra nguyên nhân': 'bg-purple-50 text-purple-700 border-purple-200 ring-purple-500/30',
+  'Hoàn thành': 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-500/30',
+};
+
+const statusDotMap: { [key in DefectReport['trangThai']]: string } = {
+  'Mới': 'bg-blue-500',
+  'Đang tiếp nhận': 'bg-indigo-500',
+  'Đang xác minh': 'bg-cyan-500',
+  'Đang xử lý': 'bg-amber-500',
+  'Chưa tìm ra nguyên nhân': 'bg-purple-500',
+  'Hoàn thành': 'bg-emerald-500',
 };
 
 type ColumnId = 'stt' | 'ngayPhanAnh' | 'maSanPham' | 'tenThuongMai' | 'noiDungPhanAnh' | 'soLo' | 'maNgaySanXuat' | 'trangThai' | 'actions';
@@ -75,7 +88,7 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'noiDungPhanAnh', label: 'Nội dung phản ánh', visible: true, width: 300, align: 'left' }, 
     { id: 'soLo', label: 'Số lô', visible: true, width: 100, align: 'left' },
     { id: 'maNgaySanXuat', label: 'Mã NSX', visible: true, width: 100, align: 'left' },
-    { id: 'trangThai', label: 'Trạng thái', visible: true, width: 150, align: 'left' },
+    { id: 'trangThai', label: 'Trạng thái', visible: true, width: 160, align: 'left' },
     { id: 'actions', label: '', visible: true, width: 100, align: 'center', fixed: true },
 ];
 
@@ -110,45 +123,46 @@ const MobileReportCard = React.memo(({
         <div 
             style={style}
             onClick={onSelect}
-            className={`absolute left-0 right-0 w-full px-4 py-3 border-b border-slate-100 active:bg-slate-100 transition-colors touch-manipulation flex flex-col justify-between bg-white`}
+            className={`absolute left-0 right-0 w-full px-4 py-3 border-b border-slate-100 active:bg-slate-50 transition-colors touch-manipulation flex flex-col justify-between bg-white`}
         >
             <div>
-                <div className="flex justify-between items-start mb-2">
+                <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2">
-                        <span className="text-base text-slate-600 px-2 py-1 rounded border border-slate-200 bg-slate-100">
+                        <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">
                             <HighlightText text={report.maSanPham} highlight={highlight} />
                         </span>
-                        <span className="text-sm text-slate-400 flex items-center gap-1">
+                        <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
                             <CalendarIcon className="w-3 h-3" />
                             {new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}
                         </span>
                     </div>
-                    <span className={`px-2 py-1 rounded text-sm border ${statusColorMap[report.trangThai]}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase flex items-center gap-1.5 ${statusColorMap[report.trangThai]}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${statusDotMap[report.trangThai]}`}></span>
                         {report.trangThai}
                     </span>
                 </div>
                 
                 {/* Title: Bold */}
-                <h4 className="font-bold text-slate-800 text-base mb-1.5 leading-snug line-clamp-2">
+                <h4 className="font-bold text-slate-800 text-sm mb-1 leading-snug line-clamp-2">
                     <HighlightText text={report.tenThuongMai} highlight={highlight} />
                 </h4>
                 
                 {/* Content: Regular */}
-                <div className="text-base font-normal text-slate-500 mb-2 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100 italic line-clamp-2">
+                <div className="text-sm font-normal text-slate-500 mb-2 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100 italic line-clamp-2">
                     <HighlightText text={report.noiDungPhanAnh || 'Không có nội dung'} highlight={highlight} />
                 </div>
             </div>
             
             <div className="flex justify-between items-center mt-1">
-                 <div className="text-base text-slate-500">
-                    Lô: <span className="text-slate-800"><HighlightText text={report.soLo} highlight={highlight} /></span>
+                 <div className="text-xs font-medium text-slate-500">
+                    Lô: <span className="text-slate-900 font-bold"><HighlightText text={report.soLo} highlight={highlight} /></span>
                  </div>
                  
                  <div className="flex items-center gap-3">
                       {onDuplicate && (
                           <button 
                              onClick={(e) => { e.stopPropagation(); onDuplicate(report); }}
-                             className="text-slate-400 hover:text-blue-600 active:scale-95 p-2 -m-2"
+                             className="text-slate-400 hover:text-blue-600 active:scale-95 p-1.5 -m-1.5"
                              title="Sao chép"
                           >
                              <DocumentDuplicateIcon className="h-5 w-5" />
@@ -157,7 +171,7 @@ const MobileReportCard = React.memo(({
                       {canDelete && (
                           <button 
                              onClick={(e) => { e.stopPropagation(); onDelete(report.id); }}
-                             className="text-slate-400 hover:text-red-600 active:scale-95 p-2 -m-2"
+                             className="text-slate-400 hover:text-red-600 active:scale-95 p-1.5 -m-1.5"
                              title="Xóa"
                           >
                              <TrashIcon className="h-5 w-5" />
@@ -477,7 +491,7 @@ const DefectReportList: React.FC<Props> = ({
   const getColumnStyle = (col: ColumnConfig) => {
       return {
           // Use flex-none for fixed columns, flex-grow for others to fill space
-          className: `${col.fixed ? 'sticky right-0 z-10 bg-white/95 backdrop-blur shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] flex-none' : ''} ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'} flex items-center min-w-0`,
+          className: `${col.fixed ? 'sticky right-0 z-10 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)] flex-none' : ''} ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'} flex items-center min-w-0`,
           style: { 
               // Flex grow proportional to width, shrink allowed, basis at width
               flex: col.fixed ? 'none' : `${col.width} 1 ${col.width}px`,
@@ -491,19 +505,19 @@ const DefectReportList: React.FC<Props> = ({
   const renderCell = (report: DefectReport, columnId: ColumnId, index: number) => {
       switch (columnId) {
           case 'stt':
-              return <span className="text-slate-500 font-normal text-base">{(currentPage - 1) * itemsPerPage + index + 1}</span>;
+              return <span className="text-slate-400 font-medium text-xs">{(currentPage - 1) * itemsPerPage + index + 1}</span>;
           case 'ngayPhanAnh':
-              return <span className="text-slate-700 font-normal text-base whitespace-nowrap">{new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}</span>;
+              return <span className="text-slate-600 font-normal text-sm whitespace-nowrap">{new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}</span>;
           case 'maSanPham':
               return (
-                  <span className="text-blue-700 font-normal text-base whitespace-nowrap block truncate" title={report.maSanPham}>
+                  <span className="text-slate-700 font-bold bg-slate-100 px-2 py-0.5 rounded text-sm whitespace-nowrap block truncate border border-slate-200" title={report.maSanPham}>
                       <HighlightText text={report.maSanPham} highlight={filters.searchTerm} />
                   </span>
               );
           case 'tenThuongMai':
               return (
                 <div className="w-full pr-2" title={report.tenThuongMai}>
-                    <div className="font-normal text-slate-800 text-base leading-snug line-clamp-2 whitespace-normal break-words">
+                    <div className="font-semibold text-slate-800 text-sm leading-snug line-clamp-2 whitespace-normal break-words">
                         <HighlightText text={report.tenThuongMai} highlight={filters.searchTerm} />
                     </div>
                 </div>
@@ -511,7 +525,7 @@ const DefectReportList: React.FC<Props> = ({
           case 'noiDungPhanAnh':
               return (
                 <div className="w-full pr-2" title={report.noiDungPhanAnh}>
-                    <div className="text-slate-600 text-base font-normal leading-snug line-clamp-2 whitespace-normal break-words">
+                    <div className="text-slate-500 text-sm font-normal leading-snug line-clamp-2 whitespace-normal break-words italic">
                         <HighlightText text={report.noiDungPhanAnh} highlight={filters.searchTerm} />
                     </div>
                 </div>
@@ -519,7 +533,7 @@ const DefectReportList: React.FC<Props> = ({
           case 'soLo':
               return (
                   <div className="w-full pr-1" title={report.soLo}>
-                      <div className="text-slate-700 text-base font-normal leading-snug line-clamp-2 whitespace-normal break-words">
+                      <div className="text-slate-700 text-sm font-medium leading-snug line-clamp-2 whitespace-normal break-words">
                           <HighlightText text={report.soLo} highlight={filters.searchTerm} />
                       </div>
                   </div>
@@ -527,14 +541,15 @@ const DefectReportList: React.FC<Props> = ({
           case 'maNgaySanXuat':
               return (
                   <div className="w-full pr-1" title={report.maNgaySanXuat}>
-                      <div className="text-slate-600 text-base font-normal leading-snug line-clamp-2 whitespace-normal break-words">
+                      <div className="text-slate-500 text-sm font-normal leading-snug line-clamp-2 whitespace-normal break-words">
                           {report.maNgaySanXuat}
                       </div>
                   </div>
               );
           case 'trangThai':
               return (
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-base font-normal whitespace-nowrap border ${statusColorMap[report.trangThai]}`}>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap border shadow-sm ${statusColorMap[report.trangThai]}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${statusDotMap[report.trangThai]}`}></span>
                       {report.trangThai}
                   </span>
               );
@@ -576,16 +591,16 @@ const DefectReportList: React.FC<Props> = ({
   const StatTab = ({ label, count, active, onClick, icon }: any) => (
       <button 
           onClick={onClick}
-          className={`relative flex items-center gap-2 px-4 py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap z-10 flex-shrink-0 snap-start ${
+          className={`relative flex items-center gap-2 px-4 py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap z-10 flex-shrink-0 snap-start select-none ${
               active 
-              ? 'text-blue-700 border-blue-600 bg-blue-50/40' 
+              ? 'text-blue-700 border-blue-600 bg-blue-50/60' 
               : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50'
           }`}
       >
-          <span className={`${active ? 'text-blue-600' : 'text-slate-400'} transition-colors`}>{icon}</span>
+          <span className={`transition-colors duration-200 ${active ? 'text-blue-600 scale-110' : 'text-slate-400'}`}>{icon}</span>
           <span>{label}</span>
-          <span className={`ml-1 py-0.5 px-2 rounded-full text-xs font-extrabold transition-colors ${
-              active ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
+          <span className={`ml-1 py-0.5 px-2 rounded-full text-xs font-extrabold transition-all duration-300 ${
+              active ? 'bg-blue-600 text-white shadow-md shadow-blue-200 scale-105' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
           }`}>
               {count}
           </span>
@@ -599,12 +614,13 @@ const DefectReportList: React.FC<Props> = ({
   return (
     <div className="flex flex-col h-full w-full relative px-0 sm:px-4 lg:px-8 py-0 sm:py-4">
       
-      <div className="flex flex-col h-full bg-slate-50 sm:bg-white sm:rounded-2xl sm:shadow-soft sm:border sm:border-slate-200 overflow-hidden sm:ring-1 sm:ring-slate-100 relative">
+      <div className="flex flex-col h-full bg-slate-50 sm:bg-white sm:rounded-2xl sm:shadow-soft sm:border sm:border-slate-200 overflow-hidden sm:ring-1 sm:ring-slate-100 relative transition-all duration-300">
           
           {/* TABS (Scrollable on Mobile) */}
           <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar bg-white shadow-sm z-20 sticky top-0 h-12 w-full snap-x">
               <StatTab label="Tất cả" count={summaryStats.total} active={filters.statusFilter === 'All'} onClick={() => onStatusFilterChange('All')} icon={<InboxIcon className="h-4 w-4"/>} />
               <StatTab label="Mới" count={summaryStats.moi} active={filters.statusFilter === 'Mới'} onClick={() => onStatusFilterChange('Mới')} icon={<SparklesIcon className="h-4 w-4"/>} />
+              <StatTab label="Đang xác minh" count={summaryStats.dangXacMinh} active={filters.statusFilter === 'Đang xác minh'} onClick={() => onStatusFilterChange('Đang xác minh')} icon={<EyeIcon className="h-4 w-4"/>} />
               <StatTab label="Đang xử lý" count={summaryStats.dangXuLy} active={filters.statusFilter === 'Đang xử lý'} onClick={() => onStatusFilterChange('Đang xử lý')} icon={<ClockIcon className="h-4 w-4"/>} />
               <StatTab label="Chưa rõ" count={summaryStats.chuaTimRaNguyenNhan} active={filters.statusFilter === 'Chưa tìm ra nguyên nhân'} onClick={() => onStatusFilterChange('Chưa tìm ra nguyên nhân')} icon={<MagnifyingGlassIcon className="h-4 w-4"/>} />
               <StatTab label="Hoàn thành" count={summaryStats.hoanThanh} active={filters.statusFilter === 'Hoàn thành'} onClick={() => onStatusFilterChange('Hoàn thành')} icon={<CheckCircleIcon className="h-4 w-4"/>} />
@@ -806,7 +822,13 @@ const DefectReportList: React.FC<Props> = ({
                         onScroll={handleScroll}
                         className="hidden md:block flex-1 overflow-auto custom-scrollbar relative"
                     >
-                        <div className="min-w-full inline-block align-middle">
+                        <div 
+                            className="min-w-full inline-block align-middle"
+                            style={{ 
+                                fontFamily: 'var(--list-font, inherit)',
+                                fontSize: 'var(--list-size, 1rem)'
+                            }}
+                        >
                             {/* Sticky Header */}
                             <div className="flex bg-white/95 backdrop-blur-md border-b border-slate-200 text-left text-sm font-bold text-slate-600 tracking-wide sticky top-0 z-20 shadow-sm min-w-full w-full" style={{ height: ROW_HEIGHT }}>
                                 {visibleColumns.map((col) => {
@@ -928,7 +950,7 @@ const DefectReportList: React.FC<Props> = ({
       
       {reportToDelete && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-fade-in-up border border-white/20">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-pop border border-white/20">
                 <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-5 mx-auto shadow-sm ring-1 ring-red-100">
                     <TrashIcon className="h-7 w-7 text-red-500" />
                 </div>

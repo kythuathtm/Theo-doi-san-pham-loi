@@ -22,7 +22,8 @@ const DefectReportForm = React.lazy(() => import('./components/DefectReportForm'
 const ProductListModal = React.lazy(() => import('./components/ProductListModal'));
 const UserManagementModal = React.lazy(() => import('./components/UserManagementModal'));
 const PermissionManagementModal = React.lazy(() => import('./components/PermissionManagementModal'));
-const Login = React.lazy(() => import('./components/Login'));
+// Explicitly cast Login type to avoid default export confusion in some environments
+const Login = React.lazy(() => import('./components/Login') as Promise<{ default: React.ComponentType<any> }>);
 const DashboardReport = React.lazy(() => import('./components/DashboardReport'));
 const SystemSettingsModal = React.lazy(() => import('./components/SystemSettingsModal'));
 
@@ -108,13 +109,48 @@ export const App: React.FC = () => {
   // Apply System Settings to DOM
   useEffect(() => {
     const root = document.documentElement;
+    
+    // Global Settings
     if (systemSettings.fontFamily) {
         root.style.setProperty('font-family', systemSettings.fontFamily);
     }
     if (systemSettings.baseFontSize) {
         root.style.fontSize = systemSettings.baseFontSize;
     }
-  }, [systemSettings.fontFamily, systemSettings.baseFontSize]);
+
+    // Extended Settings (Header & List)
+    if (systemSettings.headerFontFamily) {
+        root.style.setProperty('--header-font', systemSettings.headerFontFamily);
+    } else {
+        root.style.removeProperty('--header-font');
+    }
+
+    if (systemSettings.headerFontSize) {
+        root.style.setProperty('--header-size', systemSettings.headerFontSize);
+    } else {
+        root.style.removeProperty('--header-size');
+    }
+
+    if (systemSettings.listFontFamily) {
+        root.style.setProperty('--list-font', systemSettings.listFontFamily);
+    } else {
+        root.style.removeProperty('--list-font');
+    }
+
+    if (systemSettings.listFontSize) {
+        root.style.setProperty('--list-size', systemSettings.listFontSize);
+    } else {
+        root.style.removeProperty('--list-size');
+    }
+
+  }, [
+      systemSettings.fontFamily, 
+      systemSettings.baseFontSize,
+      systemSettings.headerFontFamily,
+      systemSettings.headerFontSize,
+      systemSettings.listFontFamily,
+      systemSettings.listFontSize
+  ]);
 
   // Sync selectedReport with reports to ensure realtime updates in modal
   useEffect(() => {
@@ -215,6 +251,8 @@ export const App: React.FC = () => {
       return {
           total: filteredReports.length,
           moi: filteredReports.filter(r => r.trangThai === 'Mới').length,
+          dangTiepNhan: filteredReports.filter(r => r.trangThai === 'Đang tiếp nhận').length,
+          dangXacMinh: filteredReports.filter(r => r.trangThai === 'Đang xác minh').length,
           dangXuLy: filteredReports.filter(r => r.trangThai === 'Đang xử lý').length,
           chuaTimRaNguyenNhan: filteredReports.filter(r => r.trangThai === 'Chưa tìm ra nguyên nhân').length,
           hoanThanh: filteredReports.filter(r => r.trangThai === 'Hoàn thành').length,
@@ -407,38 +445,40 @@ export const App: React.FC = () => {
 
       <main className="flex-1 overflow-hidden relative">
         <Suspense fallback={<Loading />}>
-            {currentView === 'list' || !canViewDashboard ? (
-                 <DefectReportList
-                    reports={paginatedReports}
-                    totalReports={filteredReports.length}
-                    currentPage={currentPage}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={setCurrentPage}
-                    onItemsPerPageChange={handleItemsPerPageChange}
-                    selectedReport={selectedReport}
-                    onSelectReport={setSelectedReport}
-                    onDelete={handleDeleteReportWrapper}
-                    currentUserRole={currentUser.role}
-                    currentUsername={currentUser.username} // Pass username for storage key
-                    filters={{ searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter }}
-                    onSearchTermChange={handleSearchTermChange}
-                    onStatusFilterChange={handleStatusFilterChange}
-                    onDefectTypeFilterChange={handleDefectTypeFilterChange}
-                    onYearFilterChange={handleYearFilterChange}
-                    onDateFilterChange={handleDateFilterChange}
-                    summaryStats={summaryStats}
-                    isLoading={isPending}
-                    onExport={handleExportData}
-                    onDuplicate={handleDuplicateReport}
-                    baseFontSize={systemSettings.baseFontSize}
-                />
-            ) : (
-                <DashboardReport 
-                    reports={filteredReports} 
-                    onFilterSelect={handleDashboardFilterSelect}
-                    onSelectReport={setSelectedReport} 
-                />
-            )}
+            <div key={currentView} className="animate-fade-in h-full flex flex-col origin-top">
+                {currentView === 'list' || !canViewDashboard ? (
+                     <DefectReportList
+                        reports={paginatedReports}
+                        totalReports={filteredReports.length}
+                        currentPage={currentPage}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setCurrentPage}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                        selectedReport={selectedReport}
+                        onSelectReport={setSelectedReport}
+                        onDelete={handleDeleteReportWrapper}
+                        currentUserRole={currentUser.role}
+                        currentUsername={currentUser.username} // Pass username for storage key
+                        filters={{ searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter }}
+                        onSearchTermChange={handleSearchTermChange}
+                        onStatusFilterChange={handleStatusFilterChange}
+                        onDefectTypeFilterChange={handleDefectTypeFilterChange}
+                        onYearFilterChange={handleYearFilterChange}
+                        onDateFilterChange={handleDateFilterChange}
+                        summaryStats={summaryStats}
+                        isLoading={isPending}
+                        onExport={handleExportData}
+                        onDuplicate={handleDuplicateReport}
+                        baseFontSize={systemSettings.baseFontSize}
+                    />
+                ) : (
+                    <DashboardReport 
+                        reports={filteredReports} 
+                        onFilterSelect={handleDashboardFilterSelect}
+                        onSelectReport={setSelectedReport} 
+                    />
+                )}
+            </div>
         </Suspense>
       </main>
 
@@ -447,7 +487,7 @@ export const App: React.FC = () => {
       <Suspense fallback={null}>
           {selectedReport && (
             <div className="fixed inset-0 z-50 flex justify-center items-end sm:items-center sm:p-4">
-               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedReport(null)}></div>
+               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-backdrop-in" onClick={() => setSelectedReport(null)}></div>
                <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-4xl bg-white rounded-none sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up ring-1 ring-slate-900/5 z-50">
                   <DefectReportDetail
                     report={selectedReport}

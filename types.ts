@@ -1,6 +1,7 @@
 
 
 
+
 // Change from enum to const object to support dynamic roles
 export const UserRole = {
   Admin: 'Admin',
@@ -59,7 +60,7 @@ export interface DefectReport {
   ngayDoiHang?: string; // New field: Exchange Date
   nguyenNhan?: string;
   huongKhacPhuc?: string;
-  trangThai: 'Mới' | 'Đang xử lý' | 'Chưa tìm ra nguyên nhân' | 'Hoàn thành';
+  trangThai: 'Mới' | 'Đang tiếp nhận' | 'Đang xác minh' | 'Đang xử lý' | 'Chưa tìm ra nguyên nhân' | 'Hoàn thành';
   ngayHoanThanh?: string;
   loaiLoi: 'Lỗi Sản xuất' | 'Lỗi Nhà cung cấp' | 'Lỗi Hỗn hợp' | 'Lỗi Khác';
   nhanHang: 'HTM' | 'VMA' | 'Khác';

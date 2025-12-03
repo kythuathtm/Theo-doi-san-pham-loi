@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { User, SystemSettings } from '../types';
 import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, ArrowRightOnRectangleIcon, CompanyLogo } from './Icons';
@@ -200,46 +199,4 @@ const Login: React.FC<Props> = ({ onLogin, users, settings }) => {
                 {error && (
                     <div className="p-4 rounded-2xl bg-red-50/90 border border-red-100 flex items-center gap-3 text-sm font-bold text-red-600 animate-shake shadow-sm backdrop-blur-sm">
                         <div className="shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                            <span className="text-lg">⚠️</span>
-                        </div>
-                        <span className="leading-snug">{error}</span>
-                    </div>
-                )}
-
-                <button 
-                    type="submit" 
-                    disabled={loading} 
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#003DA5] to-[#002a70] hover:to-[#003DA5] text-white text-base font-bold shadow-xl shadow-blue-900/20 hover:shadow-blue-900/40 hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center relative overflow-hidden group/btn uppercase tracking-wider"
-                >
-                     {/* Button Shine Effect */}
-                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out skew-y-12 origin-bottom"></div>
-                     
-                     {loading ? (
-                         <>
-                             <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white/90" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                             </svg>
-                             <span>Đang xác thực...</span>
-                         </>
-                     ) : (
-                         <span className="flex items-center gap-2 relative z-10">
-                            TRUY CẬP HỆ THỐNG <ArrowRightOnRectangleIcon className="h-5 w-5 opacity-80 group-hover/btn:translate-x-1 transition-transform" />
-                         </span>
-                     )}
-                </button>
-            </form>
-        </div>
-      </div>
-      
-      {/* Footer Info */}
-      <div className={`absolute bottom-4 w-full text-center z-10 p-4 transition-opacity duration-1000 delay-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-           <p className="text-[10px] font-black text-slate-400/60 tracking-[0.2em] uppercase mix-blend-multiply">
-               © {new Date().getFullYear()} {settings.companyName || 'HONG THIEN MY MEDICAL JOINT STOCK COMPANY'}
-           </p>
-      </div>
-    </div>
-  );
-};
-
-export default Login;
+                            <span className="text

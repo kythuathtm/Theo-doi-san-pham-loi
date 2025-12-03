@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { DefectReport, UserRole } from '../types';
 import { PencilIcon, TrashIcon, XIcon, WrenchIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, TagIcon, UserIcon, CheckCircleIcon, CalendarIcon, CompanyLogo, ListBulletIcon } from './Icons';
@@ -27,7 +28,7 @@ const DetailItem = ({ label, value, className, fullWidth }: any) => {
 };
 
 const Section = ({ title, icon, children }: any) => (
-    <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-2xl border-y sm:border border-slate-200 shadow-none sm:shadow-sm h-full flex flex-col">
+    <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-2xl border-y sm:border border-slate-200 shadow-none sm:shadow-sm h-full flex flex-col transition-all duration-300 hover:shadow-md">
         <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5 flex items-center gap-2">
             <span className="p-1.5 bg-slate-50 text-slate-500 rounded-lg border border-slate-100">{icon}</span>
             {title}
@@ -60,16 +61,10 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
 
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Robustly retrieve useReactToPrint hook from the imported module.
-  // Some ESM builds (like esm.sh) might export it as a named export, 
-  // others (CJS interop) might stash it in default.
-  // We check all locations.
   const getUseReactToPrint = () => {
       const lib = ReactToPrint as any;
       if (lib.useReactToPrint) return lib.useReactToPrint;
       if (lib.default && lib.default.useReactToPrint) return lib.default.useReactToPrint;
-      // If the default export itself is the hook (unlikely for v2 but possible in v3 beta?)
-      // If the default export is the component (class), we can't use it as a hook.
       return null;
   };
 
@@ -156,9 +151,21 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
       }
   };
 
+  const getStatusBadgeStyle = (status: DefectReport['trangThai']) => {
+      switch (status) {
+          case 'Mới': return 'bg-blue-50 text-blue-700 border-blue-200';
+          case 'Đang tiếp nhận': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+          case 'Đang xác minh': return 'bg-cyan-50 text-cyan-700 border-cyan-200';
+          case 'Đang xử lý': return 'bg-amber-50 text-amber-700 border-amber-200';
+          case 'Chưa tìm ra nguyên nhân': return 'bg-purple-50 text-purple-700 border-purple-200';
+          case 'Hoàn thành': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+          default: return 'bg-slate-50 text-slate-700 border-slate-200';
+      }
+  }
+
   return (
     <>
-      <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 bg-white flex justify-between items-start sticky top-0 z-30">
+      <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 bg-white/95 backdrop-blur-xl flex justify-between items-start sticky top-0 z-30 shadow-sm transition-all">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded uppercase shadow-sm">{report.maSanPham}</span>
@@ -241,8 +248,9 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                              <dt className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Hình ảnh minh chứng</dt>
                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                  {report.images.map((img, idx) => (
-                                     <div key={idx} className="cursor-pointer group aspect-square rounded-lg overflow-hidden border border-slate-200 bg-slate-100" onClick={() => setPreviewImage(img)}>
+                                     <div key={idx} className="cursor-pointer group aspect-square rounded-lg overflow-hidden border border-slate-200 bg-slate-100 relative" onClick={() => setPreviewImage(img)}>
                                          <img src={img} alt="proof" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"/>
+                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                                      </div>
                                  ))}
                              </div>
@@ -256,7 +264,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
         <div className="h-2 sm:hidden"></div>
 
         {/* BOTTOM ROW: PROCESSING (ACTIONABLE) */}
-        <div className="bg-white sm:rounded-2xl rounded-none border-y sm:border border-slate-200 shadow-none sm:shadow-sm relative overflow-hidden">
+        <div className="bg-white sm:rounded-2xl rounded-none border-y sm:border border-slate-200 shadow-none sm:shadow-sm relative overflow-hidden transition-all hover:shadow-md">
              
              {/* Header */}
              <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-white to-slate-50 flex flex-col sm:flex-row justify-between sm:items-center relative z-10 gap-2">
@@ -297,11 +305,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                             )}
                         </>
                      )}
-                     <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold border ml-auto sm:ml-2 shadow-sm ${
-                        report.trangThai === 'Hoàn thành' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        report.trangThai === 'Mới' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
-                        'bg-amber-50 text-amber-700 border-amber-200'
-                    }`}>
+                     <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold border ml-auto sm:ml-2 shadow-sm ${getStatusBadgeStyle(report.trangThai)}`}>
                         {report.trangThai.toUpperCase()}
                     </span>
                 </div>
@@ -322,7 +326,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                           </div>
                           {editingSections.nguyenNhan ? (
                               <textarea 
-                                className="w-full bg-white border border-amber-200 rounded-lg p-3 text-base font-normal focus:ring-2 focus:ring-amber-500/20 outline-none resize-none shadow-sm touch-manipulation"
+                                className="w-full bg-white border border-amber-200 rounded-lg p-3 text-base font-normal focus:ring-2 focus:ring-amber-500/20 outline-none resize-none shadow-sm touch-manipulation transition-all"
                                 rows={3}
                                 placeholder="Nhập nguyên nhân..."
                                 value={quickUpdateData.nguyenNhan}
@@ -347,7 +351,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                           </div>
                           {editingSections.huongKhacPhuc ? (
                                <textarea 
-                                className="w-full bg-white border border-blue-200 rounded-lg p-3 text-base font-normal focus:ring-2 focus:ring-blue-500/20 outline-none resize-none shadow-sm touch-manipulation"
+                                className="w-full bg-white border border-blue-200 rounded-lg p-3 text-base font-normal focus:ring-2 focus:ring-blue-500/20 outline-none resize-none shadow-sm touch-manipulation transition-all"
                                 rows={3}
                                 placeholder="Nhập hướng xử lý..."
                                 value={quickUpdateData.huongKhacPhuc}
@@ -372,7 +376,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                            <div className="flex flex-col items-center justify-center text-center">
                                <label className="text-xs font-bold text-emerald-600 uppercase mb-2 cursor-pointer tracking-wider">Số lượng đổi</label>
                                {editingSections.soLuong ? (
-                                   <div className="flex items-center justify-center w-full">
+                                   <div className="flex items-center justify-center w-full animate-pop">
                                        <input 
                                             type="number" 
                                             min="0"
@@ -435,9 +439,9 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
 
       {/* Image Preview Modal */}
       {previewImage && (
-          <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
-              <img src={previewImage} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
-              <button className="absolute top-4 right-4 text-white p-2 rounded-full bg-white/20 hover:bg-white/40">
+          <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
+              <img src={previewImage} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-pop" />
+              <button className="absolute top-4 right-4 text-white p-2 rounded-full bg-white/20 hover:bg-white/40 transition-colors">
                   <XIcon className="w-8 h-8" />
               </button>
           </div>

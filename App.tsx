@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef, useCallback } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon, EllipsisHorizontalIcon } from './components/Icons';
@@ -21,7 +22,8 @@ const DefectReportForm = React.lazy(() => import('./components/DefectReportForm'
 const ProductListModal = React.lazy(() => import('./components/ProductListModal'));
 const UserManagementModal = React.lazy(() => import('./components/UserManagementModal'));
 const PermissionManagementModal = React.lazy(() => import('./components/PermissionManagementModal'));
-const Login = React.lazy(() => import('./components/Login'));
+// Explicitly cast Login type to avoid default export confusion in some environments
+const Login = React.lazy(() => import('./components/Login') as Promise<{ default: React.ComponentType<any> }>);
 const DashboardReport = React.lazy(() => import('./components/DashboardReport'));
 const SystemSettingsModal = React.lazy(() => import('./components/SystemSettingsModal'));
 
@@ -249,6 +251,8 @@ export const App: React.FC = () => {
       return {
           total: filteredReports.length,
           moi: filteredReports.filter(r => r.trangThai === 'Mới').length,
+          dangTiepNhan: filteredReports.filter(r => r.trangThai === 'Đang tiếp nhận').length,
+          dangXacMinh: filteredReports.filter(r => r.trangThai === 'Đang xác minh').length,
           dangXuLy: filteredReports.filter(r => r.trangThai === 'Đang xử lý').length,
           chuaTimRaNguyenNhan: filteredReports.filter(r => r.trangThai === 'Chưa tìm ra nguyên nhân').length,
           hoanThanh: filteredReports.filter(r => r.trangThai === 'Hoàn thành').length,
@@ -441,38 +445,40 @@ export const App: React.FC = () => {
 
       <main className="flex-1 overflow-hidden relative">
         <Suspense fallback={<Loading />}>
-            {currentView === 'list' || !canViewDashboard ? (
-                 <DefectReportList
-                    reports={paginatedReports}
-                    totalReports={filteredReports.length}
-                    currentPage={currentPage}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={setCurrentPage}
-                    onItemsPerPageChange={handleItemsPerPageChange}
-                    selectedReport={selectedReport}
-                    onSelectReport={setSelectedReport}
-                    onDelete={handleDeleteReportWrapper}
-                    currentUserRole={currentUser.role}
-                    currentUsername={currentUser.username} // Pass username for storage key
-                    filters={{ searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter }}
-                    onSearchTermChange={handleSearchTermChange}
-                    onStatusFilterChange={handleStatusFilterChange}
-                    onDefectTypeFilterChange={handleDefectTypeFilterChange}
-                    onYearFilterChange={handleYearFilterChange}
-                    onDateFilterChange={handleDateFilterChange}
-                    summaryStats={summaryStats}
-                    isLoading={isPending}
-                    onExport={handleExportData}
-                    onDuplicate={handleDuplicateReport}
-                    baseFontSize={systemSettings.baseFontSize}
-                />
-            ) : (
-                <DashboardReport 
-                    reports={filteredReports} 
-                    onFilterSelect={handleDashboardFilterSelect}
-                    onSelectReport={setSelectedReport} 
-                />
-            )}
+            <div key={currentView} className="animate-fade-in h-full flex flex-col">
+                {currentView === 'list' || !canViewDashboard ? (
+                     <DefectReportList
+                        reports={paginatedReports}
+                        totalReports={filteredReports.length}
+                        currentPage={currentPage}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setCurrentPage}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                        selectedReport={selectedReport}
+                        onSelectReport={setSelectedReport}
+                        onDelete={handleDeleteReportWrapper}
+                        currentUserRole={currentUser.role}
+                        currentUsername={currentUser.username} // Pass username for storage key
+                        filters={{ searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter }}
+                        onSearchTermChange={handleSearchTermChange}
+                        onStatusFilterChange={handleStatusFilterChange}
+                        onDefectTypeFilterChange={handleDefectTypeFilterChange}
+                        onYearFilterChange={handleYearFilterChange}
+                        onDateFilterChange={handleDateFilterChange}
+                        summaryStats={summaryStats}
+                        isLoading={isPending}
+                        onExport={handleExportData}
+                        onDuplicate={handleDuplicateReport}
+                        baseFontSize={systemSettings.baseFontSize}
+                    />
+                ) : (
+                    <DashboardReport 
+                        reports={filteredReports} 
+                        onFilterSelect={handleDashboardFilterSelect}
+                        onSelectReport={setSelectedReport} 
+                    />
+                )}
+            </div>
         </Suspense>
       </main>
 

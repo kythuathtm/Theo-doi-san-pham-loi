@@ -13,12 +13,14 @@
               sans: ['var(--app-font)', 'Inter', 'system-ui', 'sans-serif'],
             },
             animation: {
-              'fade-in': 'fadeIn 0.3s ease-out',
-              'fade-in-up': 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-              'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              'fade-in': 'fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+              'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'slide-up': 'slideUp 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards', // Adjusted for smoother spring
+              'backdrop-in': 'fadeIn 0.3s ease-out forwards',
+              'pop': 'pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
               'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
-              'blob': 'blob 7s infinite',
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'blob': 'blob 10s infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'spin-slow': 'spin 3s linear infinite',
             },
             keyframes: {
@@ -27,12 +29,16 @@
                 '100%': { opacity: '1' },
               },
               fadeInUp: {
-                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '0%': { opacity: '0', transform: 'translateY(15px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
               },
               slideUp: {
-                '0%': { transform: 'translateY(100%)' },
-                '100%': { transform: 'translateY(0)' },
+                '0%': { transform: 'translateY(100%) scale(0.95)', opacity: '0' },
+                '100%': { transform: 'translateY(0) scale(1)', opacity: '1' },
+              },
+              pop: {
+                '0%': { opacity: '0', transform: 'scale(0.95)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
               },
               shake: {
                 '0%, 100%': { transform: 'translateX(0)' },
@@ -50,6 +56,7 @@
               'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
               'glow': '0 0 20px rgba(59, 130, 246, 0.5)',
               'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+              'card': '0 2px 10px rgba(0, 0, 0, 0.03)',
             }
           }
         }
@@ -67,7 +74,7 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         -webkit-tap-highlight-color: transparent;
-        letter-spacing: normal;
+        letter-spacing: -0.01em;
       }
 
       /* Premium Scrollbar */
@@ -79,12 +86,12 @@
         background: transparent; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1; 
+        background: rgba(203, 213, 225, 0.6); 
         border-radius: 10px;
         transition: background 0.2s;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8; 
+        background: rgba(148, 163, 184, 0.8); 
       }
       
       .custom-scrollbar::-webkit-scrollbar {
@@ -102,7 +109,7 @@
       /* Fix inputs */
       input, textarea, select, button {
         font-family: inherit !important;
-        font-size: 100%; /* Ensure inputs scale with root font size */
+        font-size: 100%; 
       }
       
       input:-webkit-autofill,
@@ -120,19 +127,27 @@
       .pt-safe {
         padding-top: env(safe-area-inset-top);
       }
+
+      /* Utilities */
+      .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+      }
     </style>
   <script type="importmap">
 {
   "imports": {
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "xlsx": "https://aistudiocdn.com/xlsx@^0.18.5",
     "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "vite": "https://aistudiocdn.com/vite@^7.2.4",
-    "react-to-print": "https://esm.sh/react-to-print@2.14.15",
-    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "xlsx": "https://aistudiocdn.com/xlsx@^0.18.5",
+    "react-to-print": "https://aistudiocdn.com/react-to-print@^3.2.0"
   }
 }
 </script>
