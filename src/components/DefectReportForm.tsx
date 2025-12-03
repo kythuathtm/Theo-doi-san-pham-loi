@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
 import { XIcon, CheckCircleIcon, TagIcon, WrenchIcon, LockClosedIcon, ShieldCheckIcon, ClipboardDocumentListIcon, CalendarIcon, BuildingStoreIcon, PlusIcon, TrashIcon } from './Icons';
@@ -137,14 +138,14 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   const validate = () => {
     const newErrors: Partial<Record<keyof Omit<DefectReport, 'id'>, string>> = {};
 
-    if (!formData.ngayPhanAnh) newErrors.ngayPhanAnh = "Vui lòng chọn ngày phản ánh";
+    if (!formData.ngayPhanAnh) newErrors.ngayPhanAnh = "Vui lòng chọn ngày khiếu nại";
     if (!formData.maSanPham?.trim()) newErrors.maSanPham = "Mã sản phẩm là bắt buộc";
     if (!formData.tenThuongMai?.trim()) newErrors.tenThuongMai = "Tên thương mại là bắt buộc";
     if (!formData.dongSanPham?.trim()) newErrors.dongSanPham = "Dòng sản phẩm là bắt buộc";
     if (!formData.nhanHang) newErrors.nhanHang = "Vui lòng chọn nhãn hàng";
     if (!formData.soLo?.trim()) newErrors.soLo = "Vui lòng nhập số lô";
     if (!formData.nhaPhanPhoi?.trim()) newErrors.nhaPhanPhoi = "Vui lòng nhập nhà phân phối";
-    if (!formData.noiDungPhanAnh?.trim()) newErrors.noiDungPhanAnh = "Nội dung phản ánh không được để trống";
+    if (!formData.noiDungPhanAnh?.trim()) newErrors.noiDungPhanAnh = "Nội dung khiếu nại không được để trống";
     if (!formData.loaiLoi) newErrors.loaiLoi = "Vui lòng chọn nguồn gốc lỗi";
     
     if (formData.trangThai === 'Hoàn thành') {
@@ -329,7 +330,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   };
   
   const getInputClasses = (fieldName: keyof Omit<DefectReport, 'id'>, isReadOnly: boolean = false) => {
-    const base = "transition-all duration-200 mt-1 block w-full rounded-xl text-base py-2.5 px-3 border outline-none";
+    const base = "transition-all duration-200 mt-1 block w-full rounded-xl text-base py-2.5 px-3 border outline-none font-medium";
     const normal = "bg-white text-slate-800 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 placeholder-slate-400 shadow-sm hover:border-blue-300";
     const errorClass = errors[fieldName] ? "border-red-500 ring-2 ring-red-500/10 bg-red-50 animate-shake" : "";
     
@@ -365,7 +366,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
         <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
           <div>
               <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">
-                  {initialData && !initialData.id.startsWith('new_') ? 'CHỈNH SỬA PHẢN ÁNH' : 'TẠO PHẢN ÁNH MỚI'}
+                  {initialData && !initialData.id.startsWith('new_') ? 'CHỈNH SỬA KHIẾU NẠI' : 'TẠO KHIẾU NẠI MỚI'}
               </h2>
               <p className="text-sm text-slate-500 mt-0.5">Vui lòng điền đầy đủ thông tin bắt buộc <span className="text-red-500">*</span></p>
           </div>
@@ -543,11 +544,11 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             {/* COLUMN RIGHT: REPORT DETAILS & RESOLUTION */}
             <div className="space-y-8">
                  <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                    <SectionHeader title="Chi tiết Phản ánh" icon={<ClipboardDocumentListIcon className="h-4 w-4" />} />
+                    <SectionHeader title="Chi tiết Khiếu nại" icon={<ClipboardDocumentListIcon className="h-4 w-4" />} />
                     <div className="space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700">Ngày phản ánh <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold text-slate-700">Ngày khiếu nại <span className="text-red-500">*</span></label>
                                 <input 
                                     type="date" 
                                     name="ngayPhanAnh" 
@@ -593,7 +594,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700">Nội dung phản ánh <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-bold text-slate-700">Nội dung khiếu nại <span className="text-red-500">*</span></label>
                             <textarea 
                                 name="noiDungPhanAnh" 
                                 value={formData.noiDungPhanAnh} 
@@ -745,6 +746,8 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                         className={getInputClasses('trangThai')}
                                     >
                                         <option value="Mới">Mới</option>
+                                        <option value="Đang tiếp nhận">Đang tiếp nhận</option>
+                                        <option value="Đang xác minh">Đang xác minh</option>
                                         <option value="Đang xử lý">Đang xử lý</option>
                                         <option value="Chưa tìm ra nguyên nhân">Chưa tìm ra nguyên nhân</option>
                                         <option value="Hoàn thành">Hoàn thành</option>
@@ -783,7 +786,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                 className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-95 active:translate-y-0 flex items-center"
              >
                 <CheckCircleIcon className="h-5 w-5 mr-2" />
-                Lưu phản ánh
+                Lưu khiếu nại
              </button>
           </div>
         </form>

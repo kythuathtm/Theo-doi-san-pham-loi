@@ -48,7 +48,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
       nguyenNhan: report.nguyenNhan || '',
       huongKhacPhuc: report.huongKhacPhuc || '',
       soLuongDoi: report.soLuongDoi || 0,
-      ngayDoiHang: report.ngayDoiHang || ''
+      ngayDoiHang: report.ngayDoiHang || '',
+      trangThai: report.trangThai
   });
   
   const [isUpdating, setIsUpdating] = useState(false);
@@ -74,7 +75,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
 
   const handlePrint = useReactToPrint ? useReactToPrint({
       content: () => printRef.current,
-      documentTitle: `Phieu_Phan_Anh_${report.maSanPham}_${report.id.slice(0, 6)}`,
+      documentTitle: `Phieu_Khieu_Nai_${report.maSanPham}_${report.id.slice(0, 6)}`,
       bodyClass: 'bg-white',
   }) : () => { console.warn("Printing is not available: library not loaded correctly."); };
 
@@ -87,7 +88,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
             nguyenNhan: report.nguyenNhan || '',
             huongKhacPhuc: report.huongKhacPhuc || '',
             soLuongDoi: report.soLuongDoi || 0,
-            ngayDoiHang: report.ngayDoiHang || ''
+            ngayDoiHang: report.ngayDoiHang || '',
+            trangThai: report.trangThai
         });
     }
   }, [report, isEditing]);
@@ -108,15 +110,20 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
               nguyenNhan: quickUpdateData.nguyenNhan,
               huongKhacPhuc: quickUpdateData.huongKhacPhuc,
               soLuongDoi: Number(quickUpdateData.soLuongDoi),
-              ngayDoiHang: quickUpdateData.ngayDoiHang
+              ngayDoiHang: quickUpdateData.ngayDoiHang,
+              trangThai: quickUpdateData.trangThai
           };
 
           let message = "Đã cập nhật thông tin xử lý.";
           // Logic: Auto-complete if everything is filled
-          if (updates.nguyenNhan && updates.huongKhacPhuc && updates.soLuongDoi > 0 && report.trangThai !== 'Hoàn thành') {
+          if (updates.nguyenNhan && updates.huongKhacPhuc && updates.soLuongDoi > 0 && report.trangThai !== 'Hoàn thành' && updates.trangThai !== 'Hoàn thành') {
               updates.trangThai = 'Hoàn thành';
               updates.ngayHoanThanh = new Date().toISOString().split('T')[0];
               message = "Đã cập nhật thông tin và chuyển trạng thái sang HOÀN THÀNH do đủ điều kiện.";
+          }
+          
+          if (updates.trangThai === 'Hoàn thành' && !report.ngayHoanThanh) {
+               updates.ngayHoanThanh = new Date().toISOString().split('T')[0];
           }
 
           const success = await onUpdate(report.id, updates, message, { username: currentUsername, role: currentUserRole });
@@ -136,7 +143,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
           nguyenNhan: report.nguyenNhan || '',
           huongKhacPhuc: report.huongKhacPhuc || '',
           soLuongDoi: report.soLuongDoi || 0,
-          ngayDoiHang: report.ngayDoiHang || ''
+          ngayDoiHang: report.ngayDoiHang || '',
+          trangThai: report.trangThai
       });
       setEditingSections({ nguyenNhan: false, huongKhacPhuc: false, soLuong: false });
   };
@@ -193,7 +201,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
               </button>
             )}
             {permissions.canDelete && (
-                <button onClick={() => { if (window.confirm('Xóa phản ánh này?')) onDelete(report.id); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95 border border-transparent hover:border-red-100" title="Xóa">
+                <button onClick={() => { if (window.confirm('Xóa khiếu nại này?')) onDelete(report.id); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95 border border-transparent hover:border-red-100" title="Xóa">
                   <TrashIcon className="h-5 w-5" />
                 </button>
             )}
@@ -235,12 +243,12 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
              {/* Spacing for mobile separation */}
              <div className="h-2 sm:hidden"></div>
 
-             <Section title="Khách hàng & Phản ánh" icon={<UserIcon className="h-4 w-4"/>} delay={200}>
+             <Section title="Khách hàng & Khiếu nại" icon={<UserIcon className="h-4 w-4"/>} delay={200}>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
                     <DetailItem label="Nhà phân phối" value={report.nhaPhanPhoi} fullWidth/>
                     <DetailItem label="Đơn vị sử dụng" value={report.donViSuDung} fullWidth/>
                     <div className="col-span-full mt-2">
-                        <dt className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Nội dung phản ánh</dt>
+                        <dt className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Nội dung khiếu nại</dt>
                         <dd className="text-base text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 leading-relaxed shadow-inner font-normal">
                             {report.noiDungPhanAnh}
                         </dd>
@@ -307,9 +315,26 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                             )}
                         </>
                      )}
-                     <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold border ml-auto sm:ml-2 shadow-sm ${getStatusBadgeStyle(report.trangThai)}`}>
-                        {report.trangThai.toUpperCase()}
-                    </span>
+                     
+                     {/* Editable Status Badge */}
+                     {isEditing ? (
+                        <select
+                            value={quickUpdateData.trangThai}
+                            onChange={(e) => setQuickUpdateData({...quickUpdateData, trangThai: e.target.value as any})}
+                            className={`ml-auto sm:ml-2 text-sm font-bold border rounded-lg py-1.5 px-3 outline-none cursor-pointer shadow-sm appearance-none ${getStatusBadgeStyle(quickUpdateData.trangThai)}`}
+                        >
+                            <option value="Mới">MỚI</option>
+                            <option value="Đang tiếp nhận">ĐANG TIẾP NHẬN</option>
+                            <option value="Đang xác minh">ĐANG XÁC MINH</option>
+                            <option value="Đang xử lý">ĐANG XỬ LÝ</option>
+                            <option value="Chưa tìm ra nguyên nhân">CHƯA TÌM RA NN</option>
+                            <option value="Hoàn thành">HOÀN THÀNH</option>
+                        </select>
+                     ) : (
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold border ml-auto sm:ml-2 shadow-sm ${getStatusBadgeStyle(report.trangThai)}`}>
+                            {report.trangThai.toUpperCase()}
+                        </span>
+                     )}
                 </div>
             </div>
 
@@ -464,7 +489,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                      <div className="flex items-center gap-4">
                         <div className="w-16 h-16"><CompanyLogo className="w-full h-full"/></div>
                         <div>
-                             <h1 className="text-2xl font-bold uppercase">PHIẾU PHẢN ÁNH SẢN PHẨM LỖI</h1>
+                             <h1 className="text-2xl font-bold uppercase">PHIẾU KHIẾU NẠI SẢN PHẨM LỖI</h1>
                              <p className="text-sm font-semibold text-slate-600">Công ty Cổ phần Vật tư Y tế Hồng Thiện Mỹ</p>
                         </div>
                      </div>
@@ -498,7 +523,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                 </div>
 
                 <div className="mb-6 border border-slate-300 rounded p-4">
-                     <h3 className="font-bold uppercase mb-2 border-b border-slate-200 pb-1">Nội dung phản ánh</h3>
+                     <h3 className="font-bold uppercase mb-2 border-b border-slate-200 pb-1">Nội dung khiếu nại</h3>
                      <p className="text-justify leading-relaxed">{report.noiDungPhanAnh}</p>
                 </div>
 

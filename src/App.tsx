@@ -24,7 +24,7 @@ const UserManagementModal = React.lazy(() => import('./components/UserManagement
 const PermissionManagementModal = React.lazy(() => import('./components/PermissionManagementModal'));
 // Explicitly cast Login type to avoid default export confusion in some environments
 const Login = React.lazy(() => import('./components/Login') as Promise<{ default: React.ComponentType<any> }>);
-const DashboardReport = React.lazy(() => import('./components/DashboardReport'));
+const DashboardReport = React.lazy(() => import('./components/DashboardReport') as Promise<{ default: React.ComponentType<any> }>);
 const SystemSettingsModal = React.lazy(() => import('./components/SystemSettingsModal'));
 
 interface ToastProps {
@@ -81,6 +81,7 @@ export const App: React.FC = () => {
 
   // UI State
   const [selectedReport, setSelectedReport] = useState<DefectReport | null>(null);
+  const [isModalClosing, setIsModalClosing] = useState(false); // State to handle modal closing animation
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<DefectReport | null>(null);
   
@@ -333,6 +334,15 @@ export const App: React.FC = () => {
     setIsFormOpen(true);
   };
 
+  const handleCloseDetailModal = useCallback(() => {
+      setIsModalClosing(true);
+      // Wait for animation to finish before unmounting
+      setTimeout(() => {
+          setSelectedReport(null);
+          setIsModalClosing(false);
+      }, 280); // Matches animation duration
+  }, []);
+
   const handleDuplicateReport = useCallback((report: DefectReport) => {
       // Create a copy but reset status-related fields
       const duplicate: DefectReport = {
@@ -377,6 +387,12 @@ export const App: React.FC = () => {
               setStatusFilter('All');
               setDefectTypeFilter('All');
               setSearchTerm('');
+              setCurrentView('list');
+          } else if (filterType === 'status' && value) {
+              setStatusFilter(value);
+              setCurrentView('list');
+          } else if (filterType === 'defectType' && value) {
+              setDefectTypeFilter(value);
               setCurrentView('list');
           }
       });
@@ -445,7 +461,7 @@ export const App: React.FC = () => {
 
       <main className="flex-1 overflow-hidden relative">
         <Suspense fallback={<Loading />}>
-            <div key={currentView} className="animate-fade-in h-full flex flex-col origin-top">
+            <div key={currentView} className="animate-zoom-in h-full flex flex-col origin-top">
                 {currentView === 'list' || !canViewDashboard ? (
                      <DefectReportList
                         reports={paginatedReports}
@@ -487,15 +503,21 @@ export const App: React.FC = () => {
       <Suspense fallback={null}>
           {selectedReport && (
             <div className="fixed inset-0 z-50 flex justify-center items-end sm:items-center sm:p-4">
-               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-backdrop-in" onClick={() => setSelectedReport(null)}></div>
-               <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-4xl bg-white rounded-none sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-slide-up ring-1 ring-slate-900/5 z-50">
+               {/* Backdrop */}
+               <div 
+                  className={`absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity ${isModalClosing ? 'animate-fade-out' : 'animate-backdrop-in'}`} 
+                  onClick={handleCloseDetailModal}
+               ></div>
+               
+               {/* Modal Card */}
+               <div className={`relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-4xl bg-white rounded-none sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col ring-1 ring-slate-900/5 z-50 will-change-transform ${isModalClosing ? 'animate-slide-down' : 'animate-slide-up'}`}>
                   <DefectReportDetail
                     report={selectedReport}
                     onEdit={handleEditClick}
                     onUpdate={updateReport}
                     onDelete={handleDeleteReportWrapper}
                     permissions={userPermissions}
-                    onClose={() => setSelectedReport(null)}
+                    onClose={handleCloseDetailModal}
                     currentUserRole={currentUser.role}
                     currentUsername={currentUser.username}
                     onAddComment={addComment}

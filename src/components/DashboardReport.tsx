@@ -609,7 +609,7 @@ const RecentActivityList = ({ reports, onSelect }: { reports: DefectReport[], on
 const DrillDownModal = ({ title, data, type, onClose, onRowClick }: { title: string, data: any[], type: 'distributor' | 'product', onClose: () => void, onRowClick?: (item: any) => void }) => {
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden animate-slide-up ring-1 ring-white/20">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden animate-pop ring-1 ring-white/20">
                 <div className="flex justify-between items-center p-5 border-b border-slate-100">
                     <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wide">{title}</h3>
                     <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all active:scale-95">
@@ -689,7 +689,7 @@ const DrillDownModal = ({ title, data, type, onClose, onRowClick }: { title: str
 const DetailedReportListModal = ({ title, reports, onClose, onSelectReport }: { title: string, reports: DefectReport[], onClose: () => void, onSelectReport: (r: DefectReport) => void }) => {
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col overflow-hidden animate-slide-up ring-1 ring-white/20">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col overflow-hidden animate-pop ring-1 ring-white/20">
                 <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-white">
                     <div>
                         <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wide">{title}</h3>
@@ -997,7 +997,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                         <KpiCard 
                             title="NHÀ PHÂN PHỐI" 
                             value={stats.uniqueDistributors} 
-                            subValue="Đã phản ánh" 
+                            subValue="Đã khiếu nại" 
                             trend={stats.trendTicket} 
                             icon={<TruckIcon/>} 
                             colorHex={BRAND.INDIGO} 

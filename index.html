@@ -1,9 +1,25 @@
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "xlsx": "https://aistudiocdn.com/xlsx@^0.18.5",
+    "react-to-print": "https://aistudiocdn.com/react-to-print@^3.2.0",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
+  }
+}
+</script>
+
 <!DOCTYPE html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>HỆ THỐNG THEO DÕI PHẢN ÁNH CHẤT LƯỢNG SẢN PHẨM</title>
+    <title>THEO DÕI XỬ LÝ KHIẾU NẠI CHẤT LƯỢNG SẢN PHẨM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -15,8 +31,11 @@
             animation: {
               'fade-in': 'fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
               'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'slide-up': 'slideUp 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards', // Adjusted for smoother spring
+              'slide-up': 'slideUp 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards', 
+              'slide-down': 'slideDown 0.3s cubic-bezier(0.4, 0, 1, 1) forwards',
               'backdrop-in': 'fadeIn 0.3s ease-out forwards',
+              'fade-out': 'fadeOut 0.25s ease-in forwards',
+              'zoom-in': 'zoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
               'pop': 'pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
               'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
               'blob': 'blob 10s infinite',
@@ -28,13 +47,25 @@
                 '0%': { opacity: '0' },
                 '100%': { opacity: '1' },
               },
+              fadeOut: {
+                '0%': { opacity: '1' },
+                '100%': { opacity: '0' },
+              },
               fadeInUp: {
                 '0%': { opacity: '0', transform: 'translateY(15px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
               },
               slideUp: {
-                '0%': { transform: 'translateY(100%) scale(0.95)', opacity: '0' },
+                '0%': { transform: 'translateY(100%) scale(0.96)', opacity: '0' },
                 '100%': { transform: 'translateY(0) scale(1)', opacity: '1' },
+              },
+              slideDown: {
+                '0%': { transform: 'translateY(0) scale(1)', opacity: '1' },
+                '100%': { transform: 'translateY(100%) scale(0.96)', opacity: '0' },
+              },
+              zoomIn: {
+                '0%': { opacity: '0', transform: 'scale(0.96)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
               },
               pop: {
                 '0%': { opacity: '0', transform: 'scale(0.95)' },
@@ -86,18 +117,14 @@
         background: transparent; 
       }
       ::-webkit-scrollbar-thumb {
-        background: rgba(203, 213, 225, 0.6); 
+        background: rgba(203, 213, 225, 0.5); 
         border-radius: 10px;
-        transition: background 0.2s;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: rgba(148, 163, 184, 0.8); 
+        background: rgba(148, 163, 184, 0.7); 
       }
-      
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 5px;
-        height: 5px;
-      }
+
+      /* Custom Utilities */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
@@ -105,55 +132,40 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
+      
+      .glass {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
 
-      /* Fix inputs */
-      input, textarea, select, button {
-        font-family: inherit !important;
-        font-size: 100%; 
-      }
-      
-      input:-webkit-autofill,
-      input:-webkit-autofill:hover, 
-      input:-webkit-autofill:focus, 
-      input:-webkit-autofill:active{
-          -webkit-box-shadow: 0 0 0 30px white inset !important;
-          transition: background-color 5000s ease-in-out 0s;
-      }
-      
       .pb-safe {
         padding-bottom: env(safe-area-inset-bottom);
       }
-      
-      .pt-safe {
-        padding-top: env(safe-area-inset-top);
-      }
 
-      /* Utilities */
-      .glass {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.3);
+        border-radius: 20px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(156, 163, 175, 0.5);
+      }
+      
+      /* Animation Utilities */
+      .fill-mode-backwards {
+        animation-fill-mode: backwards;
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "vite": "https://aistudiocdn.com/vite@^7.2.6",
-    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "xlsx": "https://aistudiocdn.com/xlsx@^0.18.5",
-    "react-to-print": "https://aistudiocdn.com/react-to-print@^3.2.0"
-  }
-}
-</script>
-</head>
-  <body class="bg-slate-50 text-slate-900 h-screen overflow-hidden selection:bg-blue-100 selection:text-blue-900">
-    <div id="root" class="h-full"></div>
+  </head>
+  <body>
+    <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

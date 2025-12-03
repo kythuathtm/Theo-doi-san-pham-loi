@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { DefectReport, UserRole } from '../types';
 import Pagination from './Pagination';
@@ -82,10 +83,10 @@ interface ColumnConfig {
 // Default Configuration - Removed 'select' column
 const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'stt', label: 'STT', visible: true, width: 60, align: 'center' },
-    { id: 'ngayPhanAnh', label: 'Ngày phản ánh', visible: true, width: 130, align: 'left' },
+    { id: 'ngayPhanAnh', label: 'Ngày khiếu nại', visible: true, width: 130, align: 'left' },
     { id: 'maSanPham', label: 'Mã sản phẩm', visible: true, width: 120, align: 'left' },
     { id: 'tenThuongMai', label: 'Tên thương mại', visible: true, width: 250, align: 'left' }, 
-    { id: 'noiDungPhanAnh', label: 'Nội dung phản ánh', visible: true, width: 300, align: 'left' }, 
+    { id: 'noiDungPhanAnh', label: 'Nội dung khiếu nại', visible: true, width: 300, align: 'left' }, 
     { id: 'soLo', label: 'Số lô', visible: true, width: 100, align: 'left' },
     { id: 'maNgaySanXuat', label: 'Mã NSX', visible: true, width: 100, align: 'left' },
     { id: 'trangThai', label: 'Trạng thái', visible: true, width: 160, align: 'left' },
@@ -137,7 +138,7 @@ const MobileReportCard = React.memo(({
                         </span>
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase flex items-center gap-1.5 ${statusColorMap[report.trangThai]}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${statusDotMap[report.trangThai]}`}></span>
+                        <span className={`status-dot w-1.5 h-1.5 rounded-full ${statusDotMap[report.trangThai]}`} title={report.trangThai}></span>
                         {report.trangThai}
                     </span>
                 </div>
@@ -491,7 +492,7 @@ const DefectReportList: React.FC<Props> = ({
   const getColumnStyle = (col: ColumnConfig) => {
       return {
           // Use flex-none for fixed columns, flex-grow for others to fill space
-          className: `${col.fixed ? 'sticky right-0 z-10 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)] flex-none' : ''} ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'} flex items-center min-w-0`,
+          className: `${col.fixed ? 'sticky right-0 z-10 bg-white/90 backdrop-blur-md shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)] flex-none' : ''} ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'} flex items-center min-w-0`,
           style: { 
               // Flex grow proportional to width, shrink allowed, basis at width
               flex: col.fixed ? 'none' : `${col.width} 1 ${col.width}px`,
@@ -548,15 +549,15 @@ const DefectReportList: React.FC<Props> = ({
               );
           case 'trangThai':
               return (
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap border shadow-sm ${statusColorMap[report.trangThai]}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${statusDotMap[report.trangThai]}`}></span>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap border shadow-sm transition-all duration-300 hover:scale-105 cursor-default ${statusColorMap[report.trangThai]}`}>
+                      <span className={`status-dot w-1.5 h-1.5 rounded-full ${statusDotMap[report.trangThai]}`} title={report.trangThai}></span>
                       {report.trangThai}
                   </span>
               );
           case 'actions':
               const canDelete = ([UserRole.Admin, UserRole.KyThuat] as string[]).includes(currentUserRole);
               return (
-                  <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
                       {onDuplicate && (
                         <button
                             onClick={(e) => {
@@ -830,7 +831,7 @@ const DefectReportList: React.FC<Props> = ({
                             }}
                         >
                             {/* Sticky Header */}
-                            <div className="flex bg-white/95 backdrop-blur-md border-b border-slate-200 text-left text-sm font-bold text-slate-600 tracking-wide sticky top-0 z-20 shadow-sm min-w-full w-full" style={{ height: ROW_HEIGHT }}>
+                            <div className="flex bg-white/90 backdrop-blur-md border-b border-slate-200 text-left text-sm font-bold text-slate-600 tracking-wide sticky top-0 z-20 shadow-sm min-w-full w-full" style={{ height: ROW_HEIGHT }}>
                                 {visibleColumns.map((col) => {
                                     const { className, style } = getColumnStyle(col);
                                     return (
@@ -881,7 +882,7 @@ const DefectReportList: React.FC<Props> = ({
                                             onMouseEnter={() => handleRowMouseEnter(report)}
                                             onMouseLeave={handleRowMouseLeave}
                                             onMouseMove={handleRowMouseMove}
-                                            className={`group flex items-center transition-colors cursor-pointer border-b hover:z-10 min-w-full w-full bg-white border-slate-100 hover:border-blue-500 hover:bg-blue-50/60`}
+                                            className={`group flex items-center transition-all duration-200 cursor-pointer border-b hover:z-10 min-w-full w-full bg-white border-slate-100 hover:border-blue-500 hover:bg-blue-50/60`}
                                         >
                                             {visibleColumns.map((col) => {
                                                 const { className, style } = getColumnStyle(col);
@@ -912,7 +913,7 @@ const DefectReportList: React.FC<Props> = ({
                     <p className="text-slate-500 mt-2 max-w-sm font-medium leading-relaxed">
                         {areFiltersActive 
                             ? "Không tìm thấy kết quả nào phù hợp với bộ lọc hiện tại. Hãy thử điều chỉnh lại." 
-                            : "Hệ thống chưa có dữ liệu phản ánh nào. Hãy bắt đầu bằng cách tạo mới."}
+                            : "Hệ thống chưa có dữ liệu khiếu nại nào. Hãy bắt đầu bằng cách tạo mới."}
                     </p>
                     {areFiltersActive && (
                         <button 
@@ -954,9 +955,9 @@ const DefectReportList: React.FC<Props> = ({
                 <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-5 mx-auto shadow-sm ring-1 ring-red-100">
                     <TrashIcon className="h-7 w-7 text-red-500" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 text-center mb-2 uppercase tracking-tight">XÓA PHẢN ÁNH?</h3>
+                <h3 className="text-xl font-bold text-slate-900 text-center mb-2 uppercase tracking-tight">XÓA KHIẾU NẠI?</h3>
                 <p className="text-sm text-slate-500 text-center mb-8 font-medium">
-                    Bạn sắp xóa phản ánh <span className="font-bold text-slate-900 bg-slate-100 px-1 rounded">{reportToDelete.maSanPham}</span>. Hành động này không thể hoàn tác.
+                    Bạn sắp xóa khiếu nại <span className="font-bold text-slate-900 bg-slate-100 px-1 rounded">{reportToDelete.maSanPham}</span>. Hành động này không thể hoàn tác.
                 </p>
                 <div className="flex gap-3">
                     <button onClick={() => setReportToDelete(null)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors active:scale-95">Hủy</button>

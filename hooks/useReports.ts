@@ -28,7 +28,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
   const saveReport = async (report: DefectReport, isEditing: boolean) => {
     try {
         if (isEditing && report.id && !report.id.startsWith('new_')) {
-            // Update existing (Should normally use updateReport, but keeping this for full form saves)
+            // Update existing
             const reportRef = doc(db, "reports", report.id);
             const { id, ...data } = report;
             await updateDoc(reportRef, data as any);
@@ -102,7 +102,6 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
   const updateMultipleReports = async (ids: string[], updates: Partial<DefectReport>, user?: { username: string, role: string }) => {
       try {
           const batch = writeBatch(db);
-          const timestamp = new Date().toISOString();
           
           // Prepare log if needed
           let logEntry: ActivityLog | null = null;
@@ -111,7 +110,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
                   id: `log_${Date.now()}_bulk`,
                   type: 'log',
                   content: `[Hàng loạt] Đã thay đổi trạng thái thành: ${updates.trangThai}`,
-                  timestamp,
+                  timestamp: new Date().toISOString(),
                   user: user.username,
                   role: user.role
               };

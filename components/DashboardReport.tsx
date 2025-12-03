@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { DefectReport } from '../types';
 import { 
@@ -997,7 +998,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                         <KpiCard 
                             title="NHÀ PHÂN PHỐI" 
                             value={stats.uniqueDistributors} 
-                            subValue="Đã phản ánh" 
+                            subValue="Đã khiếu nại" 
                             trend={stats.trendTicket} 
                             icon={<TruckIcon/>} 
                             colorHex={BRAND.INDIGO} 
