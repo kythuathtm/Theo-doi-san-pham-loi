@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { User, SystemSettings, UserRole } from '../types';
 import { 
@@ -83,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <img 
                     src={systemSettings.logoUrl} 
                     alt="Logo" 
-                    className="h-10 sm:h-14 w-auto object-contain flex-shrink-0" 
+                    className="h-auto max-h-[3.5rem] w-auto object-contain flex-shrink-0" 
                 />
             ) : (
                 <div className="p-1 sm:p-1.5 rounded-xl shadow-lg shadow-blue-600/10 flex-shrink-0 bg-white border border-blue-50 overflow-hidden">
@@ -103,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="font-bold text-[#C5003E] uppercase tracking-widest mt-0.5"
                   style={{ fontSize: 'calc(var(--header-size, 1.1rem) * 0.65)' }}
                >
-                 {systemSettings.appName || 'THEO DÕI XỬ LÝ KHIẾU NẠI CHẤT LƯỢNG SẢN PHẨM'}
+                 {systemSettings.appName || 'THEO DÕI XỬ LÝ KHIẾU NẠI VỀ CHẤT LƯỢNG SẢN PHẨM'}
                </span>
             </div>
             
@@ -196,13 +195,32 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
             <div className="relative ml-1" ref={profileMenuRef}>
                 <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="focus:outline-none transition-transform active:scale-95" title="Thông tin tài khoản">
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#003DA5] to-indigo-600 text-white flex items-center justify-center font-bold shadow-md border-2 border-white ring-2 ring-transparent hover:ring-blue-200 transition-all text-sm">{getUserInitials(currentUser.fullName || currentUser.username)}</div>
+                    {currentUser.avatarUrl ? (
+                        <img 
+                            src={currentUser.avatarUrl} 
+                            alt="Avatar" 
+                            className="h-9 w-9 rounded-full object-cover shadow-md border-2 border-white ring-2 ring-transparent hover:ring-blue-200 transition-all"
+                        />
+                    ) : (
+                        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#003DA5] to-indigo-600 text-white flex items-center justify-center font-bold shadow-md border-2 border-white ring-2 ring-transparent hover:ring-blue-200 transition-all text-sm">
+                            {getUserInitials(currentUser.fullName || currentUser.username)}
+                        </div>
+                    )}
                 </button>
                 {isProfileMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in-up origin-top-right text-slate-900 ring-1 ring-black/5">
-                        <div className="px-4 py-3 border-b border-slate-50 text-left">
-                            <p className="text-sm font-bold text-slate-800 capitalize truncate">{currentUser.fullName || currentUser.username}</p>
-                            <p className="text-xs font-normal text-slate-500 mt-0.5">{currentUser.role}</p>
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in-up origin-top-right text-slate-900 ring-1 ring-black/5">
+                        <div className="px-4 py-3 border-b border-slate-50 text-left flex items-center gap-3">
+                            {currentUser.avatarUrl ? (
+                                <img src={currentUser.avatarUrl} alt="Avatar" className="h-10 w-10 rounded-full object-cover border border-slate-200 shadow-sm" />
+                            ) : (
+                               <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-[#003DA5] font-bold text-sm shadow-sm border border-slate-200">
+                                  {getUserInitials(currentUser.fullName || currentUser.username)}
+                               </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-slate-800 capitalize truncate" title={currentUser.fullName || currentUser.username}>{currentUser.fullName || currentUser.username}</p>
+                                <p className="text-xs font-normal text-slate-500 mt-0.5">{currentUser.role}</p>
+                            </div>
                         </div>
                         <div className="py-1">
                             <button onClick={onLogout} className="flex w-full items-center justify-start px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors text-left">

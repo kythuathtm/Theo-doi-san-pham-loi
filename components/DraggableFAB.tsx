@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { PlusIcon } from './Icons';
@@ -9,20 +10,26 @@ interface DraggableFABProps {
 const DraggableFAB: React.FC<DraggableFABProps> = ({ onClick }) => {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
-    const [isInitialized, setIsInitialized] = useState(false);
+    // Use strict check for DOM availability
+    const [canRender, setCanRender] = useState(false);
     const dragStartRef = useRef({ x: 0, y: 0 });
     const hasMovedRef = useRef(false);
 
     useEffect(() => {
-        // Initialize position higher up on mobile to avoid pagination overlap
-        const isMobile = window.innerWidth < 640;
-        setPosition({ 
-            x: window.innerWidth - 80, 
-            y: window.innerHeight - (isMobile ? 140 : 100)
-        });
-        setIsInitialized(true);
+        // Delay rendering until client-side hydration is complete and body exists
+        if (typeof document !== 'undefined' && document.body) {
+            setCanRender(true);
+            
+            // Initialize position higher up on mobile to avoid pagination overlap
+            const isMobile = window.innerWidth < 640;
+            setPosition({ 
+                x: window.innerWidth - 80, 
+                y: window.innerHeight - (isMobile ? 140 : 100)
+            });
+        }
 
         const handleResize = () => {
+             if (typeof window === 'undefined') return;
              const isMobile = window.innerWidth < 640;
              setPosition(prev => ({
                  x: Math.min(prev.x, window.innerWidth - 80),
@@ -67,8 +74,10 @@ const DraggableFAB: React.FC<DraggableFABProps> = ({ onClick }) => {
         }
     };
 
-    // Safety check: Ensure document.body exists before creating portal to avoid Error #306
-    if (!isInitialized || typeof document === 'undefined' || !document.body) return null;
+    // Strict null check for portal container
+    if (!canRender || typeof document === 'undefined' || !document.body) {
+        return null;
+    }
 
     return createPortal(
         <button

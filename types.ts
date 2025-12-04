@@ -1,7 +1,3 @@
-
-
-
-
 // Change from enum to const object to support dynamic roles
 export const UserRole = {
   Admin: 'Admin',
@@ -20,6 +16,7 @@ export interface User {
   fullName?: string;
   role: UserRole;
   password?: string; 
+  avatarUrl?: string; // Add avatarUrl optional field
 }
 
 export interface Product {

@@ -1,7 +1,3 @@
-
-
-
-
 // Change from enum to const object to support dynamic roles
 export const UserRole = {
   Admin: 'Admin',

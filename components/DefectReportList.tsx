@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { DefectReport, UserRole } from '../types';
 import Pagination from './Pagination';
