@@ -82,165 +82,170 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
   });
   const [isLoadingReports, setIsLoadingReports] = useState(true);
 
-  useEffect(() => {
-    const q = query(collection(db, "reports"), orderBy("ngayTao", "desc"));
-    let unsubscribe = () => {};
-    try {
-        unsubscribe = onSnapshot(q, (snapshot) => {
-            const reportsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as DefectReport[];
-            
-            setReports(reportsData);
-            localStorage.setItem(LS_REPORTS, JSON.stringify(reportsData));
-            setIsLoadingReports(false);
-        }, (error) => {
-            console.warn("Reports: Firestore unavailable (permissions/network). Using local data.");
-            setIsLoadingReports(false);
-        });
-    } catch (error) {
-        console.warn("Reports: Firebase Error", error);
-        setIsLoadingReports(false);
-    }
-    return () => unsubscribe();
-  }, []);
-
   // Update Local Storage Helper
   const updateLocal = (newReports: DefectReport[]) => {
       setReports(newReports);
       localStorage.setItem(LS_REPORTS, JSON.stringify(newReports));
   };
 
-  const saveReport = async (report: DefectReport, isEditing: boolean) => {
+  useEffect(() => {
+    let unsubscribe = () => {};
     try {
-        let newReports = [...reports];
-        if (isEditing && report.id && !report.id.startsWith('new_')) {
-            const idx = newReports.findIndex(r => r.id === report.id);
-            if (idx >= 0) newReports[idx] = report;
-            
-            const reportRef = doc(db, "reports", report.id);
-            const { id, ...data } = report;
-            await updateDoc(reportRef, cleanData(data));
-        } else {
-            const newId = report.id?.startsWith('new_') ? `local_${Date.now()}` : report.id;
-            const newReport = { ...report, id: newId, ngayTao: new Date().toISOString(), activityLog: [] };
-            newReports = [newReport, ...newReports];
-            
-            const { id, ...data } = newReport;
-            // Firestore creates its own ID, but for offline we use local ID. 
-            // In a real app we'd handle sync, here we just try fire-and-forget.
-            await addDoc(collection(db, "reports"), cleanData(data));
-        }
-        updateLocal(newReports);
+        const q = query(collection(db, "reports"), orderBy("ngayTao", "desc"));
+        unsubscribe = onSnapshot(q, 
+            (snapshot) => {
+                const reportsData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })) as DefectReport[];
+                
+                updateLocal(reportsData);
+                setIsLoadingReports(false);
+            }, 
+            (error: any) => {
+                // If permission is denied, just stop loading and rely on local data
+                if (error?.code === 'permission-denied') {
+                    console.warn("Reports: Firestore permission denied. Using local data.");
+                } else {
+                    console.error("Error fetching reports:", error);
+                }
+                setIsLoadingReports(false);
+            }
+        );
+    } catch (error) {
+        console.log("Reports: Init failed, using local data.");
+        setIsLoadingReports(false);
+    }
+    return () => unsubscribe();
+  }, []);
+
+  const saveReport = async (report: DefectReport, isEditing: boolean) => {
+    // Optimistic UI Update
+    let newReports = [...reports];
+    let firestorePromise;
+
+    if (isEditing && report.id && !report.id.startsWith('new_') && !report.id.startsWith('local_')) {
+        const idx = newReports.findIndex(r => r.id === report.id);
+        if (idx >= 0) newReports[idx] = report;
+        
+        const reportRef = doc(db, "reports", report.id);
+        const { id, ...data } = report;
+        firestorePromise = updateDoc(reportRef, cleanData(data));
+    } else {
+        const newId = report.id?.startsWith('new_') ? `local_${Date.now()}` : report.id;
+        const newReport = { ...report, id: newId, ngayTao: new Date().toISOString(), activityLog: [] };
+        newReports = [newReport, ...newReports];
+        
+        const { id, ...data } = newReport;
+        firestorePromise = addDoc(collection(db, "reports"), cleanData(data));
+    }
+    updateLocal(newReports);
+
+    try {
+        await firestorePromise;
         showToast(isEditing ? 'Cập nhật thành công!' : 'Tạo mới thành công!', 'success');
         return true;
-    } catch (error) {
-        console.warn("Offline save: report");
-        // Ensure local update happened even if DB failed
-        if (isEditing) {
-             const idx = reports.findIndex(r => r.id === report.id);
-             const updated = [...reports];
-             if (idx >= 0) { updated[idx] = report; updateLocal(updated); }
-        } else {
-             const newReport = { ...report, id: `offline_${Date.now()}` };
-             updateLocal([newReport, ...reports]);
-        }
+    } catch (error: any) {
+        console.warn("Offline save: report", error.code);
         showToast('Đã lưu (Offline mode)', 'success');
         return true;
     }
   };
 
   const updateReport = async (id: string, updates: Partial<DefectReport>, successMessage: string = 'Cập nhật thành công!', user?: { username: string, role: string }) => {
-      try {
-          // Optimistic
-          const updatedReports = reports.map(r => {
-              if (r.id === id) {
-                  const updatedR = { ...r, ...updates };
-                  if (user) {
-                      const log: ActivityLog = {
-                          id: `log_${Date.now()}`,
-                          type: 'log',
-                          content: updates.trangThai ? `Trạng thái: ${updates.trangThai}` : 'Cập nhật thông tin',
-                          timestamp: new Date().toISOString(),
-                          user: user.username,
-                          role: user.role
-                      };
-                      updatedR.activityLog = [...(updatedR.activityLog || []), log];
-                  }
-                  return updatedR;
+      // Optimistic
+      const updatedReports = reports.map(r => {
+          if (r.id === id) {
+              const updatedR = { ...r, ...updates };
+              if (user) {
+                  const log: ActivityLog = {
+                      id: `log_${Date.now()}`,
+                      type: 'log',
+                      content: updates.trangThai ? `Trạng thái: ${updates.trangThai}` : 'Cập nhật thông tin',
+                      timestamp: new Date().toISOString(),
+                      user: user.username,
+                      role: user.role
+                  };
+                  updatedR.activityLog = [...(updatedR.activityLog || []), log];
               }
-              return r;
-          });
-          updateLocal(updatedReports);
+              return updatedR;
+          }
+          return r;
+      });
+      updateLocal(updatedReports);
 
-          // DB Update
+      try {
           const reportRef = doc(db, "reports", id);
           const payload: any = { ...updates };
           if (user) {
-               // Re-create log for DB (Firestore arrayUnion logic needs clean obj)
-               // ... simplified for this snippet
+               const log: ActivityLog = {
+                  id: `log_${Date.now()}`,
+                  type: 'log',
+                  content: updates.trangThai ? `Trạng thái: ${updates.trangThai}` : 'Cập nhật thông tin',
+                  timestamp: new Date().toISOString(),
+                  user: user.username,
+                  role: user.role
+              };
+              payload.activityLog = arrayUnion(log);
           }
           await updateDoc(reportRef, cleanData(payload));
           showToast(successMessage, 'success');
           return true;
-      } catch (error) {
-          console.warn("Offline update: report");
+      } catch (error: any) {
+          console.warn("Offline update: report", error.code);
           showToast(successMessage + ' (Offline)', 'success');
           return true;
       }
   };
 
   const addComment = async (reportId: string, content: string, user: { username: string, role: string }) => {
+      // Optimistic
+      const newComment: ActivityLog = {
+          id: `cmt_${Date.now()}`,
+          type: 'comment',
+          content: content,
+          timestamp: new Date().toISOString(),
+          user: user.username,
+          role: user.role
+      };
+
+      const updatedReports = reports.map(r => {
+          if (r.id === reportId) {
+              return { ...r, activityLog: [...(r.activityLog || []), newComment] };
+          }
+          return r;
+      });
+      updateLocal(updatedReports);
+
       try {
-          const newComment: ActivityLog = {
-              id: `cmt_${Date.now()}`,
-              type: 'comment',
-              content: content,
-              timestamp: new Date().toISOString(),
-              user: user.username,
-              role: user.role
-          };
-
-          const updatedReports = reports.map(r => {
-              if (r.id === reportId) {
-                  return { ...r, activityLog: [...(r.activityLog || []), newComment] };
-              }
-              return r;
-          });
-          updateLocal(updatedReports);
-
           const reportRef = doc(db, "reports", reportId);
           await updateDoc(reportRef, { activityLog: arrayUnion(newComment) });
           return true;
       } catch (error) {
           console.warn("Offline comment");
-          return true; // Pretend success locally
+          return true; 
       }
   };
 
   const deleteReport = async (id: string) => {
+    // Optimistic
+    const remaining = reports.filter(r => r.id !== id);
+    updateLocal(remaining);
+    
     try {
-        const remaining = reports.filter(r => r.id !== id);
-        updateLocal(remaining);
-        
         await deleteDoc(doc(db, "reports", id));
         showToast('Đã xóa báo cáo.', 'info');
         return true;
-    } catch (error) {
-        console.warn("Offline delete");
+    } catch (error: any) {
+        console.warn("Offline delete", error.code);
         showToast('Đã xóa (Offline mode)', 'info');
         return true;
     }
   };
 
-  // ... (Other functions follow similar pattern, implementing optimistic updates then try/catch DB)
-  
-  const updateMultipleReports = async () => { return true; }; // Placeholder for brevity if unused in this context
-  const deleteMultipleReports = async () => { return true; }; // Placeholder
-
   const importReports = async (newReports: DefectReport[]) => {
       try {
+          // Local Only import for now as batch writing all might fail partly or trigger permissions
           const combined = [...newReports.map(r => ({...r, id: `imp_${Date.now()}_${Math.random()}`})), ...reports];
           updateLocal(combined);
           showToast(`Đã import ${newReports.length} phiếu (Offline/Local).`, 'success');
@@ -253,10 +258,8 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
     isLoadingReports,
     saveReport,
     updateReport,
-    updateMultipleReports,
     addComment,
     deleteReport,
-    deleteMultipleReports,
     importReports
   };
 };

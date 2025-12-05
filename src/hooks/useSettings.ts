@@ -47,7 +47,8 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
   useEffect(() => {
     let unsubscribe = () => {};
     try {
-        unsubscribe = onSnapshot(collection(db, "settings"), 
+        const settingsRef = collection(db, "settings");
+        unsubscribe = onSnapshot(settingsRef, 
             (snapshot) => {
                 if (!snapshot.empty) {
                     const roleDoc = snapshot.docs.find(d => d.id === 'roleSettings');
@@ -64,44 +65,49 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
                     }
                 }
             },
-            (error) => {
-                console.warn("Settings: Firestore unavailable (permissions/network). Using local storage.");
+            (error: any) => {
+                if (error?.code === 'permission-denied') {
+                    console.warn("Settings: Firestore permission denied. Using local settings.");
+                } else {
+                    console.error("Settings Listener Error:", error);
+                }
             }
         );
     } catch (e) {
-        console.warn("Settings: Firebase Error:", e);
+        console.log("Settings: Init failed, using local storage.", e);
     }
     return () => unsubscribe();
   }, []);
 
   const saveRoleSettings = async (newSettings: RoleSettings) => {
+      // Optimistic Update
+      setRoleSettings(newSettings);
+      localStorage.setItem(LS_ROLE_SETTINGS, JSON.stringify(newSettings));
+      
       try {
-          setRoleSettings(newSettings);
-          localStorage.setItem(LS_ROLE_SETTINGS, JSON.stringify(newSettings));
-          
           await setDoc(doc(db, "settings", "roleSettings"), newSettings);
           showToast('Cập nhật phân quyền thành công.', 'success');
-      } catch (error) {
-          console.warn("Offline save: roleSettings");
+      } catch (error: any) {
+          console.warn("Offline save: roleSettings", error.code);
           showToast('Đã lưu cài đặt (Chế độ Offline).', 'info');
       }
   };
 
   const saveSystemSettings = async (newSettings: SystemSettings) => {
-      try {
-          setSystemSettings(newSettings);
-          localStorage.setItem(LS_SYSTEM_SETTINGS, JSON.stringify(newSettings));
+      // Optimistic Update
+      setSystemSettings(newSettings);
+      localStorage.setItem(LS_SYSTEM_SETTINGS, JSON.stringify(newSettings));
 
+      try {
           await setDoc(doc(db, "settings", "systemSettings"), newSettings);
           showToast('Cập nhật cấu hình hệ thống thành công.', 'success');
-      } catch (error) {
-          console.warn("Offline save: systemSettings");
+      } catch (error: any) {
+          console.warn("Offline save: systemSettings", error.code);
           showToast('Đã lưu cấu hình (Chế độ Offline).', 'info');
       }
   };
 
   const renameRole = async (oldName: string, newName: string) => {
-      // Local update mainly, Firebase update best effort
       try {
           const q = query(collection(db, "users"), where("role", "==", oldName));
           const snapshot = await getDocs(q);
@@ -113,9 +119,8 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
               await batch.commit();
               showToast(`Đã đồng bộ vai trò mới cho ${snapshot.size} tài khoản.`, 'success');
           }
-      } catch (error) {
-          console.warn("Rename Role: Firestore unavailable. Update manually in user management.");
-          // We don't show error toast to avoid blocking user flow
+      } catch (error: any) {
+          console.warn("Rename Role: Firestore unavailable or permission denied.", error.code);
       }
   };
 

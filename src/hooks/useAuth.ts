@@ -25,11 +25,12 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
   });
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
-  // Listen to USERS (and Seed if empty)
+  // Listen to USERS
   useEffect(() => {
     let unsubscribe = () => {};
     try {
-        unsubscribe = onSnapshot(collection(db, "users"), 
+        const usersRef = collection(db, "users");
+        unsubscribe = onSnapshot(usersRef, 
             (snapshot) => {
                 const usersData = snapshot.docs.map(doc => doc.data()) as User[];
                 if (usersData.length > 0) {
@@ -38,13 +39,18 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
                 }
                 setIsLoadingUsers(false);
             },
-            (error) => {
-                console.warn("Auth: Firestore unavailable. Using local users.");
+            (error: any) => {
+                // Handle Permission Denied gracefully
+                if (error?.code === 'permission-denied') {
+                    console.warn("Auth: Firestore permission denied. Using local users.");
+                } else {
+                    console.error("Auth Listener Error:", error);
+                }
                 setIsLoadingUsers(false);
             }
         );
     } catch (e) {
-        console.warn("Auth: Init Error", e);
+        console.log("Auth: Init failed, using local data.");
         setIsLoadingUsers(false);
     }
     return () => unsubscribe();
@@ -59,42 +65,43 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
   };
 
   const saveUser = async (user: User, isEdit: boolean) => {
-    try {
-        // Optimistic
-        let newUsers = [...users];
-        if (isEdit) {
-            newUsers = newUsers.map(u => u.username === user.username ? user : u);
-        } else {
-            if (newUsers.some(u => u.username === user.username)) {
-                showToast("Tên đăng nhập đã tồn tại", "error");
-                return false;
-            }
-            newUsers.push(user);
+    // Optimistic
+    let newUsers = [...users];
+    if (isEdit) {
+        newUsers = newUsers.map(u => u.username === user.username ? user : u);
+    } else {
+        if (newUsers.some(u => u.username === user.username)) {
+            showToast("Tên đăng nhập đã tồn tại", "error");
+            return false;
         }
-        setUsers(newUsers);
-        localStorage.setItem(LS_USERS, JSON.stringify(newUsers));
+        newUsers.push(user);
+    }
+    setUsers(newUsers);
+    localStorage.setItem(LS_USERS, JSON.stringify(newUsers));
 
+    try {
         await setDoc(doc(db, "users", user.username), user);
         showToast(isEdit ? 'Cập nhật tài khoản thành công.' : 'Thêm tài khoản mới thành công.', 'success');
         return true;
-    } catch (error) {
-        console.warn("Offline save: user");
+    } catch (error: any) {
+        console.warn("Offline save: user", error.code);
         showToast("Đã lưu tài khoản (Offline mode)", "info");
         return true;
     }
   };
 
   const deleteUser = async (username: string) => {
-    try {
-        const newUsers = users.filter(u => u.username !== username);
-        setUsers(newUsers);
-        localStorage.setItem(LS_USERS, JSON.stringify(newUsers));
+    // Optimistic
+    const newUsers = users.filter(u => u.username !== username);
+    setUsers(newUsers);
+    localStorage.setItem(LS_USERS, JSON.stringify(newUsers));
 
+    try {
         await deleteDoc(doc(db, "users", username));
         showToast('Đã xóa tài khoản.', 'info');
         return true;
-    } catch (error) {
-        console.warn("Offline delete: user");
+    } catch (error: any) {
+        console.warn("Offline delete: user", error.code);
         showToast("Đã xóa (Offline mode)", "info");
         return true;
     }

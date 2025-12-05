@@ -23,54 +23,57 @@ export const useProducts = (showToast: (msg: string, type: ToastType) => void) =
   useEffect(() => {
     let unsubscribe = () => {};
     try {
-        unsubscribe = onSnapshot(collection(db, "products"), 
+        const productsRef = collection(db, "products");
+        unsubscribe = onSnapshot(productsRef, 
             (snapshot) => {
                 const productsData = snapshot.docs.map(doc => doc.data() as Product);
-                // Only update if we actually got data (not empty due to permissions)
-                // If permission denied, this callback might not even fire with data
                 if (productsData.length > 0 || !snapshot.metadata.fromCache) {
                     setProducts(productsData);
                     localStorage.setItem(LS_PRODUCTS, JSON.stringify(productsData));
                 }
             },
-            (error) => {
-                console.warn("Product: Firestore unavailable (permissions/network). Using local data.");
-                // Keep using initial state (local storage or mock)
+            (error: any) => {
+                if (error?.code === 'permission-denied') {
+                    console.warn("Product: Firestore permission denied. Using local data.");
+                } else {
+                    console.error("Product Listener Error:", error);
+                }
             }
         );
     } catch (e) {
-        console.warn("Product: Firebase Error", e);
+        console.log("Product: Init failed, using local storage.");
     }
     return () => unsubscribe();
   }, []);
 
   const addProduct = async (product: Product) => {
-    try {
-        // Optimistic
-        const newProducts = [...products.filter(p => p.maSanPham !== product.maSanPham), product];
-        setProducts(newProducts);
-        localStorage.setItem(LS_PRODUCTS, JSON.stringify(newProducts));
+    // Optimistic
+    const newProducts = [...products.filter(p => p.maSanPham !== product.maSanPham), product];
+    setProducts(newProducts);
+    localStorage.setItem(LS_PRODUCTS, JSON.stringify(newProducts));
 
+    try {
         await setDoc(doc(db, "products", product.maSanPham), product);
         showToast('Thêm sản phẩm thành công', 'success');
-    } catch (error) {
-        console.warn("Offline add: product");
+    } catch (error: any) {
+        console.warn("Offline add: product", error.code);
         showToast('Đã lưu sản phẩm (Offline mode)', 'info');
     }
   };
 
   const deleteProduct = async (maSanPham: string) => {
     if(!window.confirm(`Xóa sản phẩm ${maSanPham}?`)) return;
-    try {
-        // Optimistic
-        const newProducts = products.filter(p => p.maSanPham !== maSanPham);
-        setProducts(newProducts);
-        localStorage.setItem(LS_PRODUCTS, JSON.stringify(newProducts));
+    
+    // Optimistic
+    const newProducts = products.filter(p => p.maSanPham !== maSanPham);
+    setProducts(newProducts);
+    localStorage.setItem(LS_PRODUCTS, JSON.stringify(newProducts));
 
+    try {
         await deleteDoc(doc(db, "products", maSanPham));
         showToast('Xóa sản phẩm thành công', 'info');
-    } catch (error) {
-        console.warn("Offline delete: product");
+    } catch (error: any) {
+        console.warn("Offline delete: product", error.code);
         showToast('Đã xóa sản phẩm (Offline mode)', 'info');
     }
   };
@@ -78,47 +81,45 @@ export const useProducts = (showToast: (msg: string, type: ToastType) => void) =
   const deleteAllProducts = async () => {
     if (!window.confirm("CẢNH BÁO: Xóa toàn bộ sản phẩm?")) return;
 
-    try {
-        setProducts([]);
-        localStorage.removeItem(LS_PRODUCTS);
+    // Optimistic
+    setProducts([]);
+    localStorage.removeItem(LS_PRODUCTS);
 
+    try {
         const q = query(collection(db, "products"));
         const snapshot = await getDocs(q);
         const batch = writeBatch(db);
         snapshot.docs.forEach(doc => batch.delete(doc.ref));
         await batch.commit();
-        
         showToast("Đã xóa toàn bộ dữ liệu sản phẩm.", "info");
-    } catch (error) {
-        console.warn("Offline delete all: products");
+    } catch (error: any) {
+        console.warn("Offline delete all: products", error.code);
         showToast("Đã xóa dữ liệu (Offline mode).", "info");
     }
   };
 
   const importProducts = async (newProducts: Product[]) => {
-      try {
-          // Optimistic merge
-          const combined = [...products];
-          newProducts.forEach(np => {
-              const idx = combined.findIndex(p => p.maSanPham === np.maSanPham);
-              if (idx >= 0) combined[idx] = np;
-              else combined.push(np);
-          });
-          setProducts(combined);
-          localStorage.setItem(LS_PRODUCTS, JSON.stringify(combined));
+      // Optimistic merge
+      const combined = [...products];
+      newProducts.forEach(np => {
+          const idx = combined.findIndex(p => p.maSanPham === np.maSanPham);
+          if (idx >= 0) combined[idx] = np;
+          else combined.push(np);
+      });
+      setProducts(combined);
+      localStorage.setItem(LS_PRODUCTS, JSON.stringify(combined));
 
-          // Try Batch Write
+      try {
           const batch = writeBatch(db);
           newProducts.forEach((p) => {
               const ref = doc(db, "products", p.maSanPham);
               batch.set(ref, p);
           });
           await batch.commit();
-          
           showToast(`Đã import thành công ${newProducts.length} sản phẩm.`, 'success');
           return true;
-      } catch (error) {
-          console.warn("Offline import: products");
+      } catch (error: any) {
+          console.warn("Offline import: products", error.code);
           showToast(`Đã import ${newProducts.length} sản phẩm (Offline mode).`, 'success');
           return true;
       }
