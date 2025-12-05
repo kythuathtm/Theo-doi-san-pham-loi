@@ -509,8 +509,8 @@ export const App: React.FC = () => {
                   onClick={handleCloseDetailModal}
                ></div>
                
-               {/* Modal Card */}
-               <div className={`relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-4xl bg-white rounded-none sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col ring-1 ring-slate-900/5 z-50 will-change-transform ${isModalClosing ? 'animate-slide-down' : 'animate-slide-up'}`}>
+               {/* Modal Card - WIDENED to max-w-7xl/95vw for better layout */}
+               <div className={`relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-[95vw] xl:max-w-7xl bg-white rounded-none sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col ring-1 ring-slate-900/5 z-50 will-change-transform ${isModalClosing ? 'animate-slide-down' : 'animate-slide-up'}`}>
                   <DefectReportDetail
                     report={selectedReport}
                     onEdit={handleEditClick}

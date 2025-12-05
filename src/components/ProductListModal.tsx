@@ -34,8 +34,8 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
   const handleDownloadTemplate = () => {
       const templateData = [
           {
-              "Mã SP (Bắt buộc)": "SP001",
-              "Tên thương mại (Bắt buộc)": "Kim lấy máu chân không",
+              "Mã SP": "SP001",
+              "Tên thương mại": "Kim lấy máu chân không",
               "Tên thiết bị": "Kim lấy máu",
               "Dòng sản phẩm": "Vật tư tiêu hao",
               "Nhãn hàng": "HTM",
@@ -43,8 +43,8 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
               "Đơn vị tính": "Hộp"
           },
           {
-              "Mã SP (Bắt buộc)": "SP002",
-              "Tên thương mại (Bắt buộc)": "Ống nghiệm serum",
+              "Mã SP": "SP002",
+              "Tên thương mại": "Ống nghiệm serum",
               "Tên thiết bị": "Ống nghiệm",
               "Dòng sản phẩm": "Ống nghiệm",
               "Nhãn hàng": "VMA",
@@ -69,33 +69,31 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
         if (!data) return;
 
         try {
-            // Read the Excel file
             const workbook = XLSX.read(data, { type: 'array' });
-            
-            // Get the first worksheet
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            
-            // Convert to JSON
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
             
             const newProducts: Product[] = [];
 
             jsonData.forEach((row: any) => {
-                // Map common header names to our data structure
                 const keys = Object.keys(row);
+                // Flexible column name matching (case insensitive, removing special chars)
                 const getVal = (keywords: string[]) => {
-                    const key = keys.find(k => keywords.some(kw => k.toLowerCase().includes(kw.toLowerCase())));
+                    const key = keys.find(k => {
+                        const normalizedKey = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        return keywords.some(kw => normalizedKey.includes(kw.toLowerCase().replace(/[^a-z0-9]/g, '')));
+                    });
                     return key ? row[key] : '';
                 };
 
-                const maSanPham = getVal(['Mã SP', 'Mã sản phẩm', 'Code', 'Ma San Pham']);
-                const tenThuongMai = getVal(['Tên TM', 'Tên thương mại', 'Name', 'Ten Thuong Mai']);
-                const tenThietBi = getVal(['Tên TB', 'Tên thiết bị', 'Device Name', 'Ten Thiet Bi']);
-                const dongSanPham = getVal(['Dòng SP', 'Dòng sản phẩm', 'Type', 'Dong San Pham']);
+                const maSanPham = getVal(['Mã SP', 'Ma San Pham', 'Code', 'Product Code']);
+                const tenThuongMai = getVal(['Tên TM', 'Ten Thuong Mai', 'Commercial Name', 'Name']);
+                const tenThietBi = getVal(['Tên TB', 'Ten Thiet Bi', 'Device Name']);
+                const dongSanPham = getVal(['Dòng SP', 'Dong San Pham', 'Type', 'Category']);
                 const nhanHang = getVal(['Nhãn hàng', 'Nhan Hang', 'Brand']);
-                const gplh = getVal(['GPLH', 'Số đăng ký', 'SDK', 'Registration']);
-                const donViTinh = getVal(['Đơn vị tính', 'ĐVT', 'Unit', 'DVT']);
+                const gplh = getVal(['GPLH', 'Số đăng ký', 'SDK', 'Reg No']);
+                const donViTinh = getVal(['Đơn vị tính', 'DVT', 'Unit']);
 
                 if (maSanPham && tenThuongMai) {
                     newProducts.push({
@@ -113,7 +111,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
             if (newProducts.length > 0) {
                 onImport(newProducts);
             } else {
-                alert("Không tìm thấy dữ liệu sản phẩm hợp lệ. Vui lòng kiểm tra tiêu đề cột (Mã SP, Tên thương mại...).");
+                alert("Không tìm thấy dữ liệu hợp lệ. Vui lòng sử dụng file mẫu hoặc kiểm tra tiêu đề cột.");
             }
 
         } catch (error) {
@@ -121,7 +119,6 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
             alert("Đã xảy ra lỗi khi đọc file Excel.");
         }
         
-        // Reset input
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
     
@@ -136,7 +133,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
       }
       onAdd(newProduct);
       setNewProduct({ maSanPham: '', tenThuongMai: '', tenThietBi: '', dongSanPham: '', nhanHang: 'HTM', GPLH: '', donViTinh: '' });
-      setIsAdding(false); // Close form after add
+      setIsAdding(false); 
   };
 
   // Filter products

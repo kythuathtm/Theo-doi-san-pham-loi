@@ -12,7 +12,7 @@
     "firebase": "^10.12.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-to-print": "^2.14.15",
+    "react-to-print": "^3.0.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
 import { XIcon, CheckCircleIcon, TagIcon, WrenchIcon, LockClosedIcon, ShieldCheckIcon, ClipboardDocumentListIcon, CalendarIcon, BuildingStoreIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon } from './Icons';
@@ -28,14 +27,16 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     donViSuDung: '', noiDungPhanAnh: '', soLo: '', maNgaySanXuat: '', hanDung: '', donViTinh: '',
     soLuongLoi: 0, soLuongDaNhap: 0, soLuongDoi: 0, ngayDoiHang: '',
     nguyenNhan: '', huongKhacPhuc: '', trangThai: 'Mới',
-    ngayHoanThanh: '', loaiLoi: '' as any, nhanHang: 'HTM', 
+    ngayHoanThanh: '', 
+    loaiLoi: '' as any, // Initial empty state handled in useEffect
+    nhanHang: 'HTM', 
     images: []
   });
   
   const [errors, setErrors] = useState<Partial<Record<keyof Omit<DefectReport, 'id'>, string>>>({});
   const [isProductInfoLocked, setIsProductInfoLocked] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [newImageUrl, setNewImageUrl] = useState(''); // State for new image input
+  const [newImageUrl, setNewImageUrl] = useState(''); 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const productCodeInputRef = useRef<HTMLInputElement>(null);
@@ -51,16 +52,14 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
       }
   };
 
-  // ... (keep handleKeyDown, useEffect status logic, useMemos for availableLines/DeviceNames/TradeNames) ...
   useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
           if (e.key === 'Escape') {
+              // Only trigger if top modal
               handleCloseAttempt();
           }
           if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-              // Prevent submit if focus is on image input
               if (document.activeElement?.getAttribute('name') === 'imageUrlInput') return;
-              
               const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
               handleSubmit(fakeEvent);
           }
@@ -69,12 +68,14 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
       return () => window.removeEventListener('keydown', handleKeyDown);
   }, [formData, isDirty]); 
 
+  // Auto-set Status to 'Hoàn thành' if sufficient info provided
   useEffect(() => {
+    // Only auto-complete if NOT already completed and has key info
     if (
-        formData.nguyenNhan && formData.nguyenNhan.trim() !== '' &&
-        formData.huongKhacPhuc && formData.huongKhacPhuc.trim() !== '' &&
-        formData.soLuongDoi > 0 &&
-        formData.trangThai !== 'Hoàn thành'
+        formData.trangThai !== 'Hoàn thành' &&
+        formData.nguyenNhan && formData.nguyenNhan.trim().length > 5 &&
+        formData.huongKhacPhuc && formData.huongKhacPhuc.trim().length > 5 &&
+        (formData.soLuongDoi > 0 || (formData.soLuongLoi > 0 && formData.huongKhacPhuc.toLowerCase().includes('không đổi')))
     ) {
         setFormData(prev => ({
             ...prev,
@@ -82,7 +83,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             ngayHoanThanh: prev.ngayHoanThanh || getTodayDateString()
         }));
     }
-  }, [formData.nguyenNhan, formData.huongKhacPhuc, formData.soLuongDoi]);
+  }, [formData.nguyenNhan, formData.huongKhacPhuc, formData.soLuongDoi, formData.soLuongLoi]);
 
   const availableLines = useMemo(() => {
       let filtered = products;
@@ -151,10 +152,11 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     if (!formData.noiDungPhanAnh?.trim()) newErrors.noiDungPhanAnh = "Nội dung khiếu nại không được để trống";
     if (!formData.loaiLoi) newErrors.loaiLoi = "Vui lòng chọn nguồn gốc lỗi";
     
+    // Strict validation for 'Hoàn thành' status
     if (formData.trangThai === 'Hoàn thành') {
-        if (!formData.ngayHoanThanh) newErrors.ngayHoanThanh = "Cần có ngày hoàn thành";
-        if (!formData.nguyenNhan?.trim()) newErrors.nguyenNhan = "Phải nhập nguyên nhân khi hoàn thành";
-        if (!formData.huongKhacPhuc?.trim()) newErrors.huongKhacPhuc = "Phải nhập hướng khắc phục khi hoàn thành";
+        if (!formData.ngayHoanThanh) newErrors.ngayHoanThanh = "Cần có ngày hoàn thành khi trạng thái là Hoàn thành";
+        if (!formData.nguyenNhan || formData.nguyenNhan.trim().length < 5) newErrors.nguyenNhan = "Phải nhập nguyên nhân chi tiết để hoàn thành";
+        if (!formData.huongKhacPhuc || formData.huongKhacPhuc.trim().length < 5) newErrors.huongKhacPhuc = "Phải nhập hướng khắc phục chi tiết để hoàn thành";
     }
 
     setErrors(newErrors);
@@ -173,13 +175,14 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     }
     
     if (formData.trangThai === 'Hoàn thành') {
-         if (name === 'nguyenNhan' && !valStr) error = 'Bắt buộc khi hoàn thành';
-         if (name === 'huongKhacPhuc' && !valStr) error = 'Bắt buộc khi hoàn thành';
+         if (name === 'nguyenNhan' && (!valStr || valStr.length < 5)) error = 'Bắt buộc khi hoàn thành (tối thiểu 5 ký tự)';
+         if (name === 'huongKhacPhuc' && (!valStr || valStr.length < 5)) error = 'Bắt buộc khi hoàn thành (tối thiểu 5 ký tự)';
          if (name === 'ngayHoanThanh' && !valStr) error = 'Bắt buộc khi hoàn thành';
     }
 
     setErrors(prev => {
         if (error) return { ...prev, [name]: error };
+        // Clear error if valid
         const { [name as keyof typeof prev]: _, ...rest } = prev;
         return rest;
     });
@@ -189,12 +192,22 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     if (initialData) {
       setFormData({
           ...initialData,
-          images: initialData.images || []
+          images: initialData.images || [],
+          // Safely handle potentially missing numeric fields from legacy data
+          soLuongLoi: initialData.soLuongLoi || 0,
+          soLuongDaNhap: initialData.soLuongDaNhap || 0,
+          soLuongDoi: initialData.soLuongDoi || 0,
       });
       const product = products.find(p => p.maSanPham.toLowerCase() === initialData.maSanPham.toLowerCase());
+      // Lock if product exists AND not a new copy
       setIsProductInfoLocked(!!product && !initialData.id.startsWith('new_'));
     } else {
-      setFormData(prev => ({ ...prev, ngayPhanAnh: getTodayDateString(), images: [] }));
+      setFormData(prev => ({ 
+          ...prev, 
+          ngayPhanAnh: getTodayDateString(), 
+          images: [],
+          loaiLoi: '' as any 
+      }));
       setIsProductInfoLocked(false);
     }
     setIsDirty(false); 
@@ -208,6 +221,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     setFormData(prev => {
         const newState = { ...prev };
         
+        // --- Product Logic ---
         if (name === 'nhanHang') {
             newState.nhanHang = value as any;
             if (value !== 'Khác') {
@@ -278,10 +292,15 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
             newState.trangThai = value as any;
             if (value === 'Hoàn thành' && !newState.ngayHoanThanh) newState.ngayHoanThanh = getTodayDateString();
         } else {
+            // General Field Handling
             let processedValue: string | number = value;
             if (type === 'number') {
-                processedValue = value === '' ? 0 : parseInt(value, 10);
-                if (isNaN(processedValue) || processedValue < 0) processedValue = 0;
+                if (value === '') {
+                    processedValue = 0; // Default to 0 for empty number fields
+                } else {
+                    const parsed = parseFloat(value);
+                    processedValue = isNaN(parsed) ? 0 : parsed;
+                }
             }
             (newState as any)[name] = processedValue;
         }
@@ -312,7 +331,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
       const file = e.target.files?.[0];
       if (!file) return;
 
-      if (file.size > 2 * 1024 * 1024) { // Limit to 2MB to respect Firestore limits
+      if (file.size > 2 * 1024 * 1024) { 
           alert("Kích thước ảnh quá lớn (>2MB). Vui lòng chọn ảnh nhỏ hơn.");
           return;
       }
@@ -328,7 +347,6 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
       };
       reader.readAsDataURL(file);
       
-      // Reset input
       if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -355,9 +373,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
         const element = formRef.current?.querySelector(`[name="${firstErrorKey}"]`);
         
         if (element) {
-            // Scroll with margin for sticky header
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
             if (element instanceof HTMLElement) {
                 element.focus();
             }
@@ -389,513 +405,263 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
   };
 
   const SectionHeader = ({ title, icon }: { title: string, icon: React.ReactNode }) => (
-      <div className="flex items-center gap-2 mb-5 pb-2 border-b border-slate-200">
-          <div className="p-1.5 bg-slate-50 text-slate-500 rounded-lg border border-slate-200 shadow-sm">{icon}</div>
-          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">{title}</h3>
+      <div className="flex items-center gap-2 mb-5 pb-2 border-b border-slate-100">
+          <div className="p-1.5 bg-blue-50 text-[#003DA5] rounded-lg">
+              {icon}
+          </div>
+          <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wide">{title}</h4>
       </div>
   );
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4 transition-opacity">
-      <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] max-w-6xl rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up ring-1 ring-white/20">
-        
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
-          <div>
-              <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">
-                  {initialData && !initialData.id.startsWith('new_') ? 'CHỈNH SỬA KHIẾU NẠI' : 'TẠO KHIẾU NẠI MỚI'}
-              </h2>
-              <p className="text-sm text-slate-500 mt-0.5">Vui lòng điền đầy đủ thông tin bắt buộc <span className="text-red-500">*</span></p>
+       <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] max-w-5xl rounded-none sm:rounded-2xl flex flex-col overflow-hidden ring-1 ring-black/5 shadow-2xl animate-pop">
+          {/* Header */}
+          <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-white">
+             <div>
+                 <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                     <ClipboardDocumentListIcon className="w-6 h-6 text-[#003DA5]"/>
+                     {initialData ? 'Cập nhật Phiếu Khiếu nại' : 'Tạo Phiếu Khiếu nại Mới'}
+                 </h2>
+                 <p className="text-sm text-slate-500 mt-1">Vui lòng điền đầy đủ thông tin bắt buộc (*)</p>
+             </div>
+             <button onClick={handleCloseAttempt} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-all active:scale-95">
+                 <XIcon className="h-6 w-6" />
+             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-block text-xs text-slate-400 bg-slate-50 border border-slate-100 px-2 py-1 rounded font-medium">ESC để đóng</span>
-            <button onClick={handleCloseAttempt} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-all active:scale-95">
-                <XIcon className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
 
-        {Object.keys(errors).length > 0 && (
-            <div className="px-6 py-3 bg-red-50 border-b border-red-100 flex items-center justify-center animate-fade-in shadow-inner">
-                <p className="text-sm font-bold text-red-600 flex items-center">
-                    <ShieldCheckIcon className="w-5 h-5 mr-2" />
-                    Vui lòng kiểm tra lại {Object.keys(errors).length} mục thông tin còn thiếu.
-                </p>
-            </div>
-        )}
+          {/* Form Content */}
+          <form ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 sm:p-8 bg-slate-50/50 custom-scrollbar">
+               {/* Product Section */}
+               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 group transition-all hover:shadow-md">
+                   <SectionHeader title="Thông tin Sản phẩm" icon={<TagIcon className="w-5 h-5"/>} />
+                   
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                        <div className="lg:col-span-1">
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nhãn hàng <span className="text-red-500">*</span></label>
+                            <select name="nhanHang" value={formData.nhanHang} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('nhanHang', isProductInfoLocked)} disabled={isFieldDisabled('nhanHang')}>
+                                <option value="HTM">HTM</option>
+                                <option value="VMA">VMA</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                            <ErrorMessage field="nhanHang" />
+                        </div>
 
-        <form id="report-form" ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/50 space-y-8 custom-scrollbar" style={{ fontFamily: 'var(--list-font, inherit)' }}>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* COLUMN LEFT: PRODUCT INFO */}
-            <div className="space-y-8">
-                <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                    <SectionHeader title="Thông tin Sản phẩm" icon={<TagIcon className="h-4 w-4" />} />
-                    <div className="space-y-5">
-                         <div>
-                            <label className="block text-sm font-bold text-slate-700">Mã sản phẩm <span className="text-red-500">*</span></label>
-                            <input 
-                                type="text" 
-                                name="maSanPham" 
-                                ref={productCodeInputRef}
-                                value={formData.maSanPham} 
-                                onChange={handleChange} 
-                                onBlur={handleBlur}
-                                disabled={isFieldDisabled('maSanPham') || isProductInfoLocked}
-                                className={getInputClasses('maSanPham', isProductInfoLocked)}
-                                style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                placeholder="Nhập mã hoặc chọn bên dưới..."
-                                list="productCodes"
-                                autoComplete="off"
-                            />
-                            <datalist id="productCodes">
-                                {products.map(p => <option key={p.maSanPham} value={p.maSanPham}>{p.tenThuongMai}</option>)}
-                            </datalist>
-                            {isProductInfoLocked && !isFieldDisabled('maSanPham') && (
-                                <p className="text-xs text-blue-500 mt-1 flex items-center"><LockClosedIcon className="w-3 h-3 mr-1"/>Tự động điền từ danh mục</p>
-                            )}
-                            <ErrorMessage field="maSanPham" />
+                        <div className="lg:col-span-1">
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Dòng sản phẩm <span className="text-red-500">*</span></label>
+                             <input list="dongSanPham-list" name="dongSanPham" value={formData.dongSanPham} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('dongSanPham', isProductInfoLocked)} disabled={isFieldDisabled('dongSanPham')} placeholder="Chọn hoặc nhập..." />
+                             <datalist id="dongSanPham-list">{availableLines.map(v => <option key={v} value={v} />)}</datalist>
+                             <ErrorMessage field="dongSanPham" />
+                        </div>
+
+                         <div className="lg:col-span-2">
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tên thiết bị y tế</label>
+                             <input list="tenThietBi-list" name="tenThietBi" value={formData.tenThietBi || ''} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('tenThietBi', isProductInfoLocked)} disabled={isFieldDisabled('tenThietBi')} placeholder="VD: Ống nghiệm..." />
+                             <datalist id="tenThietBi-list">{availableDeviceNames.map(v => <option key={v} value={v} />)}</datalist>
+                        </div>
+                        
+                        <div className="lg:col-span-2">
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tên thương mại <span className="text-red-500">*</span></label>
+                             <input list="tenThuongMai-list" name="tenThuongMai" value={formData.tenThuongMai} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('tenThuongMai', isProductInfoLocked)} disabled={isFieldDisabled('tenThuongMai')} placeholder="Nhập tên sản phẩm..." />
+                             <datalist id="tenThuongMai-list">{availableTradeNames.map(v => <option key={v} value={v} />)}</datalist>
+                             <ErrorMessage field="tenThuongMai" />
+                        </div>
+
+                         <div className="lg:col-span-1">
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mã sản phẩm <span className="text-red-500">*</span></label>
+                             <input ref={productCodeInputRef} type="text" name="maSanPham" value={formData.maSanPham} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('maSanPham', isProductInfoLocked)} disabled={isFieldDisabled('maSanPham')} placeholder="Mã..." />
+                             <ErrorMessage field="maSanPham" />
+                        </div>
+                        
+                        <div className="lg:col-span-1">
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Đơn vị tính</label>
+                             <input type="text" name="donViTinh" value={formData.donViTinh || ''} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('donViTinh', true)} readOnly />
+                        </div>
+
+                        <div className="lg:col-span-1">
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Số Lô <span className="text-red-500">*</span></label>
+                             <input type="text" name="soLo" value={formData.soLo} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('soLo')} disabled={isFieldDisabled('soLo')} placeholder="VD: 010124..." />
+                             <ErrorMessage field="soLo" />
+                        </div>
+
+                        <div className="lg:col-span-1">
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mã NSX</label>
+                             <input type="text" name="maNgaySanXuat" value={formData.maNgaySanXuat} onChange={handleChange} className={getInputClasses('maNgaySanXuat')} disabled={isFieldDisabled('maNgaySanXuat')} />
+                        </div>
+                        
+                        <div className="lg:col-span-1">
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Hạn dùng</label>
+                             <input type="date" name="hanDung" value={formData.hanDung ? formData.hanDung.split('T')[0] : ''} onChange={handleChange} className={getInputClasses('hanDung')} disabled={isFieldDisabled('hanDung')} />
+                        </div>
+                   </div>
+               </div>
+
+               {/* Distribution Section */}
+               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 group transition-all hover:shadow-md">
+                   <SectionHeader title="Thông tin Phân phối" icon={<BuildingStoreIcon className="w-5 h-5"/>} />
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nhà phân phối <span className="text-red-500">*</span></label>
+                             <input type="text" name="nhaPhanPhoi" value={formData.nhaPhanPhoi} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('nhaPhanPhoi')} disabled={isFieldDisabled('nhaPhanPhoi')} placeholder="Tên NPP..." />
+                             <ErrorMessage field="nhaPhanPhoi" />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-slate-700">Tên thương mại <span className="text-red-500">*</span></label>
-                            <input 
-                                type="text" 
-                                name="tenThuongMai" 
-                                value={formData.tenThuongMai} 
-                                onChange={handleChange}
-                                onBlur={handleBlur} 
-                                disabled={isFieldDisabled('tenThuongMai') || isProductInfoLocked}
-                                className={getInputClasses('tenThuongMai', isProductInfoLocked)}
-                                style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                list="tradeNames"
-                                autoComplete="off"
-                            />
-                             <datalist id="tradeNames">
-                                {availableTradeNames.map(t => <option key={t} value={t} />)}
-                            </datalist>
-                            <ErrorMessage field="tenThuongMai" />
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Đơn vị sử dụng</label>
+                             <input type="text" name="donViSuDung" value={formData.donViSuDung} onChange={handleChange} className={getInputClasses('donViSuDung')} disabled={isFieldDisabled('donViSuDung')} placeholder="Bệnh viện / Phòng khám..." />
                         </div>
+                   </div>
+               </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               {/* Defect Details Section */}
+               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 group transition-all hover:shadow-md">
+                   <SectionHeader title="Nội dung Khiếu nại" icon={<ShieldCheckIcon className="w-5 h-5"/>} />
+                   <div className="grid grid-cols-1 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700">Nhãn hàng <span className="text-red-500">*</span></label>
-                                <select 
-                                    name="nhanHang" 
-                                    value={formData.nhanHang} 
-                                    onChange={handleChange} 
-                                    onBlur={handleBlur}
-                                    disabled={isFieldDisabled('nhanHang')}
-                                    className={getInputClasses('nhanHang')}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                >
-                                    <option value="HTM">HTM</option>
-                                    <option value="VMA">VMA</option>
-                                    <option value="Khác">Khác</option>
-                                </select>
-                                <ErrorMessage field="nhanHang" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700">Dòng sản phẩm <span className="text-red-500">*</span></label>
-                                <input 
-                                    type="text" 
-                                    name="dongSanPham" 
-                                    value={formData.dongSanPham} 
-                                    onChange={handleChange}
-                                    onBlur={handleBlur} 
-                                    disabled={isFieldDisabled('dongSanPham') || isProductInfoLocked}
-                                    className={getInputClasses('dongSanPham', isProductInfoLocked)}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    list="lines"
-                                    autoComplete="off"
-                                />
-                                <datalist id="lines">
-                                    {availableLines.map(l => <option key={l} value={l} />)}
-                                </datalist>
-                                <ErrorMessage field="dongSanPham" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700">Tên thiết bị Y tế</label>
-                            <input 
-                                type="text" 
-                                name="tenThietBi" 
-                                value={formData.tenThietBi} 
-                                onChange={handleChange}
-                                onBlur={handleBlur} 
-                                disabled={isFieldDisabled('tenThietBi') || isProductInfoLocked}
-                                className={getInputClasses('tenThietBi', isProductInfoLocked)}
-                                style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                list="devices"
-                                autoComplete="off"
-                            />
-                            <datalist id="devices">
-                                {availableDeviceNames.map(d => <option key={d} value={d} />)}
-                            </datalist>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700">Số lô <span className="text-red-500">*</span></label>
-                                <input 
-                                    type="text" 
-                                    name="soLo" 
-                                    value={formData.soLo} 
-                                    onChange={handleChange}
-                                    onBlur={handleBlur} 
-                                    disabled={isFieldDisabled('soLo')}
-                                    className={getInputClasses('soLo')}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                />
-                                <ErrorMessage field="soLo" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700">Mã NSX</label>
-                                <input 
-                                    type="text" 
-                                    name="maNgaySanXuat" 
-                                    value={formData.maNgaySanXuat} 
-                                    onChange={handleChange}
-                                    onBlur={handleBlur} 
-                                    disabled={isFieldDisabled('maNgaySanXuat')}
-                                    className={getInputClasses('maNgaySanXuat')}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700">Hạn dùng</label>
-                                <input 
-                                    type="date" 
-                                    name="hanDung" 
-                                    value={formData.hanDung || ''} 
-                                    onChange={handleChange}
-                                    disabled={isFieldDisabled('hanDung')}
-                                    className={getInputClasses('hanDung')}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700">Đơn vị tính</label>
-                                <input 
-                                    type="text" 
-                                    name="donViTinh" 
-                                    value={formData.donViTinh || ''} 
-                                    onChange={handleChange} 
-                                    disabled={isFieldDisabled('donViTinh') || isProductInfoLocked}
-                                    className={getInputClasses('donViTinh', isProductInfoLocked)}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    placeholder="Hộp/Cái..."
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700">Nhà phân phối <span className="text-red-500">*</span></label>
-                            <input 
-                                type="text" 
-                                name="nhaPhanPhoi" 
-                                value={formData.nhaPhanPhoi} 
-                                onChange={handleChange} 
-                                onBlur={handleBlur}
-                                disabled={isFieldDisabled('nhaPhanPhoi')}
-                                className={getInputClasses('nhaPhanPhoi')}
-                                style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                list="distributors"
-                            />
-                            <datalist id="distributors">
-                                {/* Can populate from existing data later */}
-                            </datalist>
-                            <ErrorMessage field="nhaPhanPhoi" />
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            {/* COLUMN RIGHT: REPORT DETAILS & RESOLUTION */}
-            <div className="space-y-8">
-                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                    <SectionHeader title="Chi tiết Khiếu nại" icon={<ClipboardDocumentListIcon className="h-4 w-4" />} />
-                    <div className="space-y-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700">Ngày khiếu nại <span className="text-red-500">*</span></label>
-                                <input 
-                                    type="date" 
-                                    name="ngayPhanAnh" 
-                                    value={formData.ngayPhanAnh} 
-                                    onChange={handleChange} 
-                                    onBlur={handleBlur}
-                                    disabled={isFieldDisabled('ngayPhanAnh')}
-                                    className={getInputClasses('ngayPhanAnh')}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                />
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ngày phản ánh <span className="text-red-500">*</span></label>
+                                <input type="date" name="ngayPhanAnh" value={formData.ngayPhanAnh.split('T')[0]} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('ngayPhanAnh')} disabled={isFieldDisabled('ngayPhanAnh')} />
                                 <ErrorMessage field="ngayPhanAnh" />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700">Đơn vị sử dụng</label>
-                                <input 
-                                    type="text" 
-                                    name="donViSuDung" 
-                                    value={formData.donViSuDung} 
-                                    onChange={handleChange}
-                                    onBlur={handleBlur} 
-                                    disabled={isFieldDisabled('donViSuDung')}
-                                    className={getInputClasses('donViSuDung')}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                />
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nguồn gốc lỗi <span className="text-red-500">*</span></label>
+                                <select name="loaiLoi" value={formData.loaiLoi} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('loaiLoi')} disabled={isFieldDisabled('loaiLoi')}>
+                                    <option value="" disabled>-- Chọn loại lỗi --</option>
+                                    <option value="Lỗi Sản xuất">Lỗi Sản xuất</option>
+                                    <option value="Lỗi Nhà cung cấp">Lỗi Nhà cung cấp</option>
+                                    <option value="Lỗi Hỗn hợp">Lỗi Hỗn hợp</option>
+                                    <option value="Lỗi Khác">Lỗi Khác</option>
+                                </select>
+                                <ErrorMessage field="loaiLoi" />
                             </div>
-                        </div>
-                        
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700">Nguồn gốc lỗi <span className="text-red-500">*</span></label>
-                            <select 
-                                name="loaiLoi" 
-                                value={formData.loaiLoi || ''} 
-                                onChange={handleChange}
-                                onBlur={handleBlur} 
-                                disabled={isFieldDisabled('loaiLoi')}
-                                className={getInputClasses('loaiLoi')}
-                                style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                            >
-                                <option value="" disabled>-- Chọn nguồn gốc --</option>
-                                <option value="Lỗi Sản xuất">Lỗi Sản xuất</option>
-                                <option value="Lỗi Nhà cung cấp">Lỗi Nhà cung cấp</option>
-                                <option value="Lỗi Hỗn hợp">Lỗi Hỗn hợp</option>
-                                <option value="Lỗi Khác">Lỗi Khác</option>
-                            </select>
-                            <ErrorMessage field="loaiLoi" />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700">Nội dung khiếu nại <span className="text-red-500">*</span></label>
-                            <textarea 
-                                name="noiDungPhanAnh" 
-                                value={formData.noiDungPhanAnh} 
-                                onChange={handleChange} 
-                                onBlur={handleBlur}
-                                disabled={isFieldDisabled('noiDungPhanAnh')}
-                                className={getInputClasses('noiDungPhanAnh')}
-                                style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                rows={4}
-                            />
-                            <ErrorMessage field="noiDungPhanAnh" />
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mô tả nội dung <span className="text-red-500">*</span></label>
+                             <textarea rows={4} name="noiDungPhanAnh" value={formData.noiDungPhanAnh} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('noiDungPhanAnh')} disabled={isFieldDisabled('noiDungPhanAnh')} placeholder="Mô tả chi tiết tình trạng..." />
+                             <ErrorMessage field="noiDungPhanAnh" />
                         </div>
-                        
-                        {/* IMAGE PROOF SECTION - UPDATED WITH UPLOAD */}
-                        <div className="mt-4">
-                             <label className="block text-sm font-bold text-slate-700 mb-2">Hình ảnh minh chứng</label>
-                             <div className="flex gap-2 mb-2 flex-col sm:flex-row">
-                                <div className="flex-1 flex gap-2">
-                                    <input 
+
+                        {/* Images Upload */}
+                        <div>
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Hình ảnh minh chứng</label>
+                             <div className="flex flex-wrap gap-3">
+                                 {formData.images && formData.images.map((img, idx) => (
+                                     <div key={idx} className="relative w-24 h-24 rounded-lg border border-slate-200 overflow-hidden group/img">
+                                         <img src={img} alt="evidence" className="w-full h-full object-cover" />
+                                         <button type="button" onClick={() => handleRemoveImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                             <TrashIcon className="w-3 h-3" />
+                                         </button>
+                                     </div>
+                                 ))}
+                                 
+                                 <div className="w-24 h-24 rounded-lg border-2 border-dashed border-slate-300 hover:border-blue-500 hover:bg-blue-50 transition-colors flex flex-col items-center justify-center cursor-pointer relative">
+                                     <ArrowUpTrayIcon className="w-6 h-6 text-slate-400 mb-1" />
+                                     <span className="text-[10px] text-slate-500 font-bold uppercase">Upload</span>
+                                     <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        onChange={handleFileUpload} 
+                                        className="absolute inset-0 opacity-0 cursor-pointer" 
+                                        accept="image/*"
+                                     />
+                                 </div>
+                                 
+                                 {/* URL Input Alternative */}
+                                 <div className="flex items-center gap-2 w-full mt-2">
+                                     <input 
                                         type="text" 
                                         name="imageUrlInput"
                                         value={newImageUrl}
                                         onChange={(e) => setNewImageUrl(e.target.value)}
-                                        placeholder="Dán URL ảnh hoặc..."
-                                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
-                                        style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    />
-                                    <button 
-                                        type="button" 
-                                        onClick={handleAddImage}
-                                        className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg font-bold hover:bg-blue-100 transition-colors whitespace-nowrap"
-                                    >
-                                        <PlusIcon className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                <div className="flex items-center">
-                                    <span className="text-slate-400 text-xs px-2">Hoặc</span>
-                                    <input 
-                                        type="file" 
-                                        ref={fileInputRef}
-                                        accept="image/*"
-                                        onChange={handleFileUpload}
-                                        className="hidden"
-                                    />
-                                    <button 
-                                        type="button"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="px-4 py-2 bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-200 transition-colors flex items-center"
-                                    >
-                                        <ArrowUpTrayIcon className="w-4 h-4 mr-2" />
-                                        Tải ảnh lên
-                                    </button>
-                                </div>
-                             </div>
-                             
-                             {formData.images && formData.images.length > 0 && (
-                                 <div className="grid grid-cols-4 gap-2 mt-2">
-                                     {formData.images.map((img, idx) => (
-                                         <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-slate-200">
-                                             <img src={img} alt="Evidence" className="w-full h-full object-cover" />
-                                             <button 
-                                                type="button"
-                                                onClick={() => handleRemoveImage(idx)}
-                                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                             >
-                                                 <XIcon className="w-3 h-3" />
-                                             </button>
-                                         </div>
-                                     ))}
+                                        placeholder="Hoặc dán URL ảnh..." 
+                                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddImage(); }}}
+                                     />
+                                     <button type="button" onClick={handleAddImage} className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-bold text-slate-600">Thêm</button>
                                  </div>
-                             )}
+                             </div>
                         </div>
+                   </div>
+               </div>
 
-                        {/* QUANTITY SUB-SECTION */}
-                        <div className="pt-4 border-t border-slate-100">
-                             <div className="flex items-center gap-2 mb-3">
-                                 <BuildingStoreIcon className="w-4 h-4 text-slate-400" />
-                                 <span className="text-xs font-bold text-slate-500 uppercase">Thông tin Số lượng</span>
-                             </div>
-                             <div className="grid grid-cols-3 gap-4">
-                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Đã nhập</label>
-                                    <input 
-                                        type="number" 
-                                        name="soLuongDaNhap" 
-                                        value={formData.soLuongDaNhap} 
-                                        onChange={handleChange} 
-                                        disabled={isFieldDisabled('soLuongDaNhap')}
-                                        className={getInputClasses('soLuongDaNhap')}
-                                        style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    />
-                                 </div>
-                                 <div>
-                                    <label className="block text-xs font-bold text-red-500 uppercase mb-1">Lỗi</label>
-                                    <input 
-                                        type="number" 
-                                        name="soLuongLoi" 
-                                        value={formData.soLuongLoi} 
-                                        onChange={handleChange} 
-                                        disabled={isFieldDisabled('soLuongLoi')}
-                                        className={getInputClasses('soLuongLoi')}
-                                        style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    />
-                                 </div>
-                                 <div>
-                                    <label className="block text-xs font-bold text-emerald-500 uppercase mb-1">Đổi</label>
-                                    <input 
-                                        type="number" 
-                                        name="soLuongDoi" 
-                                        value={formData.soLuongDoi} 
-                                        onChange={handleChange} 
-                                        disabled={isFieldDisabled('soLuongDoi')}
-                                        className={getInputClasses('soLuongDoi')}
-                                        style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    />
-                                 </div>
-                             </div>
-                             <div className="mt-3">
-                                 <label className="block text-sm font-bold text-slate-700">Ngày đổi hàng</label>
-                                 <input 
-                                    type="date" 
-                                    name="ngayDoiHang" 
-                                    value={formData.ngayDoiHang || ''} 
-                                    onChange={handleChange} 
-                                    onBlur={handleBlur}
-                                    disabled={isFieldDisabled('ngayDoiHang')}
-                                    className={getInputClasses('ngayDoiHang')}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                />
-                             </div>
+               {/* Processing / Resolution Section */}
+               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 group transition-all hover:shadow-md border-l-4 border-l-emerald-500">
+                   <SectionHeader title="Xử lý & Khắc phục" icon={<WrenchIcon className="w-5 h-5"/>} />
+                   
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Số lượng đã nhập</label>
+                             <input type="number" name="soLuongDaNhap" value={formData.soLuongDaNhap} onChange={handleChange} className={getInputClasses('soLuongDaNhap')} min={0} />
+                        </div>
+                        <div>
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Số lượng lỗi</label>
+                             <input type="number" name="soLuongLoi" value={formData.soLuongLoi} onChange={handleChange} className={getInputClasses('soLuongLoi')} min={0} />
+                        </div>
+                        <div>
+                             <label className="block text-xs font-bold text-emerald-600 uppercase mb-1">Số lượng đổi</label>
+                             <input type="number" name="soLuongDoi" value={formData.soLuongDoi} onChange={handleChange} className={getInputClasses('soLuongDoi')} disabled={isFieldDisabled('soLuongDoi')} min={0} />
+                        </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 gap-6">
+                        <div>
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nguyên nhân <span className="text-xs text-slate-400 font-normal normal-case">(Bắt buộc nếu hoàn thành)</span></label>
+                             <textarea rows={3} name="nguyenNhan" value={formData.nguyenNhan} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('nguyenNhan')} disabled={isFieldDisabled('nguyenNhan')} placeholder="Phân tích nguyên nhân..." />
+                             <ErrorMessage field="nguyenNhan" />
+                        </div>
+                        <div>
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Biện pháp khắc phục <span className="text-xs text-slate-400 font-normal normal-case">(Bắt buộc nếu hoàn thành)</span></label>
+                             <textarea rows={3} name="huongKhacPhuc" value={formData.huongKhacPhuc} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('huongKhacPhuc')} disabled={isFieldDisabled('huongKhacPhuc')} placeholder="Hướng xử lý..." />
+                             <ErrorMessage field="huongKhacPhuc" />
+                        </div>
+                   </div>
+               </div>
+               
+               {/* Status Section */}
+               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-inner">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 items-end">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Trạng thái xử lý <span className="text-red-500">*</span></label>
+                            <select name="trangThai" value={formData.trangThai} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('trangThai')} disabled={isFieldDisabled('trangThai')}>
+                                <option value="Mới">Mới</option>
+                                <option value="Đang tiếp nhận">Đang tiếp nhận</option>
+                                <option value="Đang xác minh">Đang xác minh</option>
+                                <option value="Đang xử lý">Đang xử lý</option>
+                                <option value="Chưa tìm ra nguyên nhân">Chưa tìm ra nguyên nhân</option>
+                                <option value="Hoàn thành">Hoàn thành</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ngày hoàn thành</label>
+                            <input type="date" name="ngayHoanThanh" value={formData.ngayHoanThanh ? formData.ngayHoanThanh.split('T')[0] : ''} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('ngayHoanThanh')} disabled={isFieldDisabled('ngayHoanThanh')} />
+                            <ErrorMessage field="ngayHoanThanh" />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ngày đổi hàng</label>
+                            <input type="date" name="ngayDoiHang" value={formData.ngayDoiHang ? formData.ngayDoiHang.split('T')[0] : ''} onChange={handleChange} className={getInputClasses('ngayDoiHang')} disabled={isFieldDisabled('ngayDoiHang')} />
                         </div>
                     </div>
-                 </section>
-
-                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                    <div className="relative pl-2">
-                        <SectionHeader title="Xử lý & Khắc phục" icon={<WrenchIcon className="h-4 w-4" />} />
-                        <div className="space-y-5">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700">Nguyên nhân</label>
-                                <textarea 
-                                    name="nguyenNhan" 
-                                    value={formData.nguyenNhan} 
-                                    onChange={handleChange} 
-                                    onBlur={handleBlur}
-                                    disabled={isFieldDisabled('nguyenNhan')}
-                                    className={getInputClasses('nguyenNhan')}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    rows={3}
-                                />
-                                <ErrorMessage field="nguyenNhan" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700">Hướng khắc phục</label>
-                                <textarea 
-                                    name="huongKhacPhuc" 
-                                    value={formData.huongKhacPhuc} 
-                                    onChange={handleChange} 
-                                    onBlur={handleBlur}
-                                    disabled={isFieldDisabled('huongKhacPhuc')}
-                                    className={getInputClasses('huongKhacPhuc')}
-                                    style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    rows={3}
-                                />
-                                <ErrorMessage field="huongKhacPhuc" />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700">Trạng thái <span className="text-red-500">*</span></label>
-                                    <select 
-                                        name="trangThai" 
-                                        value={formData.trangThai} 
-                                        onChange={handleChange} 
-                                        onBlur={handleBlur}
-                                        disabled={isFieldDisabled('trangThai')}
-                                        className={getInputClasses('trangThai')}
-                                        style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    >
-                                        <option value="Mới">Mới</option>
-                                        <option value="Đang tiếp nhận">Đang tiếp nhận</option>
-                                        <option value="Đang xác minh">Đang xác minh</option>
-                                        <option value="Đang xử lý">Đang xử lý</option>
-                                        <option value="Chưa tìm ra nguyên nhân">Chưa tìm ra nguyên nhân</option>
-                                        <option value="Hoàn thành">Hoàn thành</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700">Ngày hoàn thành</label>
-                                    <input 
-                                        type="date" 
-                                        name="ngayHoanThanh" 
-                                        value={formData.ngayHoanThanh || ''} 
-                                        onChange={handleChange} 
-                                        onBlur={handleBlur}
-                                        disabled={isFieldDisabled('ngayHoanThanh')}
-                                        className={getInputClasses('ngayHoanThanh')}
-                                        style={{ fontSize: 'inherit', fontFamily: 'inherit' }}
-                                    />
-                                    <ErrorMessage field="ngayHoanThanh" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                 </section>
-            </div>
-          </div>
+               </div>
+          </form>
           
-          <div className="flex justify-end pt-5 border-t border-slate-200">
-             <button 
-                type="button" 
-                onClick={handleCloseAttempt} 
-                className="px-6 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95 mr-3"
-             >
-                Hủy bỏ
-             </button>
-             <button 
-                type="submit" 
-                className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-95 active:translate-y-0 flex items-center"
-             >
-                <CheckCircleIcon className="h-5 w-5 mr-2" />
-                Lưu khiếu nại
-             </button>
+          {/* Footer Actions */}
+          <div className="p-5 border-t border-slate-200 bg-white flex justify-between items-center z-10">
+              <div className="text-xs text-slate-400 italic hidden sm:block">
+                  * Các trường bắt buộc phải điền
+              </div>
+              <div className="flex gap-3 w-full sm:w-auto justify-end">
+                  <button onClick={handleCloseAttempt} type="button" className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-all active:scale-95 text-sm">
+                      Hủy bỏ
+                  </button>
+                  <button onClick={handleSubmit} type="button" className="px-6 py-2.5 rounded-xl bg-[#003DA5] text-white font-bold hover:bg-[#002a70] shadow-lg shadow-blue-900/20 transition-all active:scale-95 flex items-center text-sm">
+                      <CheckCircleIcon className="w-5 h-5 mr-2" />
+                      Lưu phiếu
+                  </button>
+              </div>
           </div>
-        </form>
-      </div>
+       </div>
     </div>
   );
 };

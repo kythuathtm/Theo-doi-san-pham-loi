@@ -1,8 +1,12 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { DefectReport, UserRole, ActivityLog } from '../types';
-import { PencilIcon, TrashIcon, XIcon, WrenchIcon, QuestionMarkCircleIcon, ClipboardDocumentListIcon, TagIcon, UserIcon, CheckCircleIcon, CalendarIcon, CompanyLogo, ListBulletIcon, ChatBubbleLeftIcon, ClockIcon } from './Icons';
 import { useReactToPrint } from 'react-to-print';
+import { DefectReport, UserRole, ActivityLog } from '../types';
+import { 
+  PencilIcon, TrashIcon, XIcon, WrenchIcon, ClipboardDocumentListIcon, 
+  TagIcon, ChatBubbleLeftIcon, ClockIcon, CheckCircleIcon, ArrowDownTrayIcon, 
+  BuildingStoreIcon, CalendarIcon, PaperAirplaneIcon, MapPinIcon, UserGroupIcon,
+  ArchiveBoxIcon, ExclamationTriangleIcon, CubeIcon, PrinterIcon
+} from './Icons';
 
 interface Props {
   report: DefectReport;
@@ -16,55 +20,168 @@ interface Props {
   onAddComment: (reportId: string, content: string, user: { username: string, role: string }) => Promise<boolean>;
 }
 
-const DetailItem = ({ label, value, className, fullWidth }: any) => {
-    if (value === null || value === undefined || value === '') return null;
+// --- Helper Components ---
+
+interface DetailRowProps {
+  label: string;
+  value: React.ReactNode;
+  className?: string;
+  wrapperClass?: string;
+  icon?: React.ReactNode;
+}
+
+const DetailRow: React.FC<DetailRowProps> = ({ label, value, className = "text-slate-800", wrapperClass = "col-span-1", icon }) => {
+    const hasValue = value !== null && value !== undefined && value !== '';
+    const displayValue = hasValue ? value : <span className="text-slate-300 italic font-normal text-xs">---</span>;
+
     return (
-        <div className={fullWidth ? 'col-span-full' : ''}>
-            <dt className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</dt>
-            <dd className={`text-slate-800 break-words font-normal ${className}`} style={{ fontSize: 'var(--list-size, 1rem)' }}>{value}</dd>
+        <div className={`flex flex-col ${wrapperClass}`}>
+            <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5 truncate">
+                {icon && <span className="opacity-70">{icon}</span>}
+                {label}
+            </dt>
+            <dd className={`text-sm font-medium break-words bg-slate-50/50 px-3 py-2.5 rounded-lg border border-slate-100 min-h-[40px] flex items-center shadow-sm ${hasValue ? className : ''}`}>
+                {displayValue}
+            </dd>
         </div>
     );
 };
 
-const Section = ({ title, icon, children, delay = 0 }: any) => (
-    <div 
-        className="bg-white p-4 sm:p-6 rounded-none sm:rounded-2xl border-y sm:border border-slate-200 shadow-none sm:shadow-sm h-full flex flex-col transition-all duration-300 hover:shadow-md animate-fade-in-up fill-mode-backwards"
-        style={{ animationDelay: `${delay}ms` }}
-    >
-        <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5 flex items-center gap-2">
-            <span className="p-1.5 bg-slate-50 text-slate-500 rounded-lg border border-slate-100">{icon}</span>
-            {title}
-        </h4>
-        <div className="flex-1">
+interface SectionCardProps {
+    title: string;
+    icon: React.ReactNode;
+    children?: React.ReactNode;
+    className?: string;
+    headerAction?: React.ReactNode;
+    gradient?: string;
+}
+
+const SectionCard: React.FC<SectionCardProps> = ({ title, icon, children, className = "", headerAction, gradient }) => (
+    <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col transition-all hover:shadow-md group ${className}`}>
+        {gradient && <div className={`h-1 w-full bg-gradient-to-r rounded-t-2xl ${gradient}`}></div>}
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white rounded-t-2xl">
+            <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-slate-50 text-slate-500 rounded-xl border border-slate-100 shadow-sm group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
+                    {icon}
+                </div>
+                <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wide">{title}</h4>
+            </div>
+            {headerAction}
+        </div>
+        <div className="p-5 flex-1 relative">
             {children}
         </div>
     </div>
 );
 
-const TimelineItem = ({ log }: { log: ActivityLog }) => (
-  <div className="flex gap-4 pb-6 last:pb-0 relative animate-fade-in">
-    {/* Line connector */}
-    <div className="absolute top-0 left-[19px] bottom-0 w-px bg-slate-200 last:hidden"></div>
-    
-    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 z-10 ring-4 ring-white shadow-sm border border-slate-100 ${
-      log.type === 'comment' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-500'
-    }`}>
-      {log.type === 'comment' ? <ChatBubbleLeftIcon className="w-5 h-5"/> : <ClockIcon className="w-5 h-5"/>}
-    </div>
-    
-    <div className="flex-1 bg-slate-50 rounded-xl p-3 border border-slate-100 shadow-sm">
-      <div className="flex justify-between items-start mb-1">
-        <span className="text-xs font-bold text-slate-700">{log.user} <span className="font-normal text-slate-400">({log.role})</span></span>
-        <span className="text-[10px] text-slate-400 font-medium">{new Date(log.timestamp).toLocaleString('vi-VN')}</span>
+const TimelineItem: React.FC<{ log: ActivityLog }> = ({ log }) => {
+  const isComment = log.type === 'comment';
+  return (
+    <div className="flex gap-4 pb-8 last:pb-2 relative animate-fade-in group">
+      {/* Line connector */}
+      <div className="absolute top-4 left-[15px] bottom-0 w-px bg-slate-200 group-last:hidden"></div>
+      
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 ring-4 ring-white shadow-sm border transition-colors ${
+        isComment ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-slate-50 border-slate-200 text-slate-400'
+      }`}>
+        {isComment ? <ChatBubbleLeftIcon className="w-4 h-4"/> : <ClockIcon className="w-4 h-4"/>}
       </div>
-      <p className="text-sm text-slate-600 leading-relaxed">{log.content}</p>
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-baseline mb-1.5">
+          <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
+              {log.user}
+              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md border ${isComment ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                {log.role || 'System'}
+              </span>
+          </span>
+          <span className="text-[10px] text-slate-400 font-medium tabular-nums">{new Date(log.timestamp).toLocaleString('vi-VN')}</span>
+        </div>
+        <div className={`text-sm leading-relaxed p-3.5 rounded-2xl rounded-tl-none border shadow-sm relative group-hover:shadow-md transition-shadow ${
+            isComment 
+            ? 'bg-blue-50/30 border-blue-100/60 text-slate-700' 
+            : 'bg-white border-slate-200 text-slate-600 italic'
+        }`}>
+            {log.content}
+            {/* Triangle for bubble effect */}
+            <div className={`absolute -left-[6px] top-0 w-0 h-0 border-t-[8px] border-r-[8px] border-l-0 border-b-0 border-transparent ${isComment ? 'border-t-blue-100/60' : 'border-t-slate-200'}`}></div>
+            <div className={`absolute -left-[4px] top-[1px] w-0 h-0 border-t-[6px] border-r-[6px] border-l-0 border-b-0 border-transparent ${isComment ? 'border-t-[#f8faff]' : 'border-t-white'}`}></div>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+// Visual Progress Stepper for Report Status
+const StatusStepper = ({ currentStatus }: { currentStatus: string }) => {
+    const steps = ['Mới', 'Đang tiếp nhận', 'Đang xác minh', 'Đang xử lý', 'Hoàn thành'];
+    const currentIndex = steps.indexOf(currentStatus);
+    const isErrorState = currentStatus === 'Chưa tìm ra nguyên nhân';
+
+    return (
+        <div className="w-full py-6 px-4 mb-4 bg-white border-b border-slate-100 overflow-x-auto print:hidden">
+            <div className="flex items-center justify-between min-w-[600px] relative mx-auto max-w-4xl">
+                {/* Background Line */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 rounded-full -z-10"></div>
+                
+                {/* Active Line */}
+                <div 
+                    className={`absolute left-0 top-1/2 -translate-y-1/2 h-1 rounded-full -z-10 transition-all duration-700 ease-in-out ${isErrorState ? 'bg-purple-200' : 'bg-blue-500'}`}
+                    style={{ width: isErrorState ? '100%' : `${(currentIndex / (steps.length - 1)) * 100}%` }}
+                ></div>
+
+                {steps.map((step, index) => {
+                    let status = 'pending'; // pending, active, completed
+                    if (isErrorState) {
+                         // Keep visually distinct but generally "active" for steps passed
+                         if (index < 4) status = 'completed'; // Assuming error happens before completion
+                    } else {
+                        if (index < currentIndex) status = 'completed';
+                        else if (index === currentIndex) status = 'active';
+                    }
+                    
+                    return (
+                        <div key={step} className="flex flex-col items-center gap-3 relative group">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-[3px] transition-all duration-500 z-10 ${
+                                status === 'completed' ? 'border-blue-500 bg-blue-500 text-white scale-100' :
+                                status === 'active' ? 'border-blue-500 bg-white text-blue-600 shadow-[0_0_0_4px_rgba(59,130,246,0.15)] scale-110' :
+                                'border-slate-200 bg-white text-slate-300'
+                            }`}>
+                                {status === 'completed' ? (
+                                    <CheckCircleIcon className="w-6 h-6" />
+                                ) : (
+                                    <span className="text-sm font-bold">{index + 1}</span>
+                                )}
+                            </div>
+                            <span className={`text-[11px] font-bold uppercase tracking-wider absolute -bottom-8 w-32 text-center transition-colors duration-300 ${
+                                status === 'active' ? 'text-blue-700' : 
+                                status === 'completed' ? 'text-slate-600' : 'text-slate-400'
+                            }`}>
+                                {step}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+            
+            {isErrorState && (
+                <div className="mt-8 flex justify-center animate-pulse">
+                    <span className="px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold border border-purple-200 flex items-center gap-2 shadow-sm">
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse"></span>
+                        Đang ở trạng thái: Chưa tìm ra nguyên nhân
+                    </span>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// --- Main Component ---
 
 const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelete, permissions, onClose, currentUserRole, currentUsername, onAddComment }) => {
-  const canSeeLoaiLoi = ([UserRole.Admin, UserRole.TongGiamDoc, UserRole.CungUng, UserRole.KyThuat] as string[]).includes(currentUserRole);
-  
+  // Tabs: 'info' (Information + Resolution), 'log' (Log + Chat)
+  const [activeTab, setActiveTab] = useState<'info' | 'log'>('info');
+
   const [quickUpdateData, setQuickUpdateData] = useState({
       nguyenNhan: report.nguyenNhan || '',
       huongKhacPhuc: report.huongKhacPhuc || '',
@@ -74,7 +191,16 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
   });
   
   const [isUpdating, setIsUpdating] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState('');
+  const [isSendingComment, setIsSendingComment] = useState(false);
+  const commentEndRef = useRef<HTMLDivElement>(null);
+  
+  // Printing Logic
+  const componentRef = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+      contentRef: componentRef,
+      documentTitle: `Phieu_Khieu_Nai_${report.id}`,
+  });
   
   // Granular edit state
   const [editingSections, setEditingSections] = useState({
@@ -83,74 +209,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
       soLuong: false
   });
 
-  const printRef = useRef<HTMLDivElement>(null);
-
-  const handlePrint = useReactToPrint({
-      contentRef: printRef,
-      documentTitle: `Phieu_Khieu_Nai_${report.maSanPham}_${report.id.slice(0, 6)}`,
-      bodyClass: 'bg-white',
-  });
-
-  const isEditing = Object.values(editingSections).some(Boolean);
-
-  // Sync local state when report updates from parent (Real-time update)
+  // Sync state when report prop updates
   useEffect(() => {
-    if (!isEditing) {
-        setQuickUpdateData({
-            nguyenNhan: report.nguyenNhan || '',
-            huongKhacPhuc: report.huongKhacPhuc || '',
-            soLuongDoi: report.soLuongDoi || 0,
-            ngayDoiHang: report.ngayDoiHang || '',
-            trangThai: report.trangThai
-        });
-    }
-  }, [report, isEditing]);
-
-  const getLoaiLoiBadge = (loaiLoi: string) => {
-    let style = 'bg-slate-100 text-slate-600 border-slate-200';
-    if (loaiLoi === 'Lỗi Hỗn hợp') style = 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200';
-    else if (loaiLoi === 'Lỗi Sản xuất') style = 'bg-rose-50 text-rose-700 border-rose-200';
-    else if (loaiLoi === 'Lỗi Nhà cung cấp') style = 'bg-orange-50 text-orange-700 border-orange-200';
-    
-    return <span className={`px-2 py-1 rounded-md text-sm font-bold border ${style}`}>{loaiLoi}</span>;
-  };
-
-  const handleQuickUpdate = async () => {
-      setIsUpdating(true);
-      try {
-          const updates: any = {
-              nguyenNhan: quickUpdateData.nguyenNhan,
-              huongKhacPhuc: quickUpdateData.huongKhacPhuc,
-              soLuongDoi: Number(quickUpdateData.soLuongDoi),
-              ngayDoiHang: quickUpdateData.ngayDoiHang,
-              trangThai: quickUpdateData.trangThai
-          };
-
-          let message = "Đã cập nhật thông tin xử lý.";
-          // Logic: Auto-complete if everything is filled
-          if (updates.nguyenNhan && updates.huongKhacPhuc && updates.soLuongDoi > 0 && report.trangThai !== 'Hoàn thành' && updates.trangThai !== 'Hoàn thành') {
-              updates.trangThai = 'Hoàn thành';
-              updates.ngayHoanThanh = new Date().toISOString().split('T')[0];
-              message = "Đã cập nhật thông tin và chuyển trạng thái sang HOÀN THÀNH do đủ điều kiện.";
-          }
-          
-          if (updates.trangThai === 'Hoàn thành' && !report.ngayHoanThanh) {
-               updates.ngayHoanThanh = new Date().toISOString().split('T')[0];
-          }
-
-          const success = await onUpdate(report.id, updates, message, { username: currentUsername, role: currentUserRole });
-          
-          if (success) {
-              setEditingSections({ nguyenNhan: false, huongKhacPhuc: false, soLuong: false });
-          }
-      } catch (e) {
-          console.error(e);
-      } finally {
-          setIsUpdating(false);
-      }
-  };
-
-  const cancelQuickEdit = () => {
       setQuickUpdateData({
           nguyenNhan: report.nguyenNhan || '',
           huongKhacPhuc: report.huongKhacPhuc || '',
@@ -158,464 +218,525 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
           ngayDoiHang: report.ngayDoiHang || '',
           trangThai: report.trangThai
       });
-      setEditingSections({ nguyenNhan: false, huongKhacPhuc: false, soLuong: false });
-  };
-  
-  const startEditing = (section: keyof typeof editingSections) => {
-      if (permissions.canEdit) {
-          setEditingSections(prev => ({ ...prev, [section]: true }));
+  }, [report]);
+
+  // Scroll to bottom of comments when opened or new comment added
+  useEffect(() => {
+    if (activeTab === 'log' && commentEndRef.current) {
+        commentEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [report.activityLog?.length, activeTab]);
+
+  const handleQuickUpdate = async () => {
+      setIsUpdating(true);
+      const updates: any = {};
+      
+      if (editingSections.nguyenNhan) updates.nguyenNhan = quickUpdateData.nguyenNhan;
+      if (editingSections.huongKhacPhuc) updates.huongKhacPhuc = quickUpdateData.huongKhacPhuc;
+      if (editingSections.soLuong) {
+          updates.soLuongDoi = Number(quickUpdateData.soLuongDoi);
+          updates.ngayDoiHang = quickUpdateData.ngayDoiHang;
       }
+      updates.trangThai = quickUpdateData.trangThai;
+
+      if (updates.trangThai === 'Hoàn thành' && !report.ngayHoanThanh) {
+          const d = new Date();
+          const y = d.getFullYear();
+          const m = (`0${d.getMonth() + 1}`).slice(-2);
+          const day = (`0${d.getDate()}`).slice(-2);
+          updates.ngayHoanThanh = `${y}-${m}-${day}`;
+      }
+
+      const user = { username: currentUsername, role: currentUserRole };
+      const success = await onUpdate(report.id, updates, 'Đã cập nhật thông tin xử lý.', user);
+      if (success) {
+          setEditingSections({ nguyenNhan: false, huongKhacPhuc: false, soLuong: false });
+      }
+      setIsUpdating(false);
   };
 
-  const enableEditAll = () => {
-      if (permissions.canEdit) {
-          setEditingSections({ nguyenNhan: true, huongKhacPhuc: true, soLuong: true });
+  const handleSendComment = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newComment.trim()) return;
+
+      setIsSendingComment(true);
+      const success = await onAddComment(report.id, newComment, { username: currentUsername, role: currentUserRole });
+      if (success) {
+          setNewComment('');
       }
+      setIsSendingComment(false);
   };
 
-  const getStatusBadgeStyle = (status: DefectReport['trangThai']) => {
+  const getStatusColor = (status: string) => {
       switch (status) {
-          case 'Mới': return 'bg-blue-50 text-blue-700 border-blue-200';
-          case 'Đang tiếp nhận': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-          case 'Đang xác minh': return 'bg-cyan-50 text-cyan-700 border-cyan-200';
-          case 'Đang xử lý': return 'bg-amber-50 text-amber-700 border-amber-200';
-          case 'Chưa tìm ra nguyên nhân': return 'bg-purple-50 text-purple-700 border-purple-200';
-          case 'Hoàn thành': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-          default: return 'bg-slate-50 text-slate-700 border-slate-200';
+          case 'Mới': return 'bg-blue-50 text-blue-700 border-blue-200 ring-blue-500/10';
+          case 'Đang tiếp nhận': return 'bg-indigo-50 text-indigo-700 border-indigo-200 ring-indigo-500/10';
+          case 'Đang xác minh': return 'bg-cyan-50 text-cyan-700 border-cyan-200 ring-cyan-500/10';
+          case 'Đang xử lý': return 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-500/10';
+          case 'Chưa tìm ra nguyên nhân': return 'bg-purple-50 text-purple-700 border-purple-200 ring-purple-500/10';
+          case 'Hoàn thành': return 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-500/10';
+          default: return 'bg-slate-50 text-slate-700 border-slate-200 ring-slate-500/10';
       }
-  }
+  };
 
   return (
-    <>
-      <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 bg-white/95 backdrop-blur-xl flex justify-between items-start sticky top-0 z-30 shadow-sm transition-all">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded uppercase shadow-sm">{report.maSanPham}</span>
-                <span className="text-xs text-slate-300">•</span>
-                <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
-                    <CalendarIcon className="w-3.5 h-3.5" />
-                    {new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}
-                </span>
+    <div className="flex flex-col h-full bg-[#f8fafc] font-sans">
+      <style type="text/css" media="print">
+        {`
+          @page { size: A4; margin: 15mm; }
+          body { -webkit-print-color-adjust: exact; }
+        `}
+      </style>
+      
+      {/* 1. Sticky Header */}
+      <div className="flex flex-col border-b border-slate-200 bg-white shadow-sm z-30 sticky top-0 print:hidden">
+          <div className="flex justify-between items-center px-4 py-3 sm:px-6">
+            <div className="flex items-center gap-4 min-w-0">
+                <div className={`hidden sm:flex px-3 py-1.5 rounded-lg text-[11px] font-extrabold border uppercase tracking-wider ring-4 ${getStatusColor(report.trangThai)}`}>
+                        {report.trangThai}
+                </div>
+                <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-[10px] text-slate-400 font-mono font-bold bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">#{report.id.substring(0,8)}</span>
+                            <span className="sm:hidden text-[10px] font-extrabold uppercase text-slate-500">{report.trangThai}</span>
+                        </div>
+                        <h2 className="text-lg sm:text-xl font-black text-slate-800 leading-tight truncate" title={report.tenThuongMai}>
+                            {report.tenThuongMai}
+                        </h2>
+                </div>
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight line-clamp-2">{report.tenThuongMai}</h3>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2 ml-4">
-            
-            <button onClick={() => handlePrint()} className="hidden sm:flex p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all active:scale-95 border border-transparent hover:border-slate-200" title="In phiếu">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062-.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
-                </svg>
-            </button>
 
-            {permissions.canEdit && (
-              <button onClick={() => onEdit(report)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-95 border border-transparent hover:border-blue-100" title="Chỉnh sửa toàn bộ">
-                <PencilIcon className="h-5 w-5" />
-              </button>
-            )}
-            {permissions.canDelete && (
-                <button onClick={() => { if (window.confirm('Xóa khiếu nại này?')) onDelete(report.id); }} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95 border border-transparent hover:border-red-100" title="Xóa">
-                  <TrashIcon className="h-5 w-5" />
+            <div className="flex items-center gap-2 ml-4">
+                <button 
+                    onClick={handlePrint}
+                    className="p-2 sm:px-3 sm:py-2 bg-white text-slate-600 border border-slate-300 font-bold rounded-xl text-xs sm:text-sm hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm active:scale-95 flex items-center gap-2 group"
+                >
+                    <PrinterIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">In phiếu</span>
                 </button>
-            )}
-            <div className="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all active:scale-95">
-              <XIcon className="h-6 w-6" />
-            </button>
+
+                {permissions.canEdit && (
+                    <button 
+                        onClick={() => onEdit(report)}
+                        className="p-2 sm:px-3 sm:py-2 bg-white text-slate-600 border border-slate-300 font-bold rounded-xl text-xs sm:text-sm hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm active:scale-95 flex items-center gap-2 group"
+                    >
+                        <PencilIcon className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                        <span className="hidden sm:inline">Sửa</span>
+                    </button>
+                )}
+                
+                {permissions.canDelete && (
+                    <button 
+                        onClick={() => { if(window.confirm('Xóa phiếu này?')) onDelete(report.id); }}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95 border border-transparent hover:border-red-100"
+                        title="Xóa phiếu"
+                    >
+                        <TrashIcon className="w-5 h-5" />
+                    </button>
+                )}
+                
+                <div className="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
+                
+                <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-all active:scale-95 transform hover:rotate-90 duration-300">
+                    <XIcon className="h-6 w-6" />
+                </button>
+            </div>
+          </div>
+
+          {/* 2 Tabs */}
+          <div className="px-4 sm:px-6 flex gap-6">
+              <button 
+                  onClick={() => setActiveTab('info')}
+                  className={`pb-3 text-sm font-bold border-b-2 transition-all ${
+                      activeTab === 'info' 
+                      ? 'border-blue-600 text-blue-600' 
+                      : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                  }`}
+              >
+                  <ClipboardDocumentListIcon className="w-4 h-4 inline-block mr-2 mb-0.5" />
+                  Thông tin & Phân tích
+              </button>
+              <button 
+                  onClick={() => setActiveTab('log')}
+                  className={`pb-3 text-sm font-bold border-b-2 transition-all ${
+                      activeTab === 'log' 
+                      ? 'border-purple-600 text-purple-600' 
+                      : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                  }`}
+              >
+                  <ChatBubbleLeftIcon className="w-4 h-4 inline-block mr-2 mb-0.5" />
+                  Nhật ký & Trao đổi
+              </button>
           </div>
       </div>
-      
-      <div 
-        className="flex-1 overflow-y-auto bg-slate-50 p-0 sm:p-6 space-y-0 sm:space-y-6 custom-scrollbar pb-20 sm:pb-6"
-        style={{ fontFamily: 'var(--list-font, inherit)' }}
-      >
+
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth pb-32 print:overflow-visible print:h-auto" ref={componentRef}>
         
-        {/* TOP ROW: PRODUCT & CUSTOMER - Stack on mobile, grid on large */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 sm:gap-6 bg-slate-50 sm:bg-transparent">
-             <Section title="Thông tin Sản phẩm" icon={<TagIcon className="h-4 w-4"/>} delay={100}>
-                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
-                    <DetailItem label="Dòng sản phẩm" value={report.dongSanPham} />
-                    <DetailItem label="Nhãn hàng" value={report.nhanHang} className="font-semibold text-blue-600"/>
-                    <DetailItem label="Tên thiết bị y tế" value={report.tenThietBi} fullWidth />
-                    <DetailItem label="Số lô" value={report.soLo} className="text-slate-700 bg-slate-100 px-2 py-0.5 rounded w-fit font-bold border border-slate-200"/>
-                    <DetailItem label="Mã NSX" value={report.maNgaySanXuat}/>
-                    <DetailItem label="Hạn dùng" value={report.hanDung ? new Date(report.hanDung).toLocaleDateString('en-GB') : ''} />
-                    <DetailItem label="Đơn vị tính" value={report.donViTinh} />
-                </dl>
-                <div className="mt-8 pt-6 border-t border-slate-100 grid grid-cols-3 gap-4">
-                    <div className="bg-white rounded-xl p-3 border border-slate-100 text-center shadow-sm">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Đã nhập</p>
-                        <p className="font-bold text-xl text-slate-700 mt-1">{report.soLuongDaNhap}</p>
-                    </div>
-                    <div className="bg-red-50 rounded-xl p-3 border border-red-100 text-center shadow-sm">
-                        <p className="text-xs font-bold text-red-400 uppercase tracking-wide">Lỗi</p>
-                        <p className="font-bold text-xl text-red-600 mt-1">{report.soLuongLoi}</p>
-                    </div>
-                    <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100 text-center shadow-sm">
-                        <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Đổi</p>
-                        <p className="font-bold text-xl text-emerald-600 mt-1">{report.soLuongDoi}</p>
-                    </div>
-                </div>
-             </Section>
-             
-             {/* Spacing for mobile separation */}
-             <div className="h-2 sm:hidden"></div>
+        {/* Status Stepper - Only visible in Info Tab */}
+        {activeTab === 'info' && <StatusStepper currentStatus={report.trangThai} />}
 
-             <Section title="Khách hàng & Khiếu nại" icon={<UserIcon className="h-4 w-4"/>} delay={200}>
-                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
-                    <DetailItem label="Nhà phân phối" value={report.nhaPhanPhoi} fullWidth/>
-                    <DetailItem label="Đơn vị sử dụng" value={report.donViSuDung} fullWidth/>
-                    <div className="col-span-full mt-2">
-                        <dt className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Nội dung khiếu nại</dt>
-                        <dd className="text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 leading-relaxed shadow-inner font-normal" style={{ fontSize: 'var(--list-size, 1rem)' }}>
-                            {report.noiDungPhanAnh}
-                        </dd>
-                    </div>
-                    {report.images && report.images.length > 0 && (
-                        <div className="col-span-full mt-4">
-                             <dt className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Hình ảnh minh chứng</dt>
-                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                 {report.images.map((img, idx) => (
-                                     <div key={idx} className="cursor-pointer group aspect-square rounded-lg overflow-hidden border border-slate-200 bg-slate-100 relative" onClick={() => setPreviewImage(img)}>
-                                         <img src={img} alt="proof" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"/>
-                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
-                                     </div>
-                                 ))}
-                             </div>
-                        </div>
-                    )}
-                </dl>
-             </Section>
-        </div>
-
-        {/* Spacing for mobile separation */}
-        <div className="h-2 sm:hidden"></div>
-
-        {/* BOTTOM ROW: PROCESSING (ACTIONABLE) */}
-        <div className="bg-white sm:rounded-2xl rounded-none border-y sm:border border-slate-200 shadow-none sm:shadow-sm relative overflow-hidden transition-all hover:shadow-md animate-fade-in-up fill-mode-backwards" style={{ animationDelay: '300ms' }}>
-             
-             {/* Header */}
-             <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-white to-slate-50 flex flex-col sm:flex-row justify-between sm:items-center relative z-10 gap-2">
-                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2 uppercase tracking-wide">
-                    <span className="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><ClipboardDocumentListIcon className="w-5 h-5" /></span>
-                    Xử lý & Khắc phục
-                </h4>
-                <div className="flex gap-3 items-center justify-between sm:justify-end w-full sm:w-auto">
-                     {report.trangThai !== 'Hoàn thành' && permissions.canEdit && (
-                        <>
-                            {isEditing ? (
-                                <div className="flex items-center gap-2 animate-fade-in">
-                                    <button 
-                                        onClick={cancelQuickEdit}
-                                        disabled={isUpdating}
-                                        className="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition-all"
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button 
-                                        onClick={handleQuickUpdate}
-                                        disabled={isUpdating}
-                                        className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-md shadow-blue-500/20 active:scale-95 transition-all flex items-center"
-                                    >
-                                        <CheckCircleIcon className="w-4 h-4 mr-1.5" />
-                                        {isUpdating ? 'Lưu...' : 'Lưu'}
-                                    </button>
+        <div className="p-4 sm:p-6">
+        {/* TAB 1: INFORMATION & RESOLUTION */}
+        {activeTab === 'info' && (
+            <div className="max-w-full mx-auto grid grid-cols-1 xl:grid-cols-12 gap-6 items-start animate-fade-in">
+                
+                {/* LEFT COLUMN (65% width on XL) */}
+                <div className="xl:col-span-8 space-y-6">
+                    {/* Card 1: Product & Customer */}
+                    <SectionCard title="Thông tin Chung" icon={<ArchiveBoxIcon className="w-4 h-4"/>} gradient="from-blue-400 to-indigo-400">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Product Info */}
+                            <div>
+                                <h5 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-blue-50 pb-2">
+                                    <TagIcon className="w-4 h-4"/> Sản phẩm
+                                </h5>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <DetailRow label="Mã sản phẩm" value={report.maSanPham} className="font-mono text-[#003DA5] font-bold" />
+                                        <DetailRow label="Nhãn hàng" value={report.nhanHang} />
+                                    </div>
+                                    <DetailRow label="Tên thương mại" value={report.tenThuongMai} />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <DetailRow label="Dòng sản phẩm" value={report.dongSanPham} />
+                                        <DetailRow label="Tên thiết bị" value={report.tenThietBi} />
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <DetailRow label="Số lô" value={report.soLo} className="font-mono" />
+                                        <DetailRow label="Mã NSX" value={report.maNgaySanXuat} className="font-mono" />
+                                        <DetailRow label="Hạn dùng" value={report.hanDung ? new Date(report.hanDung).toLocaleDateString('en-GB') : ''} />
+                                        <DetailRow label="ĐVT" value={report.donViTinh} />
+                                    </div>
                                 </div>
-                            ) : (
+                            </div>
+
+                            {/* Customer Info */}
+                            <div>
+                                <h5 className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-orange-50 pb-2">
+                                    <UserGroupIcon className="w-4 h-4"/> Khách hàng
+                                </h5>
+                                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                    <DetailRow 
+                                        label="Nhà phân phối" 
+                                        value={report.nhaPhanPhoi} 
+                                        className="font-semibold text-slate-700" 
+                                        icon={<BuildingStoreIcon className="w-3 h-3"/>} 
+                                    />
+                                    <DetailRow 
+                                        label="Đơn vị sử dụng" 
+                                        value={report.donViSuDung} 
+                                        className="font-semibold text-slate-700" 
+                                        icon={<MapPinIcon className="w-3 h-3"/>} 
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </SectionCard>
+
+                    {/* Card 2: Defect Content */}
+                    <SectionCard title="Nội dung khiếu nại" icon={<ExclamationTriangleIcon className="w-4 h-4"/>} gradient="from-rose-400 to-orange-400">
+                         <div className="flex flex-wrap gap-6 mb-6">
+                            <div className="flex-1 min-w-[200px]">
+                                <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Ngày phản ánh</dt>
+                                <dd className="text-sm font-bold text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 flex items-center gap-2 w-fit">
+                                    <CalendarIcon className="w-4 h-4 text-slate-400"/>
+                                    {new Date(report.ngayPhanAnh).toLocaleDateString('en-GB')}
+                                </dd>
+                            </div>
+                            <div className="flex-1 min-w-[200px]">
+                                <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Nguồn gốc lỗi</dt>
+                                <dd className="text-sm font-bold text-rose-600 bg-rose-50 border border-rose-100 px-3 py-2 rounded-lg flex items-center gap-2 shadow-sm w-fit">
+                                    <span className="relative flex h-2.5 w-2.5">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                                    </span>
+                                    {report.loaiLoi}
+                                </dd>
+                            </div>
+                         </div>
+                         
+                         <div className="mb-6">
+                            <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                                Mô tả chi tiết
+                            </dt>
+                            <dd className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 leading-relaxed text-sm whitespace-pre-wrap min-h-[80px]">
+                                {report.noiDungPhanAnh}
+                            </dd>
+                         </div>
+                         
+                         {report.images && report.images.length > 0 && (
+                             <div>
+                                <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    Hình ảnh minh chứng <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full font-bold border border-slate-200">{report.images.length}</span>
+                                </dt>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 print:grid-cols-3">
+                                    {report.images.map((img, idx) => (
+                                        <a 
+                                            href={img} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            key={idx} 
+                                            className="aspect-square rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group relative cursor-zoom-in ring-1 ring-black/5 bg-slate-100 print:break-inside-avoid"
+                                        >
+                                            <img src={img} alt={`Evidence ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                            <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 print:hidden">
+                                                <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 text-slate-800 shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                                    <ArrowDownTrayIcon className="w-4 h-4" />
+                                                </div>
+                                            </div>
+                                        </a>
+                                    ))}
+                                </div>
+                             </div>
+                         )}
+                    </SectionCard>
+                </div>
+
+                {/* RIGHT COLUMN (35% width on XL - Sticky removed to allow full scroll) */}
+                <div className="xl:col-span-4 space-y-6">
+                    {/* Card 3: Processing Info */}
+                    <SectionCard 
+                        title="Phân tích & Xử lý" 
+                        icon={<WrenchIcon className="w-4 h-4"/>} 
+                        gradient="from-emerald-400 to-teal-400"
+                        className="ring-1 ring-emerald-500/20 shadow-lg shadow-emerald-500/5 relative"
+                    >
+                        <div className="space-y-6 relative z-10">
+                            
+                            {/* QUANTITY STATS */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center h-full min-h-[90px]">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase mb-1">Đã nhập</span>
+                                    <span className="text-xl font-black text-slate-700">{report.soLuongDaNhap}</span>
+                                </div>
+                                <div className="bg-red-50 p-3 rounded-xl border border-red-100 flex flex-col items-center justify-center text-center h-full min-h-[90px]">
+                                    <span className="text-[10px] font-bold text-red-400 uppercase mb-1">Lỗi</span>
+                                    <span className="text-xl font-black text-red-600">{report.soLuongLoi}</span>
+                                </div>
+                                
+                                {/* Editable Exchange Qty */}
+                                <div className="relative group perspective h-full min-h-[90px]">
+                                    {editingSections.soLuong ? (
+                                        <div className="absolute inset-0 z-20 bg-white rounded-xl shadow-xl border border-emerald-100 p-2 animate-zoom-in flex flex-col justify-center">
+                                            <input 
+                                                type="number"
+                                                className="w-full text-center text-lg font-black text-emerald-600 border-b border-emerald-100 focus:border-emerald-500 focus:outline-none bg-transparent mb-1"
+                                                autoFocus
+                                                value={quickUpdateData.soLuongDoi}
+                                                onChange={(e) => setQuickUpdateData({...quickUpdateData, soLuongDoi: parseInt(e.target.value) || 0})}
+                                            />
+                                            <input 
+                                                type="date"
+                                                className="w-full text-[10px] p-1 border rounded bg-slate-50"
+                                                value={quickUpdateData.ngayDoiHang || ''}
+                                                onChange={(e) => setQuickUpdateData({...quickUpdateData, ngayDoiHang: e.target.value})}
+                                            />
+                                            <div className="flex gap-1 mt-1">
+                                                <button onClick={handleQuickUpdate} className="flex-1 bg-emerald-500 text-white text-[9px] rounded py-1">OK</button>
+                                                <button onClick={() => setEditingSections({...editingSections, soLuong: false})} className="flex-1 bg-slate-200 text-slate-600 text-[9px] rounded py-1">X</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div 
+                                            className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-all h-full"
+                                            onClick={() => permissions.canEdit && setEditingSections({...editingSections, soLuong: true})}
+                                        >
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <span className="text-[10px] font-bold text-emerald-500 uppercase">Đổi</span>
+                                                {permissions.canEdit && <PencilIcon className="w-3 h-3 text-emerald-300 print:hidden"/>}
+                                            </div>
+                                            <span className="text-xl font-black text-emerald-600">{report.soLuongDoi}</span>
+                                            {report.ngayDoiHang && (
+                                                <span className="text-[9px] text-emerald-600/70 font-medium mt-1 border-t border-emerald-200/50 pt-1 w-full">
+                                                    {new Date(report.ngayDoiHang).toLocaleDateString('en-GB')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* STATUS */}
+                            <div className="print:hidden">
+                                <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Trạng thái xử lý</dt>
+                                {permissions.canEdit ? (
+                                    <div className="relative group">
+                                        <select 
+                                            value={quickUpdateData.trangThai}
+                                            onChange={(e) => setQuickUpdateData({...quickUpdateData, trangThai: e.target.value as any})}
+                                            className="w-full pl-4 pr-10 py-3.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white hover:bg-slate-50 transition-colors appearance-none cursor-pointer shadow-sm"
+                                        >
+                                            <option value="Mới">Mới</option>
+                                            <option value="Đang tiếp nhận">Đang tiếp nhận</option>
+                                            <option value="Đang xác minh">Đang xác minh</option>
+                                            <option value="Đang xử lý">Đang xử lý</option>
+                                            <option value="Chưa tìm ra nguyên nhân">Chưa tìm ra nguyên nhân</option>
+                                            <option value="Hoàn thành">Hoàn thành</option>
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-400 group-hover:text-blue-500 transition-colors">
+                                            <ArrowDownTrayIcon className="w-4 h-4" />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className={`px-4 py-3 rounded-xl text-sm font-bold border text-center shadow-sm ${getStatusColor(report.trangThai)}`}>{report.trangThai}</div>
+                                )}
+                            </div>
+
+                            {/* CAUSE EDIT */}
+                            <div className="group">
+                                <div className="flex justify-between items-center mb-2">
+                                    <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Phân tích Nguyên nhân</dt>
+                                    {permissions.canEdit && !editingSections.nguyenNhan && (
+                                        <button onClick={() => setEditingSections({...editingSections, nguyenNhan: true})} className="text-blue-600 hover:text-blue-700 text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 hover:shadow-sm print:hidden">
+                                            <PencilIcon className="w-3 h-3 inline mr-1"/>Sửa
+                                        </button>
+                                    )}
+                                </div>
+                                {editingSections.nguyenNhan ? (
+                                    <div className="animate-fade-in-up bg-white p-3 rounded-xl border border-blue-200 shadow-sm ring-4 ring-blue-500/5">
+                                        <textarea 
+                                            className="w-full p-2 text-sm focus:outline-none text-slate-700 font-medium bg-transparent"
+                                            rows={4}
+                                            value={quickUpdateData.nguyenNhan}
+                                            onChange={(e) => setQuickUpdateData({...quickUpdateData, nguyenNhan: e.target.value})}
+                                            autoFocus
+                                            placeholder="Nhập nguyên nhân..."
+                                        />
+                                        <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-slate-50">
+                                            <button onClick={() => setEditingSections({...editingSections, nguyenNhan: false})} className="px-3 py-1.5 text-slate-500 hover:bg-slate-50 rounded-lg text-xs font-bold">Hủy</button>
+                                            <button onClick={handleQuickUpdate} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 shadow-sm shadow-blue-200">Lưu</button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div 
+                                        className="text-sm text-slate-700 font-medium leading-relaxed min-h-[80px] bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer group/item break-words shadow-inner print:bg-white print:border-none print:p-0"
+                                        onClick={() => permissions.canEdit && setEditingSections({...editingSections, nguyenNhan: true})}
+                                    >
+                                        {report.nguyenNhan || <span className="text-slate-400 italic font-normal">Chưa xác định nguyên nhân...</span>}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* SOLUTION EDIT */}
+                            <div className="group">
+                                <div className="flex justify-between items-center mb-2">
+                                    <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Biện pháp Khắc phục</dt>
+                                    {permissions.canEdit && !editingSections.huongKhacPhuc && (
+                                        <button onClick={() => setEditingSections({...editingSections, huongKhacPhuc: true})} className="text-blue-600 hover:text-blue-700 text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 hover:shadow-sm print:hidden">
+                                            <PencilIcon className="w-3 h-3 inline mr-1"/>Sửa
+                                        </button>
+                                    )}
+                                </div>
+                                {editingSections.huongKhacPhuc ? (
+                                    <div className="animate-fade-in-up bg-white p-3 rounded-xl border border-blue-200 shadow-sm ring-4 ring-blue-500/5">
+                                        <textarea 
+                                            className="w-full p-2 text-sm focus:outline-none text-slate-700 font-medium bg-transparent"
+                                            rows={4}
+                                            value={quickUpdateData.huongKhacPhuc}
+                                            onChange={(e) => setQuickUpdateData({...quickUpdateData, huongKhacPhuc: e.target.value})}
+                                            autoFocus
+                                            placeholder="Nhập hướng xử lý..."
+                                        />
+                                        <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-slate-50">
+                                            <button onClick={() => setEditingSections({...editingSections, huongKhacPhuc: false})} className="px-3 py-1.5 text-slate-500 hover:bg-slate-50 rounded-lg text-xs font-bold">Hủy</button>
+                                            <button onClick={handleQuickUpdate} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 shadow-sm shadow-blue-200">Lưu</button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div 
+                                        className="text-sm text-slate-700 font-medium leading-relaxed min-h-[80px] bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer group/item break-words shadow-inner print:bg-white print:border-none print:p-0"
+                                        onClick={() => permissions.canEdit && setEditingSections({...editingSections, huongKhacPhuc: true})}
+                                    >
+                                        {report.huongKhacPhuc || <span className="text-slate-400 italic font-normal">Chưa có hướng khắc phục...</span>}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Save Status Button */}
+                            {permissions.canEdit && quickUpdateData.trangThai !== report.trangThai && (
                                 <button 
-                                    onClick={enableEditAll}
-                                    className="text-xs bg-white border border-blue-200 text-blue-600 hover:bg-blue-50 font-bold px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition-all flex items-center"
-                                    title="Chỉnh sửa tất cả các trường"
+                                    onClick={handleQuickUpdate}
+                                    disabled={isUpdating}
+                                    className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 animate-fade-in-up print:hidden"
                                 >
-                                    <PencilIcon className="w-3.5 h-3.5 mr-1.5" />
-                                    Cập nhật
+                                    {isUpdating ? 'Đang lưu...' : (
+                                        <>
+                                            <CheckCircleIcon className="w-5 h-5" />
+                                            Cập nhật thay đổi
+                                        </>
+                                    )}
                                 </button>
                             )}
-                        </>
-                     )}
-                     
-                     {/* Editable Status Badge */}
-                     {isEditing ? (
-                        <select
-                            value={quickUpdateData.trangThai}
-                            onChange={(e) => setQuickUpdateData({...quickUpdateData, trangThai: e.target.value as any})}
-                            className={`ml-auto sm:ml-2 text-sm font-bold border rounded-lg py-1.5 px-3 outline-none cursor-pointer shadow-sm appearance-none ${getStatusBadgeStyle(quickUpdateData.trangThai)}`}
-                        >
-                            <option value="Mới">MỚI</option>
-                            <option value="Đang tiếp nhận">ĐANG TIẾP NHẬN</option>
-                            <option value="Đang xác minh">ĐANG XÁC MINH</option>
-                            <option value="Đang xử lý">ĐANG XỬ LÝ</option>
-                            <option value="Chưa tìm ra nguyên nhân">CHƯA TÌM RA NN</option>
-                            <option value="Hoàn thành">HOÀN THÀNH</option>
-                        </select>
-                     ) : (
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold border ml-auto sm:ml-2 shadow-sm ${getStatusBadgeStyle(report.trangThai)}`}>
-                            {report.trangThai.toUpperCase()}
-                        </span>
-                     )}
-                </div>
-            </div>
-
-            {/* Quick Edit Fields - Stack on mobile */}
-            <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-12 gap-6 relative z-10">
-                 {/* Left: Input Areas */}
-                 <div className="md:col-span-8 grid grid-cols-1 gap-4">
-                      {/* Cause Input */}
-                      <div 
-                        className={`bg-amber-50/50 rounded-xl p-4 border border-amber-100 group ${!editingSections.nguyenNhan && permissions.canEdit ? 'cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all' : ''}`}
-                        onClick={() => !editingSections.nguyenNhan && startEditing('nguyenNhan')}
-                      >
-                          <div className="flex items-center gap-2 mb-2 text-amber-700">
-                                <QuestionMarkCircleIcon className="w-4 h-4" />
-                                <label className="text-xs font-bold uppercase tracking-wide cursor-pointer">Nguyên nhân</label>
-                          </div>
-                          {editingSections.nguyenNhan ? (
-                              <textarea 
-                                className="w-full bg-white border border-amber-200 rounded-lg p-3 font-normal focus:ring-2 focus:ring-amber-500/20 outline-none resize-none shadow-sm touch-manipulation transition-all"
-                                style={{ fontSize: 'var(--list-size, 1rem)' }}
-                                rows={3}
-                                placeholder="Nhập nguyên nhân..."
-                                value={quickUpdateData.nguyenNhan}
-                                onChange={(e) => setQuickUpdateData({...quickUpdateData, nguyenNhan: e.target.value})}
-                                autoFocus
-                              />
-                          ) : (
-                              <p className={`font-normal leading-relaxed ${quickUpdateData.nguyenNhan ? 'text-slate-800' : 'text-slate-400 italic'}`} style={{ fontSize: 'var(--list-size, 1rem)' }}>
-                                  {quickUpdateData.nguyenNhan || 'Click để nhập nguyên nhân...'}
-                              </p>
-                          )}
-                      </div>
-
-                      {/* Solution Input */}
-                      <div 
-                        className={`bg-blue-50/50 rounded-xl p-4 border border-blue-100 group ${!editingSections.huongKhacPhuc && permissions.canEdit ? 'cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all' : ''}`}
-                        onClick={() => !editingSections.huongKhacPhuc && startEditing('huongKhacPhuc')}
-                      >
-                          <div className="flex items-center gap-2 mb-2 text-blue-700">
-                                <WrenchIcon className="w-4 h-4" />
-                                <label className="text-xs font-bold uppercase tracking-wide cursor-pointer">Hướng khắc phục</label>
-                          </div>
-                          {editingSections.huongKhacPhuc ? (
-                               <textarea 
-                                className="w-full bg-white border border-blue-200 rounded-lg p-3 font-normal focus:ring-2 focus:ring-blue-500/20 outline-none resize-none shadow-sm touch-manipulation transition-all"
-                                style={{ fontSize: 'var(--list-size, 1rem)' }}
-                                rows={3}
-                                placeholder="Nhập hướng xử lý..."
-                                value={quickUpdateData.huongKhacPhuc}
-                                onChange={(e) => setQuickUpdateData({...quickUpdateData, huongKhacPhuc: e.target.value})}
-                                autoFocus
-                              />
-                          ) : (
-                               <p className={`font-normal leading-relaxed ${quickUpdateData.huongKhacPhuc ? 'text-slate-800' : 'text-slate-400 italic'}`} style={{ fontSize: 'var(--list-size, 1rem)' }}>
-                                  {quickUpdateData.huongKhacPhuc || 'Click để nhập hướng khắc phục...'}
-                               </p>
-                          )}
-                      </div>
-                 </div>
-
-                 {/* Right: Metrics & Info */}
-                 <div className="md:col-span-4 flex flex-col gap-4">
-                      {/* Exchange Qty Input */}
-                      <div 
-                          className={`bg-emerald-50/50 rounded-xl p-5 border border-emerald-100 flex flex-col gap-4 ${!editingSections.soLuong && permissions.canEdit ? 'cursor-pointer hover:border-emerald-300 hover:shadow-sm transition-all' : ''}`}
-                          onClick={() => !editingSections.soLuong && startEditing('soLuong')}
-                      >
-                           <div className="flex flex-col items-center justify-center text-center">
-                               <label className="text-xs font-bold text-emerald-600 uppercase mb-2 cursor-pointer tracking-wider">Số lượng đổi</label>
-                               {editingSections.soLuong ? (
-                                   <div className="flex items-center justify-center w-full animate-pop">
-                                       <input 
-                                            type="number" 
-                                            min="0"
-                                            className="w-24 text-center text-3xl font-bold text-emerald-700 bg-white border border-emerald-200 rounded-lg py-1 focus:ring-2 focus:ring-emerald-500/20 outline-none shadow-sm touch-manipulation"
-                                            value={quickUpdateData.soLuongDoi}
-                                            onChange={(e) => setQuickUpdateData({...quickUpdateData, soLuongDoi: Number(e.target.value)})}
-                                            onClick={(e) => e.stopPropagation()} 
-                                            autoFocus
-                                       />
-                                   </div>
-                               ) : (
-                                   <p className="text-4xl font-bold text-emerald-600">{report.soLuongDoi}</p>
-                               )}
-                           </div>
-                           
-                           {/* Date Exchange Field */}
-                           <div className="border-t border-emerald-200/50 pt-3 mt-1">
-                               <div className="flex items-center justify-center gap-2 mb-1 text-emerald-700">
-                                   <CalendarIcon className="w-3.5 h-3.5" />
-                                   <label className="text-xs font-bold uppercase cursor-pointer tracking-wide">Ngày đổi hàng</label>
-                               </div>
-                               {editingSections.soLuong ? (
-                                   <input 
-                                        type="date"
-                                        className="w-full text-center text-sm font-bold text-emerald-800 bg-white border border-emerald-200 rounded-lg py-1.5 focus:ring-2 focus:ring-emerald-500/20 outline-none shadow-sm touch-manipulation"
-                                        value={quickUpdateData.ngayDoiHang}
-                                        onChange={(e) => setQuickUpdateData({...quickUpdateData, ngayDoiHang: e.target.value})}
-                                        onClick={(e) => e.stopPropagation()}
-                                   />
-                               ) : (
-                                   <p className="text-center text-sm font-bold text-emerald-800">
-                                       {quickUpdateData.ngayDoiHang ? new Date(quickUpdateData.ngayDoiHang).toLocaleDateString('en-GB') : <span className="text-emerald-400 italic font-normal text-xs">--/--/----</span>}
-                                   </p>
-                               )}
-                           </div>
-                      </div>
-
-                      {/* Info Chips */}
-                      <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3">
-                           {report.ngayHoanThanh && (
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold text-slate-400 uppercase">Ngày hoàn thành</span>
-                                    <span className="text-xs font-bold text-slate-700 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">
-                                        {new Date(report.ngayHoanThanh).toLocaleDateString('en-GB')}
-                                    </span>
+                            
+                            {report.ngayHoanThanh && (
+                                <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-xl flex items-center gap-3 animate-fade-in-up">
+                                    <div className="p-2 bg-emerald-100 text-emerald-600 rounded-full shrink-0"><CheckCircleIcon className="w-4 h-4" /></div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Đã hoàn thành</p>
+                                        <p className="text-sm font-bold text-slate-800">{new Date(report.ngayHoanThanh).toLocaleDateString('en-GB')}</p>
+                                    </div>
                                 </div>
-                           )}
-                           {canSeeLoaiLoi && report.loaiLoi && (
-                                <div>
-                                    <span className="text-xs font-bold text-slate-400 uppercase block mb-1.5">Nguồn gốc lỗi</span>
-                                    {getLoaiLoiBadge(report.loaiLoi)}
-                                </div>
-                           )}
-                      </div>
-                 </div>
-            </div>
-        </div>
-
-        {/* Timeline Log Section */}
-        <Section title="Nhật ký hoạt động" icon={<ClockIcon className="h-4 w-4"/>} delay={400}>
-            <div className="mt-2 pl-1 relative">
-                {report.activityLog && report.activityLog.length > 0 ? (
-                    <div className="relative pt-2">
-                        {[...report.activityLog].reverse().map(log => <TimelineItem key={log.id} log={log} />)}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                        <ClockIcon className="w-8 h-8 text-slate-300 mb-2"/>
-                        <p className="text-sm text-slate-400 font-medium">Chưa có hoạt động nào được ghi lại.</p>
-                    </div>
-                )}
-            </div>
-        </Section>
-
-      </div>
-
-      {/* Image Preview Modal */}
-      {previewImage && (
-          <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
-              <img src={previewImage} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-pop" />
-              <button className="absolute top-4 right-4 text-white p-2 rounded-full bg-white/20 hover:bg-white/40 transition-colors">
-                  <XIcon className="w-8 h-8" />
-              </button>
-          </div>
-      )}
-
-      {/* Hidden Print Template */}
-      <div className="absolute top-0 left-0 w-0 h-0 overflow-hidden invisible">
-            <div ref={printRef} className="print-container p-8 font-sans text-slate-900 bg-white">
-                <style>{`
-                    @media print {
-                        @page { size: A4; margin: 15mm; }
-                        body { -webkit-print-color-adjust: exact; }
-                        .print-container { width: 100%; font-size: 14px; line-height: 1.5; }
-                        .no-print { display: none !important; }
-                    }
-                `}</style>
-                <div className="flex items-center justify-between border-b-2 border-slate-800 pb-4 mb-6">
-                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16"><CompanyLogo className="w-full h-full"/></div>
-                        <div>
-                             <h1 className="text-2xl font-bold uppercase">PHIẾU KHIẾU NẠI SẢN PHẨM LỖI</h1>
-                             <p className="text-sm font-semibold text-slate-600">Công ty Cổ phần Vật tư Y tế Hồng Thiện Mỹ</p>
+                            )}
                         </div>
-                     </div>
-                     <div className="text-right">
-                         <p className="text-sm font-bold">Số phiếu: #{report.id.substring(0, 8)}</p>
-                         <p className="text-sm">Ngày in: {new Date().toLocaleDateString('en-GB')}</p>
-                     </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-x-8 gap-y-4 mb-6">
-                    <div>
-                        <span className="block text-xs font-bold uppercase text-slate-500 mb-1">Sản phẩm</span>
-                        <span className="block font-bold text-lg">{report.tenThuongMai}</span>
-                    </div>
-                     <div>
-                        <span className="block text-xs font-bold uppercase text-slate-500 mb-1">Mã SP</span>
-                        <span className="block font-bold text-lg">{report.maSanPham}</span>
-                    </div>
-                     <div>
-                        <span className="block text-xs font-bold uppercase text-slate-500 mb-1">Số lô</span>
-                        <span className="block font-bold">{report.soLo}</span>
-                    </div>
-                     <div>
-                        <span className="block text-xs font-bold uppercase text-slate-500 mb-1">Hạn dùng/NSX</span>
-                        <span className="block font-bold">{report.maNgaySanXuat || '---'} {report.hanDung ? `(HD: ${new Date(report.hanDung).toLocaleDateString('en-GB')})` : ''}</span>
-                    </div>
-                     <div>
-                        <span className="block text-xs font-bold uppercase text-slate-500 mb-1">Đơn vị tính</span>
-                        <span className="block font-bold">{report.donViTinh || '---'}</span>
-                    </div>
-                     <div className="col-span-2">
-                        <span className="block text-xs font-bold uppercase text-slate-500 mb-1">Đơn vị sử dụng</span>
-                        <span className="block font-bold">{report.donViSuDung}</span>
-                    </div>
-                </div>
-
-                <div className="mb-6 border border-slate-300 rounded p-4">
-                     <h3 className="font-bold uppercase mb-2 border-b border-slate-200 pb-1">Nội dung khiếu nại</h3>
-                     <p className="text-justify leading-relaxed">{report.noiDungPhanAnh}</p>
-                </div>
-
-                <div className="mb-6 grid grid-cols-3 gap-4 text-center border-b border-slate-200 pb-6">
-                     <div className="bg-slate-50 p-2 border border-slate-200 rounded">
-                         <span className="block text-xs uppercase font-bold text-slate-500">Số lượng nhập</span>
-                         <span className="block text-xl font-bold">{report.soLuongDaNhap}</span>
-                     </div>
-                      <div className="bg-slate-50 p-2 border border-slate-200 rounded">
-                         <span className="block text-xs uppercase font-bold text-slate-500">Số lượng lỗi</span>
-                         <span className="block text-xl font-bold">{report.soLuongLoi}</span>
-                     </div>
-                      <div className="bg-slate-50 p-2 border border-slate-200 rounded">
-                         <span className="block text-xs uppercase font-bold text-slate-500">Số lượng đổi</span>
-                         <span className="block text-xl font-bold">{report.soLuongDoi}</span>
-                         {report.ngayDoiHang && (
-                             <span className="block text-xs font-semibold text-slate-500 mt-1 pt-1 border-t border-slate-200">
-                                 {new Date(report.ngayDoiHang).toLocaleDateString('en-GB')}
-                             </span>
-                         )}
-                     </div>
-                </div>
-
-                <div className="mb-8">
-                     <h3 className="font-bold uppercase mb-2">Kết quả xử lý</h3>
-                     <div className="mb-2">
-                         <span className="font-bold text-sm uppercase text-slate-500 mr-2">Nguyên nhân:</span>
-                         <span>{report.nguyenNhan || 'Đang chờ cập nhật'}</span>
-                     </div>
-                     <div>
-                         <span className="font-bold text-sm uppercase text-slate-500 mr-2">Hướng khắc phục:</span>
-                         <span>{report.huongKhacPhuc || 'Đang chờ cập nhật'}</span>
-                     </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-8 text-center mt-12">
-                     <div>
-                         <p className="font-bold text-sm uppercase mb-12">Người lập phiếu</p>
-                         <p className="text-sm italic">(Ký, họ tên)</p>
-                     </div>
-                      <div>
-                         <p className="font-bold text-sm uppercase mb-12">Bộ phận Kỹ thuật</p>
-                         <p className="text-sm italic">(Ký, họ tên)</p>
-                     </div>
-                      <div>
-                         <p className="font-bold text-sm uppercase mb-12">Ban Giám Đốc</p>
-                         <p className="text-sm italic">(Duyệt)</p>
-                     </div>
+                    </SectionCard>
                 </div>
             </div>
+        )}
+
+        {/* TAB 2: LOG & CHAT */}
+        {activeTab === 'log' && (
+            <div className="max-w-4xl mx-auto h-full flex flex-col animate-fade-in">
+                <SectionCard title="Dòng thời gian hoạt động" icon={<ChatBubbleLeftIcon className="w-4 h-4"/>} className="flex flex-col flex-1 h-full" gradient="from-purple-400 to-pink-400">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2 mb-4">
+                        <div className="relative pt-2">
+                            {report.activityLog && report.activityLog.length > 0 ? (
+                                [...report.activityLog]
+                                .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                                .map((log) => (
+                                    <TimelineItem key={log.id} log={log} />
+                                ))
+                            ) : (
+                                <div className="h-40 flex flex-col items-center justify-center text-slate-400 opacity-60">
+                                    <ChatBubbleLeftIcon className="w-12 h-12 mb-2 stroke-1 text-slate-300"/>
+                                    <span className="text-sm font-medium">Chưa có hoạt động nào</span>
+                                </div>
+                            )}
+                            <div ref={commentEndRef} />
+                        </div>
+                    </div>
+                    
+                    <div className="pt-4 border-t border-slate-100 bg-white relative z-20 mt-auto print:hidden">
+                        <form onSubmit={handleSendComment} className="relative group">
+                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold border border-slate-200">
+                                    {currentUsername.charAt(0).toUpperCase()}
+                                </div>
+                            </div>
+                            <input 
+                                type="text"
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                placeholder="Viết bình luận..."
+                                className="w-full pl-14 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner placeholder:text-slate-400 text-slate-700 font-medium"
+                            />
+                            <button 
+                                type="submit"
+                                disabled={!newComment.trim() || isSendingComment}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 transition-all shadow-md active:scale-95 flex items-center justify-center"
+                            >
+                                {isSendingComment ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <PaperAirplaneIcon className="w-4 h-4" />}
+                            </button>
+                        </form>
+                    </div>
+                </SectionCard>
+            </div>
+        )}
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
-export default DefectReportDetail;
+export default DefectReportDetail;]]></content>
+  </change>
+</changes>

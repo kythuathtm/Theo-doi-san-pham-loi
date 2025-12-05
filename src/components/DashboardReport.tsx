@@ -35,11 +35,20 @@ const BRAND = {
 
 const parseDate = (dateStr: string) => {
     if (!dateStr || typeof dateStr !== 'string') return null;
+    // Handle standard YYYY-MM-DD
     const parts = dateStr.split('-');
-    if (parts.length !== 3) return null;
-    const [y, m, d] = parts.map(Number);
-    if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
-    return { year: y, month: m - 1, day: d }; 
+    if (parts.length === 3) {
+        const [y, m, d] = parts.map(Number);
+        if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+            return { year: y, month: m - 1, day: d };
+        }
+    }
+    // Fallback: Try Date.parse
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+        return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
+    }
+    return null;
 };
 
 // SVG Curve Generator
@@ -353,7 +362,11 @@ const TrendChart = ({ data, label, color = BRAND.PRIMARY }: any) => {
     const chartHeight = height - paddingY * 2;
 
     const getX = (i: number) => paddingX + (i / (data.length - 1)) * (width - paddingX * 2);
-    const getY = (v: number) => height - paddingY - (v / maxVal) * chartHeight;
+    const getY = (v: number) => {
+        // Prevent division by zero if maxVal is 0 (should not happen due to max(..., 5) but safety first)
+        const safeMax = maxVal === 0 ? 1 : maxVal;
+        return height - paddingY - (v / safeMax) * chartHeight;
+    };
 
     const points = data.map((d: any, i: number) => ({ x: getX(i), y: getY(d.count) }));
     const dPath = getSmoothPath(points);
@@ -431,7 +444,7 @@ const TrendChart = ({ data, label, color = BRAND.PRIMARY }: any) => {
                         <span className="font-bold text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Tháng {data[hoverIndex].month}</span>
                         <div className="flex items-baseline gap-1">
                             <span className="text-xl font-black leading-none tracking-tight" style={{ color: color }}>
-                                {data[hoverIndex].count.toLocaleString()}
+                                {data[hoverIndex].count.toLocaleString('en-US', { maximumFractionDigits: 1 })}
                             </span>
                             <span className="text-[10px] font-bold text-slate-500">{label}</span>
                         </div>
@@ -775,6 +788,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
       const today = new Date();
       const currentYear = today.getFullYear();
 
+      // Helper for sparklines
       const getSparklineData = (mode: 'ticket' | 'qty' | 'exchange', monthsBack: number = 6) => {
         const data = [];
         const currentM = today.getMonth();
@@ -784,16 +798,18 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
             let ty = currentY;
             while (tm < 0) { tm += 12; ty -= 1; }
             let val = 0;
-            reports.forEach(r => {
-                if (!r.ngayPhanAnh) return;
-                const d = parseDate(r.ngayPhanAnh);
-                if (!d) return;
-                if (d.month === tm && d.year === ty) {
-                    if (mode === 'ticket') val += 1;
-                    else if (mode === 'qty') val += (r.soLuongLoi || 0);
-                    else if (mode === 'exchange') val += (r.soLuongDoi || 0);
-                }
-            });
+            if (reports) {
+                reports.forEach(r => {
+                    if (!r.ngayPhanAnh) return;
+                    const d = parseDate(r.ngayPhanAnh);
+                    if (!d) return;
+                    if (d.month === tm && d.year === ty) {
+                        if (mode === 'ticket') val += 1;
+                        else if (mode === 'qty') val += (r.soLuongLoi || 0);
+                        else if (mode === 'exchange') val += (r.soLuongDoi || 0);
+                    }
+                });
+            }
             data.push(val);
         }
         return data;
@@ -805,14 +821,18 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
         const lm = cm === 0 ? 11 : cm - 1;
         const ly = cm === 0 ? cy - 1 : cy;
         let cVal = 0, lVal = 0;
-        reports.forEach(r => {
-            if (!r.ngayPhanAnh) return;
-            const d = parseDate(r.ngayPhanAnh);
-            if (!d) return;
-            let val = mode === 'qty' ? (r.soLuongLoi||0) : mode === 'exchange' ? (r.soLuongDoi||0) : 1;
-            if (d.month === cm && d.year === cy) cVal += val;
-            if (d.month === lm && d.year === ly) lVal += val;
-        });
+        
+        if (reports) {
+            reports.forEach(r => {
+                if (!r.ngayPhanAnh) return;
+                const d = parseDate(r.ngayPhanAnh);
+                if (!d) return;
+                let val = mode === 'qty' ? (r.soLuongLoi||0) : mode === 'exchange' ? (r.soLuongDoi||0) : 1;
+                if (d.month === cm && d.year === cy) cVal += val;
+                if (d.month === lm && d.year === ly) lVal += val;
+            });
+        }
+        
         const diff = cVal - lVal;
         let percent = lVal > 0 ? Number(((diff / lVal) * 100).toFixed(1)) : (cVal > 0 ? 100 : 0);
         return {
@@ -822,69 +842,75 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
         };
       };
 
-      reports.forEach(r => {
-          totalTickets++;
-          const dQty = r.soLuongLoi || 0;
-          const eQty = r.soLuongDoi || 0;
-          totalDefectQty += dQty;
-          totalExchangeQty += eQty;
-          if (statusCounts[r.trangThai] !== undefined) statusCounts[r.trangThai]++;
-          if (r.trangThai === 'Hoàn thành') {
-              if (eQty > 0) completedWithExchange++; else completedNoExchange++;
-          }
-          let src = 'Khác';
-          if (r.loaiLoi?.includes('Sản xuất')) src = 'Sản xuất';
-          else if (r.loaiLoi?.includes('Nhà cung cấp')) src = 'NCC';
-          else if (r.loaiLoi?.includes('Hỗn hợp')) src = 'Hỗn hợp';
-          sourceCounts[src as keyof typeof sourceCounts]++;
-          
-          const brand = r.nhanHang === 'HTM' || r.nhanHang === 'VMA' ? r.nhanHang : 'HTM'; 
-          if (brandCounts[brand]) {
-              brandCounts[brand].t++; brandCounts[brand].q += dQty; brandCounts[brand].e += eQty;
-              if (r.maSanPham) brandCounts[brand].skus.add(r.maSanPham);
-          }
-          
-          // Product Map
-          if (r.maSanPham) {
-              uniqueSKUs.add(r.maSanPham);
-              let p = prodMap.get(r.maSanPham);
-              if (!p) {
-                  // Normalize brand for product categorization
-                  const normalizedBrand = (r.nhanHang === 'HTM' || r.nhanHang === 'VMA') ? r.nhanHang : 'HTM';
-                  p = { 
-                      code: r.maSanPham, 
-                      name: r.tenThuongMai, 
-                      ticket: 0, 
-                      defect: 0, 
-                      exchange: 0,
-                      brand: normalizedBrand 
-                  };
-                  prodMap.set(r.maSanPham, p);
-              }
-              p.ticket++; 
-              p.defect += dQty; 
-              p.exchange += eQty;
-          }
-          
-          const createdDate = parseDate(r.ngayPhanAnh);
-          
-          // Distributor Map Aggregation
-          if (r.nhaPhanPhoi) {
-              const dName = r.nhaPhanPhoi.trim();
-              if (!distMap.has(dName)) {
-                  distMap.set(dName, { total: 0, completed: 0, skus: new Set() });
-              }
-              const dStats = distMap.get(dName)!;
-              dStats.total++;
-              if (r.trangThai === 'Hoàn thành') dStats.completed++;
-              if (r.maSanPham) dStats.skus.add(r.maSanPham);
-          }
+      if (reports) {
+        reports.forEach(r => {
+            totalTickets++;
+            const dQty = r.soLuongLoi || 0;
+            const eQty = r.soLuongDoi || 0;
+            totalDefectQty += dQty;
+            totalExchangeQty += eQty;
+            if (statusCounts[r.trangThai] !== undefined) statusCounts[r.trangThai]++;
+            if (r.trangThai === 'Hoàn thành') {
+                if (eQty > 0) completedWithExchange++; else completedNoExchange++;
+            }
+            let src = 'Khác';
+            if (r.loaiLoi?.includes('Sản xuất')) src = 'Sản xuất';
+            else if (r.loaiLoi?.includes('Nhà cung cấp')) src = 'NCC';
+            else if (r.loaiLoi?.includes('Hỗn hợp')) src = 'Hỗn hợp';
+            sourceCounts[src as keyof typeof sourceCounts]++;
+            
+            const brand = r.nhanHang === 'HTM' || r.nhanHang === 'VMA' ? r.nhanHang : 'HTM'; 
+            if (brandCounts[brand]) {
+                brandCounts[brand].t++; brandCounts[brand].q += dQty; brandCounts[brand].e += eQty;
+                if (r.maSanPham) brandCounts[brand].skus.add(r.maSanPham);
+            }
+            
+            // Product Map
+            if (r.maSanPham) {
+                uniqueSKUs.add(r.maSanPham);
+                let p = prodMap.get(r.maSanPham);
+                if (!p) {
+                    // Normalize brand for product categorization
+                    const normalizedBrand = (r.nhanHang === 'HTM' || r.nhanHang === 'VMA') ? r.nhanHang : 'HTM';
+                    p = { 
+                        code: r.maSanPham, 
+                        name: r.tenThuongMai, 
+                        ticket: 0, 
+                        defect: 0, 
+                        exchange: 0,
+                        brand: normalizedBrand 
+                    };
+                    prodMap.set(r.maSanPham, p);
+                }
+                p.ticket++; 
+                p.defect += dQty; 
+                p.exchange += eQty;
+            }
+            
+            const createdDate = parseDate(r.ngayPhanAnh);
+            
+            // Distributor Map Aggregation
+            if (r.nhaPhanPhoi) {
+                const dName = r.nhaPhanPhoi.trim();
+                if (!distMap.has(dName)) {
+                    distMap.set(dName, { total: 0, completed: 0, skus: new Set() });
+                }
+                const dStats = distMap.get(dName)!;
+                dStats.total++;
+                if (r.trangThai === 'Hoàn thành') dStats.completed++;
+                if (r.maSanPham) dStats.skus.add(r.maSanPham);
+            }
 
-          if (createdDate && createdDate.year === currentYear) {
-              const m = createdDate.month;
-              monthlyTicket[m]++; monthlyDefect[m] += dQty; monthlyExchange[m] += eQty;
-          }
-      });
+            if (createdDate && createdDate.year === currentYear) {
+                const m = createdDate.month;
+                if (m >= 0 && m < 12) {
+                    monthlyTicket[m]++; 
+                    monthlyDefect[m] += dQty; 
+                    monthlyExchange[m] += eQty;
+                }
+            }
+        });
+      }
 
       // Prepare lists for modals
       const distributorStats = Array.from(distMap.entries()).map(([name, val]) => ({
@@ -904,13 +930,18 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
       const trendTicket = calculateTrend('ticket');
       const trendDefect = calculateTrend('qty');
       const trendExchange = calculateTrend('exchange');
+      
       const topProducts = Array.from(prodMap.values());
       const topProductsByTicket = [...topProducts].sort((a,b) => b.ticket - a.ticket).slice(0, 5);
       const topProductsByDefect = [...topProducts].sort((a,b) => b.defect - a.defect).slice(0, 10);
+      
       let cumDefect = 0;
+      // Protect division by zero
+      const safeTotalDefect = totalDefectQty > 0 ? totalDefectQty : 1;
+      
       const paretoData = topProductsByDefect.map(p => {
           cumDefect += p.defect;
-          return { ...p, cumPercent: (cumDefect / totalDefectQty) * 100 };
+          return { ...p, cumPercent: (cumDefect / safeTotalDefect) * 100 };
       });
 
       const donutStatusData = [
@@ -930,6 +961,12 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
           { label: 'Hỗn hợp', value: sourceCounts['Hỗn hợp'] },
           { label: 'Khác', value: sourceCounts['Khác'] },
       ].filter(d => d.value > 0);
+      
+      // Calculate chart ratio safely
+      const chartRatio = monthlyDefect.map((d, i) => ({ 
+          month: i + 1, 
+          count: d > 0 ? (monthlyExchange[i] / d) * 100 : 0 
+      }));
 
       return {
           totalTickets, totalDefectQty, totalExchangeQty, totalUniqueSKUs: uniqueSKUs.size,
@@ -939,9 +976,9 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
           chartTicket: monthlyTicket.map((v, i) => ({ month: i + 1, count: v })),
           chartDefect: monthlyDefect.map((v, i) => ({ month: i + 1, count: v })),
           chartExchange: monthlyExchange.map((v, i) => ({ month: i + 1, count: v })),
-          chartRatio: monthlyDefect.map((d, i) => ({ month: i + 1, count: d > 0 ? (monthlyExchange[i] / d) * 100 : 0 })),
+          chartRatio,
           uniqueDistributors: distMap.size,
-          exchangeRate: totalDefectQty > 0 ? ((totalExchangeQty/totalDefectQty)*100).toFixed(1) : 0,
+          exchangeRate: totalDefectQty > 0 ? ((totalExchangeQty/totalDefectQty)*100).toFixed(1) : "0",
           donutStatusData, donutStatusColors, donutSourceData,
           distributorStats,
           productStats
@@ -1019,7 +1056,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                             delayIndex={2}
                         />
                         
-                        <KpiCard title="TỶ LỆ HOÀN THÀNH" value={`${((stats.statusCounts['Hoàn thành']/stats.totalTickets)*100 || 0).toFixed(0)}%`} trend={stats.trendTicket} icon={<CheckCircleIcon/>} colorHex={BRAND.SUCCESS} onClick={() => onFilterSelect('status', 'Hoàn thành')} delayIndex={3} />
+                        <KpiCard title="TỶ LỆ HOÀN THÀNH" value={`${stats.totalTickets > 0 ? ((stats.statusCounts['Hoàn thành']/stats.totalTickets)*100).toFixed(0) : 0}%`} trend={stats.trendTicket} icon={<CheckCircleIcon/>} colorHex={BRAND.SUCCESS} onClick={() => onFilterSelect('status', 'Hoàn thành')} delayIndex={3} />
                     </>
                 ) : (
                     <>

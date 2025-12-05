@@ -4,6 +4,23 @@ import { DefectReport, ToastType, ActivityLog } from '../types';
 import { db } from '../firebaseConfig';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, addDoc, deleteDoc, writeBatch, arrayUnion } from 'firebase/firestore';
 
+// Helper function to remove undefined values before sending to Firestore
+// Firestore crashes if a field is explicitly undefined
+const cleanData = (data: any): any => {
+    if (data instanceof Date) return data; // Preserve Date objects
+    if (Array.isArray(data)) {
+        return data.map(cleanData);
+    } else if (data !== null && typeof data === 'object') {
+        return Object.entries(data).reduce((acc, [key, value]) => {
+            if (value !== undefined) {
+                acc[key] = cleanData(value);
+            }
+            return acc;
+        }, {} as any);
+    }
+    return data;
+};
+
 export const useReports = (showToast: (msg: string, type: ToastType) => void) => {
   const [reports, setReports] = useState<DefectReport[]>([]);
   const [isLoadingReports, setIsLoadingReports] = useState(true);
@@ -20,6 +37,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
       setIsLoadingReports(false);
     }, (error) => {
       console.error("Error fetching reports:", error);
+      showToast('Không thể tải dữ liệu báo cáo.', 'error');
       setIsLoadingReports(false);
     });
     return () => unsubscribe();
@@ -31,7 +49,8 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
             // Update existing
             const reportRef = doc(db, "reports", report.id);
             const { id, ...data } = report;
-            await updateDoc(reportRef, data as any);
+            const cleanedData = cleanData(data);
+            await updateDoc(reportRef, cleanedData);
             showToast('Cập nhật báo cáo thành công!', 'success');
         } else {
             // Create new
@@ -41,13 +60,14 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
                 ngayTao: new Date().toISOString(),
                 activityLog: [] // Initialize empty log
             };
-            await addDoc(collection(db, "reports"), newReportData);
+            const cleanedData = cleanData(newReportData);
+            await addDoc(collection(db, "reports"), cleanedData);
             showToast('Tạo báo cáo mới thành công!', 'success');
         }
         return true;
     } catch (error) {
         console.error("Error saving report:", error);
-        showToast('Lỗi khi lưu báo cáo', 'error');
+        showToast('Lỗi khi lưu báo cáo (Chi tiết trong Console)', 'error');
         return false;
     }
   };
@@ -89,7 +109,8 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
               }
           }
 
-          await updateDoc(reportRef, payload);
+          const cleanedPayload = cleanData(payload);
+          await updateDoc(reportRef, cleanedPayload);
           showToast(successMessage, 'success');
           return true;
       } catch (error) {
@@ -116,13 +137,15 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
               };
           }
 
+          const payload: any = { ...updates };
+          if (logEntry) {
+              payload.activityLog = arrayUnion(logEntry);
+          }
+          const cleanedPayload = cleanData(payload);
+
           ids.forEach(id => {
               const ref = doc(db, "reports", id);
-              const payload: any = { ...updates };
-              if (logEntry) {
-                  payload.activityLog = arrayUnion(logEntry);
-              }
-              batch.update(ref, payload);
+              batch.update(ref, cleanedPayload);
           });
 
           await batch.commit();
@@ -147,6 +170,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
               role: user.role
           };
           
+          // No need to cleanData for arrayUnion usually, but safe to keep object pure
           await updateDoc(reportRef, {
               activityLog: arrayUnion(newComment)
           });
