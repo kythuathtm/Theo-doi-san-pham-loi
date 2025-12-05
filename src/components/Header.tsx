@@ -1,9 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { User, SystemSettings, UserRole } from '../types';
 import { 
   BarChartIcon, CalendarIcon, ListBulletIcon, ChartPieIcon, 
   ArrowDownTrayIcon, Cog8ToothIcon, ShieldCheckIcon, 
-  TableCellsIcon, UserGroupIcon, ArrowRightOnRectangleIcon, CompanyLogo, BellIcon
+  TableCellsIcon, UserGroupIcon, ArrowRightOnRectangleIcon, CompanyLogo, BellIcon,
+  ArrowUpTrayIcon, DocumentDuplicateIcon
 } from './Icons';
 
 interface HeaderProps {
@@ -17,6 +19,9 @@ interface HeaderProps {
   setYearFilter: (year: string) => void;
   availableYears: string[];
   onExport: () => void;
+  onImport: () => void;
+  onDownloadTemplate: () => void;
+  canImport: boolean;
   onLogout: () => void;
   onOpenPermissionModal: () => void;
   onOpenProductModal: () => void;
@@ -34,7 +39,10 @@ export const Header: React.FC<HeaderProps> = ({
   yearFilter, 
   setYearFilter, 
   availableYears,
-  onExport, 
+  onExport,
+  onImport,
+  onDownloadTemplate,
+  canImport,
   onLogout, 
   onOpenPermissionModal, 
   onOpenProductModal, 
@@ -42,8 +50,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSystemSettingsModal
 }) => {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+  const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
+  const dataMenuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   // Close menus on outside click
@@ -52,17 +62,20 @@ export const Header: React.FC<HeaderProps> = ({
           if (adminMenuRef.current && !adminMenuRef.current.contains(event.target as Node)) {
               setIsAdminMenuOpen(false);
           }
+          if (dataMenuRef.current && !dataMenuRef.current.contains(event.target as Node)) {
+              setIsDataMenuOpen(false);
+          }
           if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
               setIsProfileMenuOpen(false);
           }
       };
-      if (isAdminMenuOpen || isProfileMenuOpen) {
+      if (isAdminMenuOpen || isProfileMenuOpen || isDataMenuOpen) {
           document.addEventListener('mousedown', handleClickOutside);
       }
       return () => {
           document.removeEventListener('mousedown', handleClickOutside);
       };
-  }, [isAdminMenuOpen, isProfileMenuOpen]);
+  }, [isAdminMenuOpen, isProfileMenuOpen, isDataMenuOpen]);
 
   const getUserInitials = (name: string) => name ? name.charAt(0).toUpperCase() : '?';
 
@@ -155,10 +168,39 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-1">
                 {currentView === 'list' && (
-                    <button onClick={onExport} className="p-2 sm:px-3 sm:py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold transition-all active:scale-95 flex items-center" title="Xuất Excel">
-                        <ArrowDownTrayIcon className="h-5 w-5 sm:mr-2 text-slate-500" /><span className="hidden sm:inline">Xuất</span>
-                    </button>
+                    <div className="relative" ref={dataMenuRef}>
+                        <button 
+                            onClick={() => setIsDataMenuOpen(!isDataMenuOpen)} 
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all border active:scale-95 ${isDataMenuOpen ? 'bg-blue-50 border-blue-200 text-[#003DA5]' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm'}`}
+                        >
+                            <ArrowDownTrayIcon className="h-5 w-5" />
+                            <span className="hidden sm:inline text-sm font-bold">Dữ liệu</span>
+                        </button>
+                        
+                        {isDataMenuOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in-up origin-top-right text-slate-900 ring-1 ring-black/5">
+                                <button onClick={() => { onExport(); setIsDataMenuOpen(false); }} className="flex w-full items-center px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#003DA5] transition-colors text-left">
+                                    <ArrowDownTrayIcon className="h-4 w-4 mr-3 text-slate-400" />
+                                    Xuất Excel
+                                </button>
+                                {canImport && (
+                                    <>
+                                        <button onClick={() => { onDownloadTemplate(); setIsDataMenuOpen(false); }} className="flex w-full items-center px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#003DA5] transition-colors text-left">
+                                            <DocumentDuplicateIcon className="h-4 w-4 mr-3 text-slate-400" />
+                                            Tải file mẫu Import
+                                        </button>
+                                        <div className="h-px bg-slate-100 my-1"></div>
+                                        <button onClick={() => { onImport(); setIsDataMenuOpen(false); }} className="flex w-full items-center px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors text-left">
+                                            <ArrowUpTrayIcon className="h-4 w-4 mr-3 text-emerald-500" />
+                                            Nhập Excel (Import)
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 )}
+
                 <button className="p-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-blue-600 rounded-xl transition-all shadow-sm active:scale-95 relative" title="Thông báo">
                     <BellIcon className="h-5 w-5" />
                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-1 ring-white"></span>

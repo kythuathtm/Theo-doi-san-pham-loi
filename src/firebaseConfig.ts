@@ -1,15 +1,17 @@
+
 // @ts-ignore
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 // QUAN TRỌNG: Thay thế thông tin bên dưới bằng thông tin từ Firebase Console của bạn
 const firebaseConfig = {
-  apiKey: "AIzaSyDjW9eTJbMUc-PTWyT7IL6ps5V7AN3DZCo",
-  authDomain: "theo-doi-san-pham-loi.firebaseapp.com",
-  projectId: "theo-doi-san-pham-loi",
-  storageBucket: "theo-doi-san-pham-loi.firebasestorage.app",
-  messagingSenderId: "393797044768",
-  appId: "1:393797044768:web:a84dd44b4164f573554a45"
+  apiKey: "AIzaSyDeqjEcX4eEvl-2FBhY4mCTx7zmMVl55vE",
+  authDomain: "ykkhclsp.firebaseapp.com",
+  projectId: "ykkhclsp",
+  storageBucket: "ykkhclsp.firebasestorage.app",
+  messagingSenderId: "123816810828",
+  appId: "1:123816810828:web:7d7b52ebe943cbf17e17e9",
+  measurementId: "G-PP20K8JT03"
 };
 
 // Khởi tạo Firebase

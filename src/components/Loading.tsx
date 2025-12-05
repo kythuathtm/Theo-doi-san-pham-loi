@@ -1,29 +1,27 @@
 
 import React from 'react';
+import { CompanyLogo } from './Icons';
 
 const Loading: React.FC = () => (
-  <div className="w-full h-full p-8 animate-pulse">
-    {/* Header Skeleton */}
-    <div className="flex justify-between items-center mb-8">
-        <div className="h-8 bg-slate-200 rounded-lg w-1/4"></div>
-        <div className="flex gap-2">
-            <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
-            <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
+  <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center p-8 animate-fade-in bg-slate-50/50">
+    <div className="relative">
+        <div className="w-16 h-16 bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-center p-3 relative z-10 animate-pop">
+            <CompanyLogo className="w-full h-full text-[#003DA5] animate-pulse-slow" />
         </div>
+        <div className="absolute inset-0 bg-blue-400/20 rounded-2xl blur-xl animate-pulse"></div>
     </div>
-
-    {/* Table Skeleton */}
-    <div className="space-y-4">
-        <div className="h-12 bg-slate-200 rounded-xl w-full mb-6"></div>
-        {[...Array(6)].map((_, i) => (
-            <div key={i} className="flex gap-4">
-                <div className="h-16 bg-slate-100 rounded-xl w-16"></div>
-                <div className="h-16 bg-slate-100 rounded-xl flex-1"></div>
-                <div className="h-16 bg-slate-100 rounded-xl w-32"></div>
-                <div className="h-16 bg-slate-100 rounded-xl w-32"></div>
-            </div>
-        ))}
+    <div className="mt-6 flex flex-col items-center gap-2">
+        <div className="h-1.5 w-32 bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-full bg-[#003DA5] w-1/2 animate-[shimmer_1.5s_infinite_linear] rounded-full"></div>
+        </div>
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Đang tải dữ liệu...</span>
     </div>
+    <style>{`
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+    `}</style>
   </div>
 );
 

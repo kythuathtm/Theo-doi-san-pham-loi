@@ -75,7 +75,7 @@ export const App: React.FC = () => {
 
   // Use Custom Hooks
   const { currentUser, users, login, logout, saveUser, deleteUser } = useAuth(showToast);
-  const { reports, isLoadingReports, saveReport, deleteReport, updateReport, addComment } = useReports(showToast);
+  const { reports, isLoadingReports, saveReport, deleteReport, updateReport, addComment, importReports } = useReports(showToast);
   const { products, addProduct, deleteProduct, deleteAllProducts, importProducts } = useProducts(showToast);
   const { roleSettings, systemSettings, saveRoleSettings, saveSystemSettings, renameRole } = useSettings(showToast);
 
@@ -106,6 +106,7 @@ export const App: React.FC = () => {
   const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
   
   const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Apply System Settings to DOM
   useEffect(() => {
@@ -427,6 +428,119 @@ export const App: React.FC = () => {
     XLSX.writeFile(workbook, `bao_cao_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
+  // --- Excel Import Logic ---
+  const handleDownloadReportTemplate = () => {
+      const templateData = [
+          {
+              "Ngày phản ánh": "2024-01-30",
+              "Mã sản phẩm": "SP001",
+              "Tên thương mại": "Kim lấy máu chân không",
+              "Dòng sản phẩm": "Vật tư tiêu hao",
+              "Nhãn hàng": "HTM",
+              "Số lô": "LOT123",
+              "Hạn dùng": "2026-01-01",
+              "Nhà phân phối": "NPP A",
+              "Đơn vị sử dụng": "Bệnh viện X",
+              "Nội dung phản ánh": "Kim bị cong",
+              "Số lượng lỗi": 10,
+              "Số lượng đổi": 5,
+              "Trạng thái": "Mới",
+              "Loại lỗi": "Lỗi Sản xuất",
+              "Nguyên nhân": "",
+              "Biện pháp khắc phục": ""
+          }
+      ];
+      const worksheet = XLSX.utils.json_to_sheet(templateData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "MauNhapLieu");
+      XLSX.writeFile(workbook, "Mau_Nhap_Khieu_Nai.xlsx");
+  };
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+          const data = event.target?.result;
+          if (!data) return;
+
+          try {
+              const workbook = XLSX.read(data, { type: 'array' });
+              const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+              const jsonData = XLSX.utils.sheet_to_json(worksheet);
+              
+              const newReports: DefectReport[] = [];
+              const todayStr = new Date().toISOString();
+
+              jsonData.forEach((row: any) => {
+                  const getVal = (keys: string[]) => {
+                      const key = Object.keys(row).find(k => keys.some(kw => k.toLowerCase().includes(kw.toLowerCase())));
+                      return key ? row[key] : '';
+                  };
+
+                  const maSanPham = getVal(['Mã sản phẩm', 'Ma SP']);
+                  const ngayPhanAnhRaw = getVal(['Ngày phản ánh']);
+                  
+                  // Parse Excel Date (Serial number or string)
+                  let ngayPhanAnh = new Date().toISOString().split('T')[0];
+                  if (typeof ngayPhanAnhRaw === 'number') {
+                      const date = new Date((ngayPhanAnhRaw - (25567 + 2)) * 86400 * 1000); // Adjust excel date
+                      ngayPhanAnh = date.toISOString().split('T')[0];
+                  } else if (typeof ngayPhanAnhRaw === 'string' && ngayPhanAnhRaw.includes('/')) {
+                      // Try DD/MM/YYYY
+                      const parts = ngayPhanAnhRaw.split('/');
+                      if (parts.length === 3) ngayPhanAnh = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                  } else if (ngayPhanAnhRaw) {
+                      ngayPhanAnh = String(ngayPhanAnhRaw);
+                  }
+
+                  if (maSanPham) {
+                      newReports.push({
+                          id: '', // Will be generated in hook
+                          ngayTao: todayStr,
+                          ngayPhanAnh,
+                          maSanPham: String(maSanPham).trim(),
+                          tenThuongMai: String(getVal(['Tên thương mại', 'Ten thuong mai']) || ''),
+                          dongSanPham: String(getVal(['Dòng sản phẩm', 'Dong san pham']) || ''),
+                          nhanHang: (getVal(['Nhãn hàng', 'Brand']) || 'HTM') as any,
+                          soLo: String(getVal(['Số lô', 'So lo']) || ''),
+                          hanDung: getVal(['Hạn dùng']) ? String(getVal(['Hạn dùng'])) : '',
+                          nhaPhanPhoi: String(getVal(['Nhà phân phối', 'NPP']) || ''),
+                          donViSuDung: String(getVal(['Đơn vị sử dụng', 'Benh vien']) || ''),
+                          noiDungPhanAnh: String(getVal(['Nội dung', 'Mo ta']) || ''),
+                          soLuongLoi: Number(getVal(['Số lượng lỗi', 'SL loi']) || 0),
+                          soLuongDaNhap: 0,
+                          soLuongDoi: Number(getVal(['Số lượng đổi', 'SL doi']) || 0),
+                          trangThai: (getVal(['Trạng thái', 'Status']) || 'Mới') as any,
+                          loaiLoi: (getVal(['Loại lỗi', 'Nguyen nhan goc']) || '') as any,
+                          nguyenNhan: String(getVal(['Nguyên nhân', 'Root cause']) || ''),
+                          huongKhacPhuc: String(getVal(['Biện pháp', 'Khac phuc']) || ''),
+                          maNgaySanXuat: '',
+                          tenThietBi: '',
+                          donViTinh: '',
+                          images: [],
+                          activityLog: []
+                      });
+                  }
+              });
+
+              if (newReports.length > 0) {
+                  await importReports(newReports);
+              } else {
+                  showToast("Không tìm thấy dữ liệu hợp lệ trong file.", "error");
+              }
+
+          } catch (error) {
+              console.error("Import error", error);
+              showToast("Lỗi đọc file Excel.", "error");
+          }
+          
+          if (fileInputRef.current) fileInputRef.current.value = '';
+      };
+      reader.readAsArrayBuffer(file);
+  };
+
   if (!currentUser) {
       return (
         <Suspense fallback={<Loading />}>
@@ -452,11 +566,23 @@ export const App: React.FC = () => {
         setYearFilter={handleYearFilterChange}
         availableYears={availableYears}
         onExport={handleExportData}
+        onImport={() => fileInputRef.current?.click()}
+        onDownloadTemplate={handleDownloadReportTemplate}
+        canImport={userPermissions.canCreate}
         onLogout={handleLogout}
         onOpenPermissionModal={() => setIsPermissionModalOpen(true)}
         onOpenProductModal={() => setIsProductModalOpen(true)}
         onOpenUserModal={() => setIsUserModalOpen(true)}
         onOpenSystemSettingsModal={() => setIsSystemSettingsModalOpen(true)}
+      />
+      
+      {/* Hidden File Input for Import */}
+      <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileImport} 
+          className="hidden" 
+          accept=".xlsx, .xls" 
       />
 
       <main className="flex-1 overflow-hidden relative">

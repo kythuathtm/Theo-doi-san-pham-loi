@@ -13,18 +13,40 @@ const INITIAL_USERS: User[] = [
   { username: 'tgd', fullName: 'Nguyễn Tổng', role: UserRole.TongGiamDoc, password: '123' },
 ];
 
+const LS_USERS = 'app_users_data';
+
 export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>(() => {
+      try {
+          const saved = localStorage.getItem(LS_USERS);
+          return saved ? JSON.parse(saved) : INITIAL_USERS;
+      } catch { return INITIAL_USERS; }
+  });
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
   // Listen to USERS (and Seed if empty)
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "users"), async (snapshot) => {
-      const usersData = snapshot.docs.map(doc => doc.data()) as User[];
-      setUsers(usersData);
-      setIsLoadingUsers(false);
-    });
+    let unsubscribe = () => {};
+    try {
+        unsubscribe = onSnapshot(collection(db, "users"), 
+            (snapshot) => {
+                const usersData = snapshot.docs.map(doc => doc.data()) as User[];
+                if (usersData.length > 0) {
+                    setUsers(usersData);
+                    localStorage.setItem(LS_USERS, JSON.stringify(usersData));
+                }
+                setIsLoadingUsers(false);
+            },
+            (error) => {
+                console.warn("Auth: Firestore unavailable. Using local users.");
+                setIsLoadingUsers(false);
+            }
+        );
+    } catch (e) {
+        console.warn("Auth: Init Error", e);
+        setIsLoadingUsers(false);
+    }
     return () => unsubscribe();
   }, []);
 
@@ -38,30 +60,49 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
 
   const saveUser = async (user: User, isEdit: boolean) => {
     try {
+        // Optimistic
+        let newUsers = [...users];
+        if (isEdit) {
+            newUsers = newUsers.map(u => u.username === user.username ? user : u);
+        } else {
+            if (newUsers.some(u => u.username === user.username)) {
+                showToast("Tên đăng nhập đã tồn tại", "error");
+                return false;
+            }
+            newUsers.push(user);
+        }
+        setUsers(newUsers);
+        localStorage.setItem(LS_USERS, JSON.stringify(newUsers));
+
         await setDoc(doc(db, "users", user.username), user);
         showToast(isEdit ? 'Cập nhật tài khoản thành công.' : 'Thêm tài khoản mới thành công.', 'success');
         return true;
     } catch (error) {
-        console.error("User save error:", error);
-        showToast("Lỗi khi lưu tài khoản", "error");
-        return false;
+        console.warn("Offline save: user");
+        showToast("Đã lưu tài khoản (Offline mode)", "info");
+        return true;
     }
   };
 
   const deleteUser = async (username: string) => {
     try {
+        const newUsers = users.filter(u => u.username !== username);
+        setUsers(newUsers);
+        localStorage.setItem(LS_USERS, JSON.stringify(newUsers));
+
         await deleteDoc(doc(db, "users", username));
         showToast('Đã xóa tài khoản.', 'info');
         return true;
     } catch (error) {
-        showToast("Lỗi khi xóa tài khoản", "error");
-        return false;
+        console.warn("Offline delete: user");
+        showToast("Đã xóa (Offline mode)", "info");
+        return true;
     }
   };
 
   return {
     currentUser,
-    users: users.length > 0 ? users : INITIAL_USERS, // Fallback for login screen
+    users,
     isLoadingUsers,
     login,
     logout,

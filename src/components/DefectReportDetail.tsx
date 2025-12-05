@@ -37,8 +37,20 @@ interface DetailRowProps {
 }
 
 const DetailRow: React.FC<DetailRowProps> = ({ label, value, className = "text-slate-800", wrapperClass = "col-span-1", icon, isFullWidth = false }) => {
-    // Check if value is null or undefined to show placeholder
+    // Check if value is potentially dangerous (raw object)
+    let displayValue = value;
     const showPlaceholder = value === null || value === undefined || value === '';
+
+    if (!showPlaceholder && typeof value === 'object' && !React.isValidElement(value)) {
+        // Fallback for objects that are not React elements (e.g., if a date object or array was passed incorrectly)
+        try {
+            if (value instanceof Date) displayValue = value.toLocaleDateString('vi-VN');
+            else if (Array.isArray(value)) displayValue = value.join(', ');
+            else displayValue = JSON.stringify(value);
+        } catch (e) {
+            displayValue = "Error displaying value";
+        }
+    }
 
     return (
         <div className={`flex flex-col ${wrapperClass}`}>
@@ -47,7 +59,7 @@ const DetailRow: React.FC<DetailRowProps> = ({ label, value, className = "text-s
                 {label}
             </dt>
             <dd className={`text-sm font-medium break-words bg-slate-50/50 px-3 py-2.5 rounded-lg border border-slate-100 flex items-center shadow-sm ${isFullWidth ? 'min-h-[60px] items-start' : 'min-h-[40px]'} ${showPlaceholder ? '' : className}`}>
-                {showPlaceholder ? <span className="text-slate-300 italic font-normal text-xs">---</span> : value}
+                {showPlaceholder ? <span className="text-slate-300 italic font-normal text-xs">---</span> : displayValue}
             </dd>
         </div>
     );
