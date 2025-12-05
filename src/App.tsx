@@ -62,6 +62,9 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   );
 };
 
+// Safe XLSX access
+const xlsxLib = (XLSX as any).default ?? XLSX;
+
 // --- Main App Component ---
 
 export const App: React.FC = () => {
@@ -422,10 +425,10 @@ export const App: React.FC = () => {
         'Ngày hoàn thành': r.ngayHoanThanh ? new Date(r.ngayHoanThanh).toLocaleDateString('en-GB') : '',
         'Loại lỗi': r.loaiLoi || ''
     }));
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "BaoCao");
-    XLSX.writeFile(workbook, `bao_cao_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    const worksheet = xlsxLib.utils.json_to_sheet(dataToExport);
+    const workbook = xlsxLib.utils.book_new();
+    xlsxLib.utils.book_append_sheet(workbook, worksheet, "BaoCao");
+    xlsxLib.writeFile(workbook, `bao_cao_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   // --- Excel Import Logic ---
@@ -450,10 +453,10 @@ export const App: React.FC = () => {
               "Biện pháp khắc phục": ""
           }
       ];
-      const worksheet = XLSX.utils.json_to_sheet(templateData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "MauNhapLieu");
-      XLSX.writeFile(workbook, "Mau_Nhap_Khieu_Nai.xlsx");
+      const worksheet = xlsxLib.utils.json_to_sheet(templateData);
+      const workbook = xlsxLib.utils.book_new();
+      xlsxLib.utils.book_append_sheet(workbook, worksheet, "MauNhapLieu");
+      xlsxLib.writeFile(workbook, "Mau_Nhap_Khieu_Nai.xlsx");
   };
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -466,9 +469,9 @@ export const App: React.FC = () => {
           if (!data) return;
 
           try {
-              const workbook = XLSX.read(data, { type: 'array' });
+              const workbook = xlsxLib.read(data, { type: 'array' });
               const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-              const jsonData = XLSX.utils.sheet_to_json(worksheet);
+              const jsonData = xlsxLib.utils.sheet_to_json(worksheet);
               
               const newReports: DefectReport[] = [];
               const todayStr = new Date().toISOString();
@@ -533,7 +536,7 @@ export const App: React.FC = () => {
 
           } catch (error) {
               console.error("Import error", error);
-              showToast("Lỗi đọc file Excel.", "error");
+              showToast("Lỗi đọc file Excel. Vui lòng kiểm tra định dạng.", "error");
           }
           
           if (fileInputRef.current) fileInputRef.current.value = '';

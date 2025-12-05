@@ -31,6 +31,9 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
       donViTinh: ''
   });
 
+  // Safe XLSX access
+  const xlsxLib = (XLSX as any).default ?? XLSX;
+
   const handleDownloadTemplate = () => {
       const templateData = [
           {
@@ -53,10 +56,10 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
           }
       ];
       
-      const worksheet = XLSX.utils.json_to_sheet(templateData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "MauNhapLieu");
-      XLSX.writeFile(workbook, "Mau_Danh_Sach_San_Pham.xlsx");
+      const worksheet = xlsxLib.utils.json_to_sheet(templateData);
+      const workbook = xlsxLib.utils.book_new();
+      xlsxLib.utils.book_append_sheet(workbook, worksheet, "MauNhapLieu");
+      xlsxLib.writeFile(workbook, "Mau_Danh_Sach_San_Pham.xlsx");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,10 +72,10 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
         if (!data) return;
 
         try {
-            const workbook = XLSX.read(data, { type: 'array' });
+            const workbook = xlsxLib.read(data, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            const jsonData = xlsxLib.utils.sheet_to_json(worksheet);
             
             const newProducts: Product[] = [];
 
@@ -116,7 +119,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
 
         } catch (error) {
             console.error("Lỗi đọc file:", error);
-            alert("Đã xảy ra lỗi khi đọc file Excel.");
+            alert("Đã xảy ra lỗi khi đọc file Excel. Vui lòng kiểm tra lại định dạng file.");
         }
         
         if (fileInputRef.current) fileInputRef.current.value = '';
