@@ -66,15 +66,15 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
                 }
             },
             (error: any) => {
-                if (error?.code === 'permission-denied') {
-                    console.warn("Settings: Firestore permission denied. Using local settings.");
+                if (error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions')) {
+                    console.warn("Settings: Firestore permission denied. Switching to Offline Mode.");
                 } else {
                     console.error("Settings Listener Error:", error);
                 }
             }
         );
     } catch (e) {
-        console.log("Settings: Init failed, using local storage.", e);
+        console.warn("Settings: Init failed or offline, using local storage.");
     }
     return () => unsubscribe();
   }, []);
@@ -120,7 +120,7 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
               showToast(`Đã đồng bộ vai trò mới cho ${snapshot.size} tài khoản.`, 'success');
           }
       } catch (error: any) {
-          console.warn("Rename Role: Firestore unavailable or permission denied.", error.code);
+          console.warn("Rename Role: Firestore unavailable or permission denied. (Offline)", error.code);
       }
   };
 

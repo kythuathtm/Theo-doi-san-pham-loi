@@ -41,8 +41,8 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
             },
             (error: any) => {
                 // Handle Permission Denied gracefully
-                if (error?.code === 'permission-denied') {
-                    console.warn("Auth: Firestore permission denied. Using local users.");
+                if (error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions')) {
+                    console.warn("Auth: Firestore permission denied. Using local users (Offline Mode).");
                 } else {
                     console.error("Auth Listener Error:", error);
                 }
@@ -50,7 +50,7 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
             }
         );
     } catch (e) {
-        console.log("Auth: Init failed, using local data.");
+        console.warn("Auth: Init failed or offline, using local data.");
         setIsLoadingUsers(false);
     }
     return () => unsubscribe();

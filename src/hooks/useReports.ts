@@ -103,9 +103,8 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
                 setIsLoadingReports(false);
             }, 
             (error: any) => {
-                // If permission is denied, just stop loading and rely on local data
-                if (error?.code === 'permission-denied') {
-                    console.warn("Reports: Firestore permission denied. Using local data.");
+                if (error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions')) {
+                    console.warn("Reports: Firestore permission denied. Using local data (Offline Mode).");
                 } else {
                     console.error("Error fetching reports:", error);
                 }
@@ -113,7 +112,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
             }
         );
     } catch (error) {
-        console.log("Reports: Init failed, using local data.");
+        console.warn("Reports: Init failed or offline, using local data.");
         setIsLoadingReports(false);
     }
     return () => unsubscribe();

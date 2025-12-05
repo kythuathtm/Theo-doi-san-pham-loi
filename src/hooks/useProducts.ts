@@ -33,15 +33,15 @@ export const useProducts = (showToast: (msg: string, type: ToastType) => void) =
                 }
             },
             (error: any) => {
-                if (error?.code === 'permission-denied') {
-                    console.warn("Product: Firestore permission denied. Using local data.");
+                if (error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions')) {
+                    console.warn("Product: Firestore permission denied. Using local data (Offline Mode).");
                 } else {
                     console.error("Product Listener Error:", error);
                 }
             }
         );
     } catch (e) {
-        console.log("Product: Init failed, using local storage.");
+        console.warn("Product: Init failed or offline, using local storage.");
     }
     return () => unsubscribe();
   }, []);
