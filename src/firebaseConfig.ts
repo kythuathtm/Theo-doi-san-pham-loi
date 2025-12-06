@@ -1,5 +1,5 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import * as firebaseApp from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore"; // <-- Thêm dòng này để import Firestore
 
@@ -19,14 +19,12 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// Fix: Use namespace import and cast to any to resolve "no exported member" error in some environments
+export const app = (firebaseApp as any).initializeApp(firebaseConfig);
+export const analytics = getAnalytics(app);
 
 // Initialize Cloud Firestore and get a reference to the service
-const db = getFirestore(app); // <-- Thêm dòng này để kết nối với Firestore
+export const db = getFirestore(app); // <-- Thêm dòng này để kết nối với Firestore
 
 // Bây giờ bạn có thể sử dụng biến 'db' để tương tác với cơ sở dữ liệu Firestore của mình
 console.log("Firebase Analytics và Firestore đã được kết nối thành công!", app, analytics, db);
-
-// Ví dụ nhỏ: Kiểm tra xem Firestore có sẵn sàng để sử dụng không
-// console.log("Firestore instance:", db);
