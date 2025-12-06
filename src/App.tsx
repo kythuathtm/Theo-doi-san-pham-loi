@@ -80,7 +80,7 @@ export const App: React.FC = () => {
   const { currentUser, users, login, logout, saveUser, deleteUser } = useAuth(showToast);
   const { reports, isLoadingReports, saveReport, deleteReport, updateReport, addComment, importReports } = useReports(showToast);
   const { products, addProduct, deleteProduct, deleteAllProducts, importProducts } = useProducts(showToast);
-  const { roleSettings, systemSettings, saveRoleSettings, saveSystemSettings, renameRole } = useSettings(showToast);
+  const { roleSettings, systemSettings, saveRoleSettings, saveSystemSettings, renameRole, isOffline, connectionError } = useSettings(showToast);
 
   // UI State
   const [selectedReport, setSelectedReport] = useState<DefectReport | null>(null);
@@ -577,6 +577,7 @@ export const App: React.FC = () => {
         onOpenProductModal={() => setIsProductModalOpen(true)}
         onOpenUserModal={() => setIsUserModalOpen(true)}
         onOpenSystemSettingsModal={() => setIsSystemSettingsModalOpen(true)}
+        isOffline={isOffline}
       />
       
       {/* Hidden File Input for Import */}
@@ -702,6 +703,8 @@ export const App: React.FC = () => {
                 currentSettings={systemSettings}
                 onSave={saveSystemSettings}
                 onClose={() => setIsSystemSettingsModalOpen(false)}
+                isOffline={isOffline}
+                connectionError={connectionError}
               />
           )}
       </Suspense>

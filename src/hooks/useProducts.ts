@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Product, ToastType } from '../types';
 import { db } from '../firebaseConfig';
@@ -30,9 +31,9 @@ export const useProducts = (showToast: (msg: string, type: ToastType) => void) =
             },
             (error: any) => {
                 if (error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions')) {
-                    console.warn("Product: Firestore permission denied. Using local data (Offline Mode).");
+                    console.info("Product: Firestore permission denied. Using local data (Offline Mode).");
                 } else {
-                    console.error("Product Listener Error:", error);
+                    console.warn("Product Listener Error (Offline Mode):", error);
                 }
             }
         );
@@ -52,7 +53,7 @@ export const useProducts = (showToast: (msg: string, type: ToastType) => void) =
         await setDoc(doc(db, "products", product.maSanPham), product);
         showToast('Thêm sản phẩm thành công', 'success');
     } catch (error: any) {
-        console.warn("Offline add: product", error.code);
+        console.info("Offline add: product (local only)");
         showToast('Đã lưu sản phẩm (Offline mode)', 'info');
     }
   };
@@ -69,7 +70,7 @@ export const useProducts = (showToast: (msg: string, type: ToastType) => void) =
         await deleteDoc(doc(db, "products", maSanPham));
         showToast('Xóa sản phẩm thành công', 'info');
     } catch (error: any) {
-        console.warn("Offline delete: product", error.code);
+        console.info("Offline delete: product (local only)");
         showToast('Đã xóa sản phẩm (Offline mode)', 'info');
     }
   };
@@ -89,7 +90,7 @@ export const useProducts = (showToast: (msg: string, type: ToastType) => void) =
         await batch.commit();
         showToast("Đã xóa toàn bộ dữ liệu sản phẩm.", "info");
     } catch (error: any) {
-        console.warn("Offline delete all: products", error.code);
+        console.info("Offline delete all: products (local only)");
         showToast("Đã xóa dữ liệu (Offline mode).", "info");
     }
   };
@@ -115,7 +116,7 @@ export const useProducts = (showToast: (msg: string, type: ToastType) => void) =
           showToast(`Đã import thành công ${newProducts.length} sản phẩm.`, 'success');
           return true;
       } catch (error: any) {
-          console.warn("Offline import: products", error.code);
+          console.info("Offline import: products (local only)");
           showToast(`Đã import ${newProducts.length} sản phẩm (Offline mode).`, 'success');
           return true;
       }

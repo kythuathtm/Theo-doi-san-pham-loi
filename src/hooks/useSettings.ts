@@ -43,6 +43,9 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
       } catch { return DEFAULT_SYSTEM_SETTINGS; }
   });
 
+  const [isOffline, setIsOffline] = useState(false);
+  const [connectionError, setConnectionError] = useState<string>('');
+
   // Listen to SETTINGS
   useEffect(() => {
     let unsubscribe = () => {};
@@ -64,17 +67,26 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
                         localStorage.setItem(LS_SYSTEM_SETTINGS, JSON.stringify(data));
                     }
                 }
+                setIsOffline(false);
+                setConnectionError('');
             },
             (error: any) => {
-                if (error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions')) {
-                    console.warn("Settings: Firestore permission denied. Switching to Offline Mode.");
+                const isPermError = error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions');
+                
+                if (isPermError) {
+                    console.info("Settings: Firestore permission denied. Switching to Offline Mode.");
+                    setConnectionError('permission-denied');
                 } else {
-                    console.error("Settings Listener Error:", error);
+                    console.warn("Settings Listener Error (Offline Mode):", error);
+                    setConnectionError(error?.message || 'unknown');
                 }
+                setIsOffline(true);
             }
         );
-    } catch (e) {
+    } catch (e: any) {
         console.warn("Settings: Init failed or offline, using local storage.");
+        setIsOffline(true);
+        setConnectionError(e?.message || 'init-failed');
     }
     return () => unsubscribe();
   }, []);
@@ -88,7 +100,7 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
           await setDoc(doc(db, "settings", "roleSettings"), newSettings);
           showToast('Cập nhật phân quyền thành công.', 'success');
       } catch (error: any) {
-          console.warn("Offline save: roleSettings", error.code);
+          console.info("Offline save: roleSettings (local only)");
           showToast('Đã lưu cài đặt (Chế độ Offline).', 'info');
       }
   };
@@ -102,7 +114,7 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
           await setDoc(doc(db, "settings", "systemSettings"), newSettings);
           showToast('Cập nhật cấu hình hệ thống thành công.', 'success');
       } catch (error: any) {
-          console.warn("Offline save: systemSettings", error.code);
+          console.info("Offline save: systemSettings (local only)");
           showToast('Đã lưu cấu hình (Chế độ Offline).', 'info');
       }
   };
@@ -120,7 +132,7 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
               showToast(`Đã đồng bộ vai trò mới cho ${snapshot.size} tài khoản.`, 'success');
           }
       } catch (error: any) {
-          console.warn("Rename Role: Firestore unavailable or permission denied. (Offline)", error.code);
+          console.info("Rename Role: Firestore unavailable or permission denied. (Offline mode)");
       }
   };
 
@@ -129,6 +141,8 @@ export const useSettings = (showToast: (msg: string, type: ToastType) => void) =
     systemSettings,
     saveRoleSettings,
     saveSystemSettings,
-    renameRole
+    renameRole,
+    isOffline,
+    connectionError
   };
 };

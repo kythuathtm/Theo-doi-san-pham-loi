@@ -1,9 +1,13 @@
-
-// @ts-ignore
+// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
+import { getFirestore } from "firebase/firestore"; // <-- Thêm dòng này để import Firestore
 
-// QUAN TRỌNG: Thay thế thông tin bên dưới bằng thông tin từ Firebase Console của bạn
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDeqjEcX4eEvl-2FBhY4mCTx7zmMVl55vE",
   authDomain: "ykkhclsp.firebaseapp.com",
@@ -14,8 +18,15 @@ const firebaseConfig = {
   measurementId: "G-PP20K8JT03"
 };
 
-// Khởi tạo Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const analytics = getAnalytics(app);
 
-export { db };
+// Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app); // <-- Thêm dòng này để kết nối với Firestore
+
+// Bây giờ bạn có thể sử dụng biến 'db' để tương tác với cơ sở dữ liệu Firestore của mình
+console.log("Firebase Analytics và Firestore đã được kết nối thành công!", app, analytics, db);
+
+// Ví dụ nhỏ: Kiểm tra xem Firestore có sẵn sàng để sử dụng không
+// console.log("Firestore instance:", db);

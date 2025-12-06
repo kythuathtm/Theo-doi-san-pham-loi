@@ -40,11 +40,11 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
                 setIsLoadingUsers(false);
             },
             (error: any) => {
-                // Handle Permission Denied gracefully
+                // Handle Permission Denied gracefully by logging info instead of warning
                 if (error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions')) {
-                    console.warn("Auth: Firestore permission denied. Using local users (Offline Mode).");
+                    console.info("Auth: Firestore permission denied. Functioning in offline mode with local users.");
                 } else {
-                    console.error("Auth Listener Error:", error);
+                    console.warn("Auth Listener Error (Offline Mode):", error);
                 }
                 setIsLoadingUsers(false);
             }
@@ -84,7 +84,8 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
         showToast(isEdit ? 'Cập nhật tài khoản thành công.' : 'Thêm tài khoản mới thành công.', 'success');
         return true;
     } catch (error: any) {
-        console.warn("Offline save: user", error.code);
+        // Suppress specific offline/permission errors in console
+        console.info("Offline save: user (local only)");
         showToast("Đã lưu tài khoản (Offline mode)", "info");
         return true;
     }
@@ -101,7 +102,7 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
         showToast('Đã xóa tài khoản.', 'info');
         return true;
     } catch (error: any) {
-        console.warn("Offline delete: user", error.code);
+        console.info("Offline delete: user (local only)");
         showToast("Đã xóa (Offline mode)", "info");
         return true;
     }

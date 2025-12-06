@@ -5,7 +5,7 @@ import {
   BarChartIcon, CalendarIcon, ListBulletIcon, ChartPieIcon, 
   ArrowDownTrayIcon, Cog8ToothIcon, ShieldCheckIcon, 
   TableCellsIcon, UserGroupIcon, ArrowRightOnRectangleIcon, CompanyLogo, BellIcon,
-  ArrowUpTrayIcon, DocumentDuplicateIcon
+  ArrowUpTrayIcon, DocumentDuplicateIcon, CloudSlashIcon
 } from './Icons';
 
 interface HeaderProps {
@@ -27,6 +27,7 @@ interface HeaderProps {
   onOpenProductModal: () => void;
   onOpenUserModal: () => void;
   onOpenSystemSettingsModal: () => void;
+  isOffline?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -47,7 +48,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenPermissionModal, 
   onOpenProductModal, 
   onOpenUserModal, 
-  onOpenSystemSettingsModal
+  onOpenSystemSettingsModal,
+  isOffline
 }) => {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
@@ -166,6 +168,19 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           <div className="flex items-center gap-2 sm:gap-4">
+            
+            {/* Offline Indicator - Clickable to help user fix connection */}
+            {isOffline && (
+                <button 
+                    onClick={onOpenSystemSettingsModal}
+                    className="hidden md:flex items-center px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg text-xs font-bold text-red-600 gap-2 cursor-pointer hover:bg-red-100 transition-colors shadow-sm animate-pulse" 
+                    title="Mất kết nối Database. Bấm để xem hướng dẫn khắc phục."
+                >
+                    <CloudSlashIcon className="w-4 h-4" />
+                    <span>Offline Mode</span>
+                </button>
+            )}
+
             <div className="flex items-center gap-1">
                 {currentView === 'list' && (
                     <div className="relative" ref={dataMenuRef}>

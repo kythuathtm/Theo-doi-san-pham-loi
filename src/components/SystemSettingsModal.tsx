@@ -1,17 +1,20 @@
 
 import React, { useState, useRef } from 'react';
 import { SystemSettings } from '../types';
-import { XIcon, CheckCircleIcon, ArrowUpTrayIcon, TrashIcon, TagIcon, WrenchIcon, SparklesIcon, ShoppingBagIcon, ListBulletIcon, TableCellsIcon } from './Icons';
+import { db } from '../firebaseConfig';
+import { XIcon, CheckCircleIcon, ArrowUpTrayIcon, TrashIcon, TagIcon, WrenchIcon, SparklesIcon, ShoppingBagIcon, ListBulletIcon, TableCellsIcon, ServerStackIcon, ArrowPathIcon, ExclamationCircleIcon, CloudIcon, CloudSlashIcon } from './Icons';
 
 interface Props {
   currentSettings: SystemSettings;
   onSave: (settings: SystemSettings) => void;
   onClose: () => void;
+  isOffline?: boolean;
+  connectionError?: string;
 }
 
-const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose }) => {
+const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose, isOffline, connectionError }) => {
   const [settings, setSettings] = useState<SystemSettings>(currentSettings);
-  const [activeTab, setActiveTab] = useState<'general' | 'header' | 'list'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'header' | 'list' | 'database'>(isOffline ? 'database' : 'general');
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const fontOptions = [
@@ -149,6 +152,17 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'list' ? 'bg-purple-50 text-purple-700' : 'text-slate-600 hover:bg-slate-50'}`}
                     >
                         <TableCellsIcon className="w-5 h-5" /> Bảng & Danh sách
+                    </button>
+                    <div className="my-2 h-px bg-slate-100"></div>
+                    <button 
+                        onClick={() => setActiveTab('database')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'database' ? 'bg-red-50 text-red-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        <ServerStackIcon className="w-5 h-5" /> 
+                        <div className="flex justify-between w-full items-center">
+                            <span>Cơ sở dữ liệu</span>
+                            {isOffline && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
+                        </div>
                     </button>
                 </div>
             </div>
@@ -345,6 +359,80 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                                 onFontSizeChange={(val: string) => setSettings({...settings, listFontSize: val})}
                                 defaultSize="15px"
                             />
+                        </div>
+                    </div>
+                )}
+
+                {/* TAB: DATABASE - NEW */}
+                {activeTab === 'database' && (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <SectionTitle title="Trạng thái Kết nối" icon={<ServerStackIcon className="w-5 h-5" />} colorClass={isOffline ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600"} />
+                            
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isOffline ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                                    {isOffline ? <CloudSlashIcon className="w-6 h-6" /> : <CloudIcon className="w-6 h-6" />}
+                                </div>
+                                <div>
+                                    <h3 className={`text-lg font-bold ${isOffline ? 'text-red-600' : 'text-emerald-600'}`}>
+                                        {isOffline ? 'Mất kết nối với Firestore' : 'Đang kết nối ổn định'}
+                                    </h3>
+                                    <p className="text-sm text-slate-500">
+                                        Project ID: <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1 rounded">{db.app.options.projectId}</span>
+                                    </p>
+                                </div>
+                                <button onClick={() => window.location.reload()} className="ml-auto flex items-center px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-all active:scale-95">
+                                    <ArrowPathIcon className="w-4 h-4 mr-2" /> Tải lại trang
+                                </button>
+                            </div>
+
+                            {isOffline && connectionError === 'permission-denied' && (
+                                <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 mb-6">
+                                    <div className="flex items-start gap-3">
+                                        <ExclamationCircleIcon className="w-5 h-5 text-orange-500 mt-0.5" />
+                                        <div>
+                                            <h4 className="text-sm font-bold text-orange-800 uppercase mb-1">Lỗi Quyền truy cập (Permission Denied)</h4>
+                                            <p className="text-sm text-orange-700 leading-relaxed">
+                                                Ứng dụng không thể đọc/ghi dữ liệu do cấu hình bảo mật của Firebase chặn truy cập.
+                                                Để khắc phục và chuyển sang chế độ <strong>Online</strong>, bạn cần cập nhật Rules trong Firebase Console.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isOffline && (
+                                <div className="space-y-4">
+                                    <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                        <WrenchIcon className="w-4 h-4 text-blue-500" />
+                                        Hướng dẫn khắc phục (Cho Admin/Developer)
+                                    </h4>
+                                    
+                                    <div className="bg-slate-900 text-slate-300 p-4 rounded-xl font-mono text-xs leading-relaxed overflow-x-auto">
+                                        <div className="flex justify-between items-center mb-2 border-b border-slate-700 pb-2">
+                                            <span className="text-emerald-400 font-bold">Firestore Security Rules</span>
+                                            <span className="text-[10px] uppercase text-slate-500">Copy đoạn mã dưới đây</span>
+                                        </div>
+                                        <pre className="whitespace-pre-wrap">
+{`rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}`}
+                                        </pre>
+                                    </div>
+
+                                    <ol className="list-decimal list-inside text-sm text-slate-600 space-y-2 pl-2">
+                                        <li>Truy cập <strong>Firebase Console</strong> của dự án <span className="font-mono bg-slate-100 px-1 rounded">{db.app.options.projectId}</span>.</li>
+                                        <li>Vào mục <strong>Firestore Database</strong> {'>'} Tab <strong>Rules</strong>.</li>
+                                        <li>Dán đoạn mã trên vào khung soạn thảo và bấm <strong>Publish</strong>.</li>
+                                        <li>Quay lại đây và bấm nút <strong>Tải lại trang</strong>.</li>
+                                    </ol>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

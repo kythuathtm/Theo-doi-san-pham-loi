@@ -76,17 +76,17 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
             
-            // Helper to normalize string for comparison (removes accents, special chars, lowercase)
+            // Helper to normalize string for comparison (removes accents, special chars, lowercase, spaces)
             const normalizeStr = (str: any) => {
-                if (!str) return '';
+                if (str === null || str === undefined) return '';
                 return String(str)
                     .normalize("NFD")
                     .replace(/[\u0300-\u036f]/g, "")
                     .toLowerCase()
-                    .replace(/[^a-z0-9]/g, "");
+                    .replace(/[^a-z0-9]/g, ""); // Remove everything except letters and numbers
             };
 
-            // 1. Detect Header Row: Read first 20 rows to find header
+            // 1. Read raw data to detect header
             const rawData = xlsxLib.utils.sheet_to_json(worksheet, { header: 1, range: 0, defval: '' }) as any[][];
             
             if (!rawData || rawData.length === 0) {
@@ -95,27 +95,37 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                  return;
             }
 
+            // Score-based Header Detection
             let headerRowIndex = 0;
-            // Keywords that definitely appear in the header
-            const requiredKeywords = ['masp', 'codesp', 'productcode', 'mahang']; 
-            
-            // Scan rows
+            let maxScore = -1;
+
+            const detectionKeywords = {
+                code: ['masp', 'masanpham', 'mahang', 'code', 'productcode', 'sku', 'ma'],
+                name: ['ten', 'name', 'tensanpham', 'tenthuongmai', 'productname', 'tenhang'],
+                brand: ['nhanhang', 'brand', 'hang', 'ncc', 'vendor', 'hangsanxuat'],
+                unit: ['dvt', 'donvitinh', 'unit']
+            };
+
             for (let i = 0; i < Math.min(rawData.length, 20); i++) {
                 const row = rawData[i];
-                if (!Array.isArray(row)) continue;
+                if (!Array.isArray(row) || row.length === 0) continue;
                 
-                const hasCodeColumn = row.some((cell: any) => {
-                    const cellStr = normalizeStr(cell);
-                    return requiredKeywords.some(kw => cellStr.includes(kw));
-                });
+                let score = 0;
+                const rowStr = row.map(cell => normalizeStr(cell));
                 
-                if (hasCodeColumn) {
+                // Check for presence of key columns
+                if (rowStr.some(c => detectionKeywords.code.some(k => c.includes(k) || k.includes(c)))) score += 3;
+                if (rowStr.some(c => detectionKeywords.name.some(k => c.includes(k) || k.includes(c)))) score += 2;
+                if (rowStr.some(c => detectionKeywords.brand.some(k => c.includes(k)))) score += 1;
+                if (rowStr.some(c => detectionKeywords.unit.some(k => c.includes(k)))) score += 1;
+                
+                if (score > maxScore) {
+                    maxScore = score;
                     headerRowIndex = i;
-                    break;
                 }
             }
 
-            // 2. Parse Data with detected header
+            // 2. Parse Data with detected header row
             const jsonData = xlsxLib.utils.sheet_to_json(worksheet, { range: headerRowIndex });
             
             const newProducts: Product[] = [];
@@ -126,28 +136,27 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                 const getVal = (keywords: string[]) => {
                     const normalizedKeywords = keywords.map(k => normalizeStr(k));
                     
-                    // Find key in row that matches one of the keywords
                     const foundKey = keys.find(k => {
                         const nk = normalizeStr(k);
-                        // Robust check: matches normalized forms (e.g. "masp" matches "masanpham")
-                        return normalizedKeywords.some(kw => nk === kw || nk.includes(kw) || kw.includes(nk));
+                        // Check exact match or inclusion
+                        return normalizedKeywords.some(kw => nk === kw || nk.includes(kw));
                     });
                     
                     return foundKey ? row[foundKey] : undefined;
                 };
 
-                const maSanPham = getVal(['Mã SP', 'Ma San Pham', 'Code', 'Product Code', 'Mã hàng', 'Mã']);
+                const maSanPham = getVal(['Mã SP', 'Ma San Pham', 'Code', 'Product Code', 'Mã hàng', 'Mã', 'SKU', 'Mã sản phẩm']);
                 const tenThuongMai = getVal(['Tên thương mại', 'Ten Thuong Mai', 'Tên sản phẩm', 'Ten San Pham', 'Name', 'Product Name', 'Tên hàng']);
-                const tenThietBi = getVal(['Tên thiết bị', 'Ten Thiet Bi', 'Device Name', 'Loại thiết bị']);
-                const dongSanPham = getVal(['Dòng sản phẩm', 'Dong San Pham', 'Type', 'Category', 'Dòng']);
-                const nhanHang = getVal(['Nhãn hàng', 'Nhan Hang', 'Brand', 'Hãng', 'NCC']);
-                const gplh = getVal(['GPLH', 'Số đăng ký', 'SDK', 'Reg No']);
-                const donViTinh = getVal(['Đơn vị tính', 'DVT', 'Unit']);
+                const tenThietBi = getVal(['Tên thiết bị', 'Ten Thiet Bi', 'Device Name', 'Loại thiết bị', 'Tên thiết bị YT']);
+                const dongSanPham = getVal(['Dòng sản phẩm', 'Dong San Pham', 'Type', 'Category', 'Dòng', 'Dòng SP']);
+                const nhanHang = getVal(['Nhãn hàng', 'Nhan Hang', 'Brand', 'Hãng', 'NCC', 'Hãng SX']);
+                const gplh = getVal(['GPLH', 'Số đăng ký', 'SDK', 'Reg No', 'Số GPNK']);
+                const donViTinh = getVal(['Đơn vị tính', 'DVT', 'Unit', 'Đơn vị']);
 
-                if (maSanPham && tenThuongMai) {
+                if (maSanPham && (tenThuongMai || tenThietBi)) {
                     newProducts.push({
                         maSanPham: String(maSanPham).trim(),
-                        tenThuongMai: String(tenThuongMai).trim(),
+                        tenThuongMai: String(tenThuongMai || tenThietBi || '').trim(),
                         tenThietBi: String(tenThietBi || '').trim(),
                         dongSanPham: String(dongSanPham || '').trim(),
                         nhanHang: nhanHang ? String(nhanHang).trim() : 'HTM',
@@ -160,7 +169,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
             if (newProducts.length > 0) {
                 onImport(newProducts);
             } else {
-                alert("Không tìm thấy dữ liệu hợp lệ.\n\nVui lòng đảm bảo file Excel có dòng tiêu đề chứa 'Mã SP' và 'Tên thương mại'.");
+                alert("Không tìm thấy dữ liệu hợp lệ.\n\nVui lòng đảm bảo file Excel có dòng tiêu đề chứa 'Mã SP' và 'Tên thương mại'.\n\nBạn có thể tải file mẫu để xem định dạng chuẩn.");
             }
 
         } catch (error) {

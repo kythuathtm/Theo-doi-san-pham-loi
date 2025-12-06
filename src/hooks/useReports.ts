@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { DefectReport, ToastType, ActivityLog } from '../types';
 import { db } from '../firebaseConfig';
@@ -52,9 +53,9 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
             }, 
             (error: any) => {
                 if (error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions')) {
-                    console.warn("Reports: Firestore permission denied. Using local data (Offline Mode).");
+                    console.info("Reports: Firestore permission denied. Using local data (Offline Mode).");
                 } else {
-                    console.error("Error fetching reports:", error);
+                    console.warn("Error fetching reports (Offline Mode):", error);
                 }
                 setIsLoadingReports(false);
             }
@@ -93,7 +94,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
         showToast(isEditing ? 'Cập nhật thành công!' : 'Tạo mới thành công!', 'success');
         return true;
     } catch (error: any) {
-        console.warn("Offline save: report", error.code);
+        console.info("Offline save: report (local only)");
         showToast('Đã lưu (Offline mode)', 'success');
         return true;
     }
@@ -139,7 +140,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
           showToast(successMessage, 'success');
           return true;
       } catch (error: any) {
-          console.warn("Offline update: report", error.code);
+          console.info("Offline update: report (local only)");
           showToast(successMessage + ' (Offline)', 'success');
           return true;
       }
@@ -169,7 +170,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
           await updateDoc(reportRef, { activityLog: arrayUnion(newComment) });
           return true;
       } catch (error) {
-          console.warn("Offline comment");
+          console.info("Offline comment (local only)");
           return true; 
       }
   };
@@ -184,7 +185,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
         showToast('Đã xóa báo cáo.', 'info');
         return true;
     } catch (error: any) {
-        console.warn("Offline delete", error.code);
+        console.info("Offline delete (local only)");
         showToast('Đã xóa (Offline mode)', 'info');
         return true;
     }
