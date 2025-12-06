@@ -1,3 +1,4 @@
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
@@ -33,4 +34,7 @@
 
 body {
     -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }

@@ -75,26 +75,72 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
             const workbook = xlsxLib.read(new Uint8Array(data), { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = xlsxLib.utils.sheet_to_json(worksheet);
+            
+            // Helper to normalize string for comparison (removes accents, special chars, lowercase)
+            const normalizeStr = (str: any) => {
+                if (!str) return '';
+                return String(str)
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]/g, "");
+            };
+
+            // 1. Detect Header Row: Read first 20 rows to find header
+            const rawData = xlsxLib.utils.sheet_to_json(worksheet, { header: 1, range: 0, defval: '' }) as any[][];
+            
+            if (!rawData || rawData.length === 0) {
+                 alert("File Excel trống hoặc không đọc được dữ liệu.");
+                 if (fileInputRef.current) fileInputRef.current.value = '';
+                 return;
+            }
+
+            let headerRowIndex = 0;
+            // Keywords that definitely appear in the header
+            const requiredKeywords = ['masp', 'codesp', 'productcode', 'mahang']; 
+            
+            // Scan rows
+            for (let i = 0; i < Math.min(rawData.length, 20); i++) {
+                const row = rawData[i];
+                if (!Array.isArray(row)) continue;
+                
+                const hasCodeColumn = row.some((cell: any) => {
+                    const cellStr = normalizeStr(cell);
+                    return requiredKeywords.some(kw => cellStr.includes(kw));
+                });
+                
+                if (hasCodeColumn) {
+                    headerRowIndex = i;
+                    break;
+                }
+            }
+
+            // 2. Parse Data with detected header
+            const jsonData = xlsxLib.utils.sheet_to_json(worksheet, { range: headerRowIndex });
             
             const newProducts: Product[] = [];
 
             jsonData.forEach((row: any) => {
                 const keys = Object.keys(row);
-                // Flexible column name matching (case insensitive, removing special chars)
+                
                 const getVal = (keywords: string[]) => {
-                    const key = keys.find(k => {
-                        const normalizedKey = k.toLowerCase().replace(/[^a-z0-9]/g, '');
-                        return keywords.some(kw => normalizedKey.includes(kw.toLowerCase().replace(/[^a-z0-9]/g, '')));
+                    const normalizedKeywords = keywords.map(k => normalizeStr(k));
+                    
+                    // Find key in row that matches one of the keywords
+                    const foundKey = keys.find(k => {
+                        const nk = normalizeStr(k);
+                        // Robust check: matches normalized forms (e.g. "masp" matches "masanpham")
+                        return normalizedKeywords.some(kw => nk === kw || nk.includes(kw) || kw.includes(nk));
                     });
-                    return key ? row[key] : '';
+                    
+                    return foundKey ? row[foundKey] : undefined;
                 };
 
-                const maSanPham = getVal(['Mã SP', 'Ma San Pham', 'Code', 'Product Code']);
-                const tenThuongMai = getVal(['Tên TM', 'Ten Thuong Mai', 'Commercial Name', 'Name']);
-                const tenThietBi = getVal(['Tên TB', 'Ten Thiet Bi', 'Device Name']);
-                const dongSanPham = getVal(['Dòng SP', 'Dong San Pham', 'Type', 'Category']);
-                const nhanHang = getVal(['Nhãn hàng', 'Nhan Hang', 'Brand']);
+                const maSanPham = getVal(['Mã SP', 'Ma San Pham', 'Code', 'Product Code', 'Mã hàng', 'Mã']);
+                const tenThuongMai = getVal(['Tên thương mại', 'Ten Thuong Mai', 'Tên sản phẩm', 'Ten San Pham', 'Name', 'Product Name', 'Tên hàng']);
+                const tenThietBi = getVal(['Tên thiết bị', 'Ten Thiet Bi', 'Device Name', 'Loại thiết bị']);
+                const dongSanPham = getVal(['Dòng sản phẩm', 'Dong San Pham', 'Type', 'Category', 'Dòng']);
+                const nhanHang = getVal(['Nhãn hàng', 'Nhan Hang', 'Brand', 'Hãng', 'NCC']);
                 const gplh = getVal(['GPLH', 'Số đăng ký', 'SDK', 'Reg No']);
                 const donViTinh = getVal(['Đơn vị tính', 'DVT', 'Unit']);
 
@@ -114,12 +160,12 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
             if (newProducts.length > 0) {
                 onImport(newProducts);
             } else {
-                alert("Không tìm thấy dữ liệu hợp lệ. Vui lòng sử dụng file mẫu hoặc kiểm tra tiêu đề cột.");
+                alert("Không tìm thấy dữ liệu hợp lệ.\n\nVui lòng đảm bảo file Excel có dòng tiêu đề chứa 'Mã SP' và 'Tên thương mại'.");
             }
 
         } catch (error) {
-            console.error("Lỗi đọc file:", error);
-            alert("Đã xảy ra lỗi khi đọc file Excel. Vui lòng kiểm tra lại định dạng file.");
+            console.error("Lỗi import:", error);
+            alert("Đã xảy ra lỗi khi đọc file. Vui lòng kiểm tra lại định dạng file (nên dùng .xlsx).");
         }
         
         if (fileInputRef.current) fileInputRef.current.value = '';
