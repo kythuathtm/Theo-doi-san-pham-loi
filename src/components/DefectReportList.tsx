@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { DefectReport, UserRole } from '../types';
 import { 
@@ -6,7 +5,8 @@ import {
   TrashIcon, DocumentDuplicateIcon, PencilIcon, 
   CalendarIcon, AdjustmentsIcon, EyeIcon, 
   CheckCircleIcon, WrenchIcon, ShoppingBagIcon, 
-  TagIcon, UserIcon, ClockIcon 
+  TagIcon, UserIcon, ClockIcon, ArrowUpIcon, ArrowDownIcon,
+  ChartPieIcon, InboxIcon, ExclamationCircleIcon
 } from './Icons';
 import Pagination from './Pagination';
 
@@ -65,6 +65,8 @@ interface DefectReportListProps {
   onExport: () => void;
   onDuplicate: (report: DefectReport) => void;
   baseFontSize?: string;
+  sortConfig?: { key: string; direction: 'asc' | 'desc' };
+  onSort?: (key: string) => void;
 }
 
 // Helper to format date string YYYY-MM-DD to DD/MM/YYYY
@@ -78,6 +80,21 @@ const formatDate = (dateStr: string) => {
         return dateStr;
     } catch(e) { return dateStr; }
 };
+
+const SummaryCard = ({ label, count, colorClass, icon, isActive, onClick }: { label: string, count: number, colorClass: string, icon: React.ReactNode, isActive?: boolean, onClick?: () => void }) => (
+    <div 
+        onClick={onClick}
+        className={`flex items-center p-3 rounded-xl border bg-white shadow-sm flex-1 min-w-[140px] animate-fade-in transition-all cursor-pointer select-none active:scale-95 ${colorClass} ${isActive ? 'ring-2 ring-offset-1 ring-blue-400 transform scale-105 z-10 shadow-md' : 'hover:bg-slate-50 hover:shadow-md'}`}
+    >
+        <div className="p-2 rounded-lg bg-opacity-20 mr-3">
+            {icon}
+        </div>
+        <div>
+            <p className="text-[0.65rem] font-bold uppercase tracking-wider opacity-70 mb-0.5">{label}</p>
+            <p className="text-xl font-black leading-none">{count}</p>
+        </div>
+    </div>
+);
 
 const DefectReportList: React.FC<DefectReportListProps> = ({
   reports,
@@ -101,7 +118,9 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
   isLoading,
   onExport,
   onDuplicate,
-  baseFontSize = '15px'
+  baseFontSize = '15px',
+  sortConfig,
+  onSort
 }) => {
     // State for column customization
     const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
@@ -155,12 +174,12 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                 return (
                     <div>
                         <span className="block font-medium text-slate-700" style={{ fontSize: 'inherit' }}>{formatDate(report.ngayPhanAnh)}</span>
-                        <span className="text-[10px] text-slate-400 font-bold bg-slate-100 px-1 rounded inline-block mt-0.5">{report.id}</span>
+                        <span className="text-[0.625rem] text-slate-400 font-bold bg-slate-100 px-1 rounded inline-block mt-0.5 font-sans">{report.id}</span>
                     </div>
                 );
             case 'maSanPham':
                 return (
-                    <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 text-xs">
+                    <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 text-xs font-sans">
                         {report.maSanPham}
                     </span>
                 );
@@ -174,16 +193,16 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
             case 'noiDungPhanAnh':
                 return <div className="line-clamp-2 text-slate-600" title={report.noiDungPhanAnh} style={{ fontSize: 'inherit' }}>{report.noiDungPhanAnh}</div>;
             case 'soLo':
-                return <span className="font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded text-xs">{report.soLo}</span>;
+                return <span className="font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded text-xs font-sans">{report.soLo}</span>;
             case 'hanDung':
                 return formatDate(report.hanDung || '');
             case 'donViTinh':
                 return report.donViTinh;
             case 'maNgaySanXuat':
-                return report.maNgaySanXuat;
+                return <span className="font-sans">{report.maNgaySanXuat}</span>;
             case 'trangThai':
                 return (
-                    <span className={`inline-flex px-2 py-1 rounded border text-[11px] font-bold uppercase tracking-wide whitespace-nowrap ${getStatusStyle(report.trangThai)}`}>
+                    <span className={`inline-flex px-2 py-1 rounded border text-[0.6875rem] font-bold uppercase tracking-wide whitespace-nowrap ${getStatusStyle(report.trangThai)}`}>
                         {report.trangThai}
                     </span>
                 );
@@ -224,8 +243,52 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
 
     return (
         <div className="h-full flex flex-col bg-slate-50/50">
+            {/* Dashboard Summary Widget */}
+            <div className="bg-white border-b border-slate-200 px-4 py-3 sm:px-6 sticky top-0 z-30 shadow-sm flex flex-wrap gap-3 overflow-x-auto custom-scrollbar">
+                <SummaryCard 
+                    label="TỔNG CỘNG" 
+                    count={summaryStats.total} 
+                    colorClass="border-slate-200 text-slate-700" 
+                    icon={<InboxIcon className="w-5 h-5 text-slate-500 bg-slate-100 rounded p-0.5" />} 
+                    isActive={filters.statusFilter === 'All'}
+                    onClick={() => onStatusFilterChange('All')}
+                />
+                <SummaryCard 
+                    label="MỚI" 
+                    count={summaryStats.moi} 
+                    colorClass="border-blue-200 text-blue-700 bg-blue-50/30" 
+                    icon={<TagIcon className="w-5 h-5 text-blue-500 bg-blue-100 rounded p-0.5" />} 
+                    isActive={filters.statusFilter === 'Mới'}
+                    onClick={() => onStatusFilterChange('Mới')}
+                />
+                <SummaryCard 
+                    label="ĐANG XỬ LÝ" 
+                    count={summaryStats.dangXuLy + summaryStats.dangTiepNhan + summaryStats.dangXacMinh} 
+                    colorClass="border-amber-200 text-amber-700 bg-amber-50/30" 
+                    icon={<ClockIcon className="w-5 h-5 text-amber-500 bg-amber-100 rounded p-0.5" />} 
+                    isActive={filters.statusFilter === 'Processing_Group' || ['Đang tiếp nhận', 'Đang xác minh', 'Đang xử lý'].includes(filters.statusFilter)}
+                    onClick={() => onStatusFilterChange('Processing_Group')}
+                />
+                <SummaryCard 
+                    label="CHƯA RÕ NN" 
+                    count={summaryStats.chuaTimRaNguyenNhan} 
+                    colorClass="border-purple-200 text-purple-700 bg-purple-50/30" 
+                    icon={<ExclamationCircleIcon className="w-5 h-5 text-purple-500 bg-purple-100 rounded p-0.5" />} 
+                    isActive={filters.statusFilter === 'Chưa tìm ra nguyên nhân'}
+                    onClick={() => onStatusFilterChange('Chưa tìm ra nguyên nhân')}
+                />
+                <SummaryCard 
+                    label="HOÀN THÀNH" 
+                    count={summaryStats.hoanThanh} 
+                    colorClass="border-emerald-200 text-emerald-700 bg-emerald-50/30" 
+                    icon={<CheckCircleIcon className="w-5 h-5 text-emerald-500 bg-emerald-100 rounded p-0.5" />} 
+                    isActive={filters.statusFilter === 'Hoàn thành'}
+                    onClick={() => onStatusFilterChange('Hoàn thành')}
+                />
+            </div>
+
             {/* Filter Bar */}
-            <div className="bg-white border-b border-slate-200 px-4 py-3 sm:px-6 flex flex-col sm:flex-row gap-3 items-center justify-between sticky top-0 z-20 shadow-sm">
+            <div className="bg-white border-b border-slate-200 px-4 py-3 sm:px-6 flex flex-col sm:flex-row gap-3 items-center justify-between sticky top-[74px] z-20 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)]">
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-1">
                     <div className="relative flex-1 max-w-md">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -257,23 +320,6 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                             </select>
                             <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-slate-500">
                                 <FunnelIcon className="h-4 w-4" />
-                            </div>
-                        </div>
-
-                         <div className="relative min-w-[140px]">
-                            <select 
-                                value={filters.defectTypeFilter}
-                                onChange={(e) => onDefectTypeFilterChange(e.target.value)}
-                                className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] shadow-sm outline-none appearance-none bg-white cursor-pointer"
-                            >
-                                <option value="All">Tất cả lỗi</option>
-                                <option value="Lỗi Sản xuất">Lỗi Sản xuất</option>
-                                <option value="Lỗi Nhà cung cấp">Lỗi Nhà cung cấp</option>
-                                <option value="Lỗi Hỗn hợp">Lỗi Hỗn hợp</option>
-                                <option value="Lỗi Khác">Lỗi Khác</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-slate-500">
-                                <TagIcon className="h-4 w-4" />
                             </div>
                         </div>
 
@@ -360,16 +406,34 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                      <table className="min-w-full divide-y divide-slate-200" style={{ fontFamily: 'var(--list-font, inherit)', fontSize: 'var(--list-size, 1rem)' }}>
                          <thead className="bg-slate-50 sticky top-0 z-10 shadow-sm">
                              <tr>
-                                 {columns.filter(c => c.visible).map((col) => (
-                                     <th 
-                                        key={col.id}
-                                        scope="col"
-                                        className={`px-4 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap ${col.fixed ? 'sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]' : ''}`}
-                                        style={{ width: col.width, textAlign: col.align || 'left', fontSize: 'inherit' }}
-                                     >
-                                         {col.label}
-                                     </th>
-                                 ))}
+                                 {columns.filter(c => c.visible).map((col) => {
+                                     // Determine if this column is sortable and its current sort state
+                                     const isSortable = onSort && ['ngayPhanAnh', 'maSanPham', 'tenThuongMai', 'trangThai', 'soLo', 'maNgaySanXuat'].includes(col.id);
+                                     const isSorted = sortConfig?.key === col.id;
+                                     const sortDirection = sortConfig?.direction;
+
+                                     return (
+                                         <th 
+                                            key={col.id}
+                                            scope="col"
+                                            className={`px-4 py-2.5 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap leading-tight 
+                                                ${col.fixed ? 'sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]' : ''}
+                                                ${isSortable ? 'cursor-pointer hover:bg-slate-100 select-none group' : ''}
+                                            `}
+                                            style={{ width: col.width, textAlign: col.align || 'left', fontSize: '0.8em' }}
+                                            onClick={() => isSortable && onSort && onSort(col.id)}
+                                         >
+                                             <div className={`flex items-center gap-1 ${col.align === 'center' ? 'justify-center' : ''}`}>
+                                                 {col.label}
+                                                 {isSortable && (
+                                                     <span className={`transition-opacity ${isSorted ? 'opacity-100 text-blue-600' : 'opacity-0 group-hover:opacity-40'}`}>
+                                                         {isSorted && sortDirection === 'desc' ? <ArrowDownIcon className="w-3 h-3" /> : <ArrowUpIcon className="w-3 h-3" />}
+                                                     </span>
+                                                 )}
+                                             </div>
+                                         </th>
+                                     );
+                                 })}
                              </tr>
                          </thead>
                          <tbody className="bg-white divide-y divide-slate-100">
@@ -417,7 +481,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
             </div>
 
             {/* Mobile List View */}
-            <div className="md:hidden flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3" style={{ fontSize: 'var(--list-size, 0.875rem)' }}>
+            <div className="md:hidden flex-1 overflow-auto custom-scrollbar p-3 space-y-3" style={{ fontSize: 'var(--list-size, 0.875rem)' }}>
                 {isLoading ? (
                     [...Array(3)].map((_, i) => (
                         <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 animate-pulse">
@@ -444,10 +508,10 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                         >
                             {/* Card Header: Date & Status */}
                             <div className="flex justify-between items-start">
-                                <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                                <span className="text-[0.625rem] font-bold text-slate-400 flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
                                      <CalendarIcon className="w-3 h-3"/> {formatDate(report.ngayPhanAnh)}
                                 </span>
-                                <span className={`px-2 py-1 rounded text-[10px] font-bold border uppercase tracking-wide ${getStatusStyle(report.trangThai)}`}>
+                                <span className={`px-2 py-1 rounded text-[0.625rem] font-bold border uppercase tracking-wide ${getStatusStyle(report.trangThai)}`}>
                                     {report.trangThai}
                                 </span>
                             </div>
@@ -455,14 +519,14 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                             {/* Main Info */}
                             <div>
                                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                     <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 text-[10px] uppercase">{report.maSanPham}</span>
+                                     <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 text-[0.625rem] uppercase font-sans">{report.maSanPham}</span>
                                      {report.soLo && (
-                                        <span className="font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-[10px]">{report.soLo}</span>
+                                        <span className="font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-[0.625rem] font-sans">{report.soLo}</span>
                                      )}
-                                     <span className="text-[10px] text-slate-400 font-medium truncate max-w-[120px] ml-auto">{report.nhanHang}</span>
+                                     <span className="text-[0.625rem] text-slate-400 font-medium truncate max-w-[120px] ml-auto">{report.nhanHang}</span>
                                 </div>
                                 <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2">{report.tenThuongMai}</h3>
-                                {report.dongSanPham && <div className="text-[10px] text-slate-500 mt-0.5 font-medium">{report.dongSanPham}</div>}
+                                {report.dongSanPham && <div className="text-[0.625rem] text-slate-500 mt-0.5 font-medium">{report.dongSanPham}</div>}
                             </div>
 
                             {/* Content Snippet */}

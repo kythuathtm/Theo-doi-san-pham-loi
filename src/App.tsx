@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef, useCallback } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon, EllipsisHorizontalIcon } from './components/Icons';
@@ -101,6 +100,12 @@ export const App: React.FC = () => {
   const [yearFilter, setYearFilter] = useState(currentYear); 
   const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
   
+  // Sorting State
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ 
+      key: 'ngayPhanAnh', 
+      direction: 'desc' 
+  });
+
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -189,7 +194,7 @@ export const App: React.FC = () => {
 
   // Filter Logic
   const filteredReports = useMemo(() => {
-    let result = reports;
+    let result = [...reports];
 
     if (currentUser) {
         const config = roleSettings[currentUser.role];
@@ -214,7 +219,12 @@ export const App: React.FC = () => {
     }
 
     if (statusFilter !== 'All') {
-      result = result.filter((r) => r.trangThai === statusFilter);
+      if (statusFilter === 'Processing_Group') {
+          // Group: Đang tiếp nhận, Đang xác minh, Đang xử lý
+          result = result.filter(r => ['Đang tiếp nhận', 'Đang xác minh', 'Đang xử lý'].includes(r.trangThai));
+      } else {
+          result = result.filter((r) => r.trangThai === statusFilter);
+      }
     }
 
     if (defectTypeFilter !== 'All') {
@@ -237,8 +247,28 @@ export const App: React.FC = () => {
       result = result.filter((r) => r.ngayPhanAnh <= dateFilter.end);
     }
 
+    // Sorting Logic
+    if (sortConfig.key) {
+        result.sort((a, b) => {
+            let aVal = (a as any)[sortConfig.key];
+            let bVal = (b as any)[sortConfig.key];
+
+            // Handle potential null/undefined
+            if (aVal === null || aVal === undefined) aVal = '';
+            if (bVal === null || bVal === undefined) bVal = '';
+
+            // String comparison
+            if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+            if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+            if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
     return result;
-  }, [reports, searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter, currentUser, roleSettings]);
+  }, [reports, searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter, currentUser, roleSettings, sortConfig]);
 
   const paginatedReports = useMemo(() => {
       const start = (currentPage - 1) * itemsPerPage;
@@ -246,16 +276,31 @@ export const App: React.FC = () => {
   }, [filteredReports, currentPage, itemsPerPage]);
 
   const summaryStats = useMemo(() => {
-      return {
-          total: filteredReports.length,
-          moi: filteredReports.filter(r => r.trangThai === 'Mới').length,
-          dangTiepNhan: filteredReports.filter(r => r.trangThai === 'Đang tiếp nhận').length,
-          dangXacMinh: filteredReports.filter(r => r.trangThai === 'Đang xác minh').length,
-          dangXuLy: filteredReports.filter(r => r.trangThai === 'Đang xử lý').length,
-          chuaTimRaNguyenNhan: filteredReports.filter(r => r.trangThai === 'Chưa tìm ra nguyên nhân').length,
-          hoanThanh: filteredReports.filter(r => r.trangThai === 'Hoàn thành').length,
+      // Calculate based on the CURRENT VIEW (respecting year/search filters) to be more dynamic
+      // Or use the 'reports' base if we want global stats regardless of other filters.
+      // Usually dashboard stats respect the global filters (Year).
+      
+      let baseData = reports;
+      
+      // Respect Year Filter for Summary
+      if (yearFilter !== 'All') {
+          baseData = baseData.filter((r) => {
+            if (!r.ngayPhanAnh) return false;
+            const year = new Date(r.ngayPhanAnh).getFullYear().toString();
+            return year === yearFilter;
+        });
       }
-  }, [filteredReports]);
+
+      return {
+          total: baseData.length,
+          moi: baseData.filter(r => r.trangThai === 'Mới').length,
+          dangTiepNhan: baseData.filter(r => r.trangThai === 'Đang tiếp nhận').length,
+          dangXacMinh: baseData.filter(r => r.trangThai === 'Đang xác minh').length,
+          dangXuLy: baseData.filter(r => r.trangThai === 'Đang xử lý').length,
+          chuaTimRaNguyenNhan: baseData.filter(r => r.trangThai === 'Chưa tìm ra nguyên nhân').length,
+          hoanThanh: baseData.filter(r => r.trangThai === 'Hoàn thành').length,
+      }
+  }, [reports, yearFilter]);
   
   const availableYears = useMemo(() => {
       const years = new Set<string>();
@@ -300,6 +345,7 @@ export const App: React.FC = () => {
       setDefectTypeFilter('All');
       setYearFilter(new Date().getFullYear().toString());
       setDateFilter({ start: '', end: '' });
+      setSortConfig({ key: 'ngayPhanAnh', direction: 'desc' });
   };
 
   // Memoized Handlers for List to avoid re-renders
@@ -372,6 +418,13 @@ export const App: React.FC = () => {
   const handleYearFilterChange = useCallback((year: string) => startTransition(() => setYearFilter(year)), []);
   const handleDateFilterChange = useCallback((dates: {start: string, end: string}) => startTransition(() => setDateFilter(dates)), []);
   
+  const handleSort = useCallback((key: string) => {
+      setSortConfig(current => ({
+          key,
+          direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
+      }));
+  }, []);
+
   const handleDashboardFilterSelect = (filterType: 'status' | 'defectType' | 'all' | 'search' | 'brand', value?: string) => {
       startTransition(() => {
           setYearFilter('All');
@@ -609,6 +662,8 @@ export const App: React.FC = () => {
                         onExport={handleExportData}
                         onDuplicate={handleDuplicateReport}
                         baseFontSize={systemSettings.baseFontSize}
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
                     />
                 ) : (
                     <DashboardReport 

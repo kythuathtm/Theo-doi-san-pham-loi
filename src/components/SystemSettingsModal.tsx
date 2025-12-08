@@ -29,14 +29,19 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
   ];
 
   const fontSizeOptions = [
+      { label: 'Cực nhỏ (10px)', value: '10px' },
       { label: 'Rất nhỏ (11px)', value: '11px' },
       { label: 'Nhỏ (12px)', value: '12px' },
       { label: 'Trung bình (13px)', value: '13px' },
-      { label: 'Lớn (14px)', value: '14px' },
+      { label: 'Vừa (14px)', value: '14px' },
       { label: 'Tiêu chuẩn (15px)', value: '15px' },
       { label: 'Hơi lớn (16px)', value: '16px' },
+      { label: 'Lớn (17px)', value: '17px' },
       { label: 'Rất lớn (18px)', value: '18px' },
+      { label: 'To (19px)', value: '19px' },
       { label: 'Cực lớn (20px)', value: '20px' },
+      { label: 'Khổng lồ (22px)', value: '22px' },
+      { label: 'Tối đa (24px)', value: '24px' },
   ];
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,8 +88,18 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
       defaultFamily = "'Inter', sans-serif",
       defaultSize = "15px"
   }: any) => (
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-3">
-          <h5 className="text-xs font-bold text-slate-500 uppercase mb-3">{label}</h5>
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-3 relative group">
+          <div className="flex justify-between items-center mb-3">
+              <h5 className="text-xs font-bold text-slate-500 uppercase">{label}</h5>
+              <button 
+                  onClick={() => { onFontFamilyChange(defaultFamily); onFontSizeChange(defaultSize); }}
+                  className="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded text-slate-400 hover:text-blue-600 hover:border-blue-300 transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
+                  title="Khôi phục mặc định"
+              >
+                  <ArrowPathIcon className="w-3 h-3 inline mr-1" />
+                  Mặc định
+              </button>
+          </div>
           <div className="grid grid-cols-2 gap-4">
               <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Phông chữ</label>

@@ -66,7 +66,7 @@ const DetailRow: React.FC<DetailRowProps> = ({ label, value, className = "text-s
 
     return (
         <div className={`flex flex-col ${wrapperClass}`}>
-            <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5 truncate">
+            <dt className="text-[0.625rem] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5 truncate">
                 {icon && <span className="opacity-70">{icon}</span>}
                 {label}
             </dt>
@@ -121,11 +121,11 @@ const TimelineItem: React.FC<{ log: ActivityLog }> = ({ log }) => {
         <div className="flex justify-between items-baseline mb-1.5">
           <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
               {log.user}
-              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md border ${isComment ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+              <span className={`text-[0.5625rem] font-bold uppercase px-1.5 py-0.5 rounded-md border ${isComment ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
                 {log.role || 'System'}
               </span>
           </span>
-          <span className="text-[10px] text-slate-400 font-medium tabular-nums">{new Date(log.timestamp).toLocaleString('vi-VN')}</span>
+          <span className="text-[0.625rem] text-slate-400 font-medium tabular-nums">{new Date(log.timestamp).toLocaleString('vi-VN')}</span>
         </div>
         <div className={`text-sm leading-relaxed p-3.5 rounded-2xl rounded-tl-none border shadow-sm relative group-hover:shadow-md transition-shadow ${
             isComment 
@@ -183,7 +183,7 @@ const StatusStepper = ({ currentStatus }: { currentStatus: string }) => {
                                     <span className="text-xs font-bold">{index + 1}</span>
                                 )}
                             </div>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider text-center transition-colors duration-300 ${
+                            <span className={`text-[0.625rem] font-bold uppercase tracking-wider text-center transition-colors duration-300 ${
                                 status === 'active' ? 'text-blue-700' : 
                                 status === 'completed' ? 'text-slate-600' : 'text-slate-300'
                             }`}>
@@ -196,7 +196,7 @@ const StatusStepper = ({ currentStatus }: { currentStatus: string }) => {
             
             {isErrorState && (
                 <div className="mt-4 flex justify-center animate-pulse">
-                    <span className="px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-[10px] font-bold border border-purple-200 flex items-center gap-2 shadow-sm uppercase tracking-wide">
+                    <span className="px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-[0.625rem] font-bold border border-purple-200 flex items-center gap-2 shadow-sm uppercase tracking-wide">
                         <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
                         Đang ở trạng thái: Chưa tìm ra nguyên nhân
                     </span>
@@ -334,13 +334,13 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
       <div className="flex flex-col border-b border-slate-200 bg-white shadow-sm z-30 sticky top-0 print:hidden flex-shrink-0">
           <div className="flex justify-between items-center px-4 py-3 sm:px-6">
             <div className="flex items-center gap-4 min-w-0">
-                <div className={`hidden sm:flex px-3 py-1.5 rounded-lg text-[11px] font-extrabold border uppercase tracking-wider ring-4 ${getStatusColor(report.trangThai)}`}>
+                <div className={`hidden sm:flex px-3 py-1.5 rounded-lg text-[0.6875rem] font-extrabold border uppercase tracking-wider ring-4 ${getStatusColor(report.trangThai)}`}>
                         {report.trangThai}
                 </div>
                 <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[10px] text-slate-400 font-mono font-bold bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">#{report.id}</span>
-                            <span className="sm:hidden text-[10px] font-extrabold uppercase text-slate-500">{report.trangThai}</span>
+                            <span className="text-[0.625rem] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">#{report.id}</span>
+                            <span className="sm:hidden text-[0.625rem] font-extrabold uppercase text-slate-500">{report.trangThai}</span>
                         </div>
                         <h2 className="text-lg sm:text-xl font-black text-slate-800 leading-tight truncate" title={report.tenThuongMai}>
                             {report.tenThuongMai}
@@ -418,8 +418,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                 <DetailRow label="Mã sản phẩm" value={report.maSanPham} icon={<TagIcon className="w-3 h-3"/>} className="text-[#003DA5] font-black" />
                                 <DetailRow label="Tên thương mại" value={report.tenThuongMai} wrapperClass="col-span-2 md:col-span-2" className="font-bold text-slate-800" />
-                                <DetailRow label="Số Lô" value={report.soLo} className="font-mono bg-slate-100" />
-                                <DetailRow label="Mã NSX" value={report.maNgaySanXuat} className="font-mono" />
+                                <DetailRow label="Số Lô" value={report.soLo} className="font-bold bg-slate-100 font-sans" />
+                                <DetailRow label="Mã NSX" value={report.maNgaySanXuat} className="font-bold font-sans" />
                                 <DetailRow label="Hạn dùng" value={formatDate(report.hanDung)} icon={<CalendarIcon className="w-3 h-3"/>} />
                                 {/* Hidden: Dòng SP, Tên TB, Nhãn hàng, ĐVT */}
                             </div>
@@ -447,7 +447,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                     />
                                     {report.images && report.images.length > 0 && (
                                         <div className="mt-4">
-                                            <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                            <dt className="text-[0.625rem] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
                                                 <ArchiveBoxIcon className="w-3 h-3"/> Hình ảnh minh chứng
                                             </dt>
                                             <div className="flex flex-wrap gap-2">
@@ -487,17 +487,17 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                 {/* Quantities Grid - Vertical Stack on Mobile/Side Panel, Grid on specific widths if space allows */}
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col items-center justify-center gap-1 group hover:border-blue-200 transition-colors text-center">
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight group-hover:text-blue-500">Đã nhập</span>
+                                        <span className="text-[0.5625rem] font-bold text-slate-400 uppercase tracking-tight group-hover:text-blue-500">Đã nhập</span>
                                         <div className="text-xl font-black text-slate-700">{report.soLuongDaNhap}</div>
-                                        <span className="text-[9px] text-slate-400">{report.donViTinh || 'ĐVT'}</span>
+                                        <span className="text-[0.5625rem] text-slate-400">{report.donViTinh || 'ĐVT'}</span>
                                     </div>
                                     <div className="bg-rose-50 p-2.5 rounded-xl border border-rose-100 flex flex-col items-center justify-center gap-1 group hover:border-rose-200 transition-colors text-center">
-                                        <span className="text-[9px] font-bold text-rose-400 uppercase tracking-tight group-hover:text-rose-600">Lỗi</span>
+                                        <span className="text-[0.5625rem] font-bold text-rose-400 uppercase tracking-tight group-hover:text-rose-600">Lỗi</span>
                                         <div className="text-xl font-black text-rose-600">{report.soLuongLoi}</div>
-                                        <span className="text-[9px] text-rose-400/80">{report.donViTinh || 'ĐVT'}</span>
+                                        <span className="text-[0.5625rem] text-rose-400/80">{report.donViTinh || 'ĐVT'}</span>
                                     </div>
                                     <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 flex flex-col items-center justify-center gap-1 relative group hover:border-emerald-200 transition-colors text-center">
-                                        <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-tight group-hover:text-emerald-700">Đổi trả</span>
+                                        <span className="text-[0.5625rem] font-bold text-emerald-500 uppercase tracking-tight group-hover:text-emerald-700">Đổi trả</span>
                                         
                                         {permissions.canEdit && editingSections.soLuong ? (
                                             <div className="w-full flex flex-col items-center">
@@ -510,7 +510,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                                 />
                                                 <input 
                                                     type="date"
-                                                    className="w-full text-[9px] border border-emerald-200 rounded px-1 py-0.5"
+                                                    className="w-full text-[0.5625rem] border border-emerald-200 rounded px-1 py-0.5"
                                                     value={quickUpdateData.ngayDoiHang || ''}
                                                     onChange={(e) => setQuickUpdateData({...quickUpdateData, ngayDoiHang: e.target.value})}
                                                 />
@@ -529,11 +529,11 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                                 {/* Exchange Date Display */}
                                                 <div className="flex items-center gap-1 mt-1 bg-emerald-100/60 px-1.5 py-0.5 rounded border border-emerald-200/50 min-h-[20px]">
                                                     {report.ngayDoiHang ? (
-                                                        <span className="text-[9px] font-bold text-emerald-800 whitespace-nowrap">
+                                                        <span className="text-[0.5625rem] font-bold text-emerald-800 whitespace-nowrap">
                                                             {formatDate(report.ngayDoiHang)}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-[8px] text-emerald-600/50 italic">--/--/--</span>
+                                                        <span className="text-[0.5rem] text-emerald-600/50 italic">--/--/--</span>
                                                     )}
                                                 </div>
                                             </>
@@ -553,7 +553,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                             {permissions.canEdit && (
                                                 <button 
                                                     onClick={() => setEditingSections({...editingSections, nguyenNhan: !editingSections.nguyenNhan})}
-                                                    className="text-[10px] font-bold text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 px-2 py-0.5 rounded"
+                                                    className="text-[0.625rem] font-bold text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 px-2 py-0.5 rounded"
                                                 >
                                                     {editingSections.nguyenNhan ? 'Hủy' : 'Sửa'}
                                                 </button>
@@ -584,7 +584,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                             {permissions.canEdit && (
                                                 <button 
                                                     onClick={() => setEditingSections({...editingSections, huongKhacPhuc: !editingSections.huongKhacPhuc})}
-                                                    className="text-[10px] font-bold text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 px-2 py-0.5 rounded"
+                                                    className="text-[0.625rem] font-bold text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 px-2 py-0.5 rounded"
                                                 >
                                                     {editingSections.huongKhacPhuc ? 'Hủy' : 'Sửa'}
                                                 </button>
@@ -650,7 +650,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                             </select>
                                             
                                             {quickUpdateData.trangThai === 'Hoàn thành' && !report.ngayHoanThanh && (
-                                                 <span className="text-[10px] text-emerald-600 font-bold animate-pulse flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 mt-1">
+                                                 <span className="text-[0.625rem] text-emerald-600 font-bold animate-pulse flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 mt-1">
                                                      <CheckCircleIcon className="w-3 h-3"/> Tự động chốt ngày hoàn thành
                                                  </span>
                                             )}

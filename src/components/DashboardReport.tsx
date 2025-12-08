@@ -176,7 +176,7 @@ const KpiCard = ({ title, value, subValue, trend, icon, colorHex, onClick, trend
             <div className="relative z-10 flex flex-col h-full">
                 {/* Header: Title Left, Icon Right */}
                 <div className="flex justify-between items-start mb-3">
-                    <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest leading-tight mt-1">{title}</p>
+                    <p className="text-[0.6875rem] font-extrabold text-slate-400 uppercase tracking-widest leading-tight mt-1">{title}</p>
                     
                     <div 
                         className="p-2.5 rounded-xl transition-all duration-500 shadow-sm group-hover:scale-110 group-hover:rotate-3 ring-1 ring-inset ring-white/50"
@@ -200,14 +200,14 @@ const KpiCard = ({ title, value, subValue, trend, icon, colorHex, onClick, trend
                     <div className="flex flex-col justify-end gap-1.5 min-w-0">
                          {/* Trend Badge */}
                         {!isNeutral && (
-                            <div className={`flex items-center w-fit gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${trendColorClass}`}>
+                            <div className={`flex items-center w-fit gap-1 text-[0.625rem] font-bold px-2 py-0.5 rounded-full border ${trendColorClass}`}>
                                 <TrendIcon className="w-3 h-3 stroke-[3px]" />
                                 {Math.abs(trend.percent)}%
                             </div>
                         )}
                         {/* SubValue */}
                         {subValue && (
-                            <p className="text-[11px] font-semibold text-slate-400/90 truncate" title={subValue}>
+                            <p className="text-[0.6875rem] font-semibold text-slate-400/90 truncate" title={subValue}>
                                 {subValue}
                             </p>
                         )}
@@ -315,11 +315,11 @@ const DonutChart = ({ data, colors, centerLabel, onClickSlice }: any) => {
                     <span className="text-3xl font-black text-slate-800 tracking-tight tabular-nums transition-all duration-300 transform scale-100">
                         {hoveredSlice ? activeItem.value.toLocaleString() : <CountUp value={activeItem.value} />}
                     </span>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest px-2 text-center line-clamp-1 mt-1 max-w-[120px]">
+                    <span className="text-[0.625rem] uppercase font-bold text-slate-400 tracking-widest px-2 text-center line-clamp-1 mt-1 max-w-[120px]">
                         {activeItem.label}
                     </span>
                     {hoveredSlice && (
-                        <div className="mt-2 px-2 py-0.5 rounded-md text-[10px] font-bold text-white shadow-sm transition-all animate-fade-in-up" style={{ backgroundColor: colors[data.indexOf(hoveredSlice) % colors.length] }}>
+                        <div className="mt-2 px-2 py-0.5 rounded-md text-[0.625rem] font-bold text-white shadow-sm transition-all animate-fade-in-up" style={{ backgroundColor: colors[data.indexOf(hoveredSlice) % colors.length] }}>
                             {((hoveredSlice.value / total) * 100).toFixed(1)}%
                         </div>
                     )}
@@ -441,12 +441,12 @@ const TrendChart = ({ data, label, color = BRAND.PRIMARY }: any) => {
                     style={{ left: `${(getX(hoverIndex) / width) * 100}%` }}
                 >
                     <div className="bg-white/95 backdrop-blur-md border border-slate-100 text-slate-800 p-2.5 rounded-xl shadow-xl flex flex-col min-w-[90px] ring-1 ring-black/5 transform -translate-y-2">
-                        <span className="font-bold text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Tháng {data[hoverIndex].month}</span>
+                        <span className="font-bold text-[0.625rem] text-slate-400 uppercase tracking-widest mb-0.5">Tháng {data[hoverIndex].month}</span>
                         <div className="flex items-baseline gap-1">
                             <span className="text-xl font-black leading-none tracking-tight" style={{ color: color }}>
                                 {data[hoverIndex].count.toLocaleString('en-US', { maximumFractionDigits: 1 })}
                             </span>
-                            <span className="text-[10px] font-bold text-slate-500">{label}</span>
+                            <span className="text-[0.625rem] font-bold text-slate-500">{label}</span>
                         </div>
                     </div>
                 </div>
@@ -454,7 +454,7 @@ const TrendChart = ({ data, label, color = BRAND.PRIMARY }: any) => {
 
             <div className="flex justify-between px-4 mt-2 border-t border-slate-100 pt-2">
                 {data.map((d: any, i: number) => (
-                    <div key={i} className={`text-[10px] font-bold uppercase text-center flex-1 transition-colors duration-200 ${hoverIndex === i ? 'text-slate-800 scale-110' : 'text-slate-400'}`}>
+                    <div key={i} className={`text-[0.625rem] font-bold uppercase text-center flex-1 transition-colors duration-200 ${hoverIndex === i ? 'text-slate-800 scale-110' : 'text-slate-400'}`}>
                         T{d.month}
                     </div>
                 ))}
@@ -604,9 +604,9 @@ const RecentActivityList = ({ reports, onSelect }: { reports: DefectReport[], on
                         <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-center mb-1">
                                 <span className="font-bold text-slate-700 truncate group-hover:text-[#003DA5] transition-colors" style={{ fontSize: 'var(--list-size, 0.75rem)' }}>{r.maSanPham}</span>
-                                <span className="text-[10px] text-slate-400 font-bold bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">{new Date(r.ngayPhanAnh).toLocaleDateString('en-GB')}</span>
+                                <span className="text-[0.625rem] text-slate-400 font-bold bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">{new Date(r.ngayPhanAnh).toLocaleDateString('en-GB')}</span>
                             </div>
-                            <div className="text-[11px] text-slate-500 font-medium truncate group-hover:text-slate-700 transition-colors" style={{ fontSize: 'var(--list-size, 0.7rem)' }}>
+                            <div className="text-[0.6875rem] text-slate-500 font-medium truncate group-hover:text-slate-700 transition-colors" style={{ fontSize: 'var(--list-size, 0.7rem)' }}>
                                 {r.tenThuongMai}
                             </div>
                         </div>
@@ -741,7 +741,7 @@ const DetailedReportListModal = ({ title, reports, onClose, onSelectReport }: { 
                                         <div className="text-xs text-slate-500 line-clamp-1 italic">{r.noiDungPhanAnh}</div>
                                     </td>
                                     <td className="p-4 text-right">
-                                        <span className={`px-2 py-1 rounded text-[10px] font-bold border uppercase whitespace-nowrap ${
+                                        <span className={`px-2 py-1 rounded text-[0.625rem] font-bold border uppercase whitespace-nowrap ${
                                             r.trangThai === 'Mới' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                                             r.trangThai === 'Hoàn thành' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                             'bg-amber-50 text-amber-600 border-amber-100'
@@ -1009,19 +1009,24 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                         Cập nhật theo thời gian thực
                     </p>
                 </div>
-                <div className="bg-white/80 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-slate-200 inline-flex animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                    <button 
-                        onClick={() => setViewMode('service')}
-                        className={`flex items-center px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${viewMode === 'service' ? 'bg-[#003DA5] text-white shadow-lg shadow-blue-900/20' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
-                    >
-                        <UserGroupIcon className="w-4 h-4 mr-2" /> Dịch vụ
-                    </button>
-                    <button 
-                        onClick={() => setViewMode('production')}
-                        className={`flex items-center px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${viewMode === 'production' ? 'bg-[#C5003E] text-white shadow-lg shadow-rose-900/20' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
-                    >
-                        <CubeIcon className="w-4 h-4 mr-2" /> Sản xuất
-                    </button>
+                
+                <div className="flex flex-wrap items-center gap-3 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                    
+                    {/* View Mode Switcher */}
+                    <div className="bg-white/80 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-slate-200 inline-flex">
+                        <button 
+                            onClick={() => setViewMode('service')}
+                            className={`flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${viewMode === 'service' ? 'bg-[#003DA5] text-white shadow-lg shadow-blue-900/20' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+                        >
+                            <UserGroupIcon className="w-4 h-4 mr-2" /> Dịch vụ
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('production')}
+                            className={`flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${viewMode === 'production' ? 'bg-[#C5003E] text-white shadow-lg shadow-rose-900/20' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+                        >
+                            <CubeIcon className="w-4 h-4 mr-2" /> Sản xuất
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1097,11 +1102,11 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 relative z-10">
                                                 <div className="text-center">
-                                                    <span className="block text-[10px] text-slate-400 font-bold uppercase">Phiếu</span>
+                                                    <span className="block text-[0.625rem] text-slate-400 font-bold uppercase">Phiếu</span>
                                                     <span className="block text-lg font-black text-slate-700"><CountUp value={bStats.t} /></span>
                                                 </div>
                                                 <div className="text-center">
-                                                    <span className="block text-[10px] text-slate-400 font-bold uppercase">SKU Lỗi</span>
+                                                    <span className="block text-[0.625rem] text-slate-400 font-bold uppercase">SKU Lỗi</span>
                                                     <span className="block text-lg font-black text-slate-700"><CountUp value={bStats.skus.size} /></span>
                                                 </div>
                                             </div>
@@ -1144,7 +1149,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-xs font-bold text-slate-700 truncate group-hover:text-blue-600 transition-colors" title={p.name}>{p.name}</span>
-                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">{p.ticket} phiếu</span>
+                                                <span className="text-[0.625rem] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">{p.ticket} phiếu</span>
                                             </div>
                                             <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                                 <div className={`h-full rounded-full ${idx === 0 ? 'bg-amber-500' : 'bg-slate-400'}`} style={{width: `${(p.ticket / stats.topProductsByTicket[0].ticket)*100}%`}}></div>
@@ -1263,11 +1268,11 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 relative z-10">
                                                 <div className="text-center">
-                                                    <span className="block text-[10px] text-slate-400 font-bold uppercase">Lỗi</span>
+                                                    <span className="block text-[0.625rem] text-slate-400 font-bold uppercase">Lỗi</span>
                                                     <span className="block text-lg font-black text-slate-700"><CountUp value={bStats.q} /></span>
                                                 </div>
                                                 <div className="text-center">
-                                                    <span className="block text-[10px] text-slate-400 font-bold uppercase">Đổi</span>
+                                                    <span className="block text-[0.625rem] text-slate-400 font-bold uppercase">Đổi</span>
                                                     <span className="block text-lg font-black text-slate-700"><CountUp value={bStats.e} /></span>
                                                 </div>
                                             </div>

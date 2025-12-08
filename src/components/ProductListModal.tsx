@@ -427,14 +427,14 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                     >
                     <thead className="bg-slate-50/80 backdrop-blur">
                         <tr>
-                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-28 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Mã SP</th>
-                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Tên thương mại</th>
-                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-48 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Tên thiết bị YT</th>
-                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-32 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Dòng SP</th>
-                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-20 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>ĐVT</th>
-                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-24 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>Nhãn hàng</th>
-                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-32 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}>GPLH</th>
-                        <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase w-16 sticky top-0 bg-slate-50 z-10" style={{ fontSize: 'inherit' }}></th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-28 sticky top-0 bg-slate-50 z-10" style={{ fontSize: '0.8em' }}>Mã SP</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase sticky top-0 bg-slate-50 z-10" style={{ fontSize: '0.8em' }}>Tên thương mại</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-48 sticky top-0 bg-slate-50 z-10" style={{ fontSize: '0.8em' }}>Tên thiết bị YT</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-32 sticky top-0 bg-slate-50 z-10" style={{ fontSize: '0.8em' }}>Dòng SP</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-20 sticky top-0 bg-slate-50 z-10" style={{ fontSize: '0.8em' }}>ĐVT</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-24 sticky top-0 bg-slate-50 z-10" style={{ fontSize: '0.8em' }}>Nhãn hàng</th>
+                        <th className="px-4 py-3 text-left font-bold text-slate-500 uppercase w-32 sticky top-0 bg-slate-50 z-10" style={{ fontSize: '0.8em' }}>GPLH</th>
+                        <th className="px-4 py-3 text-right font-bold text-slate-500 uppercase w-16 sticky top-0 bg-slate-50 z-10" style={{ fontSize: '0.8em' }}></th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-100">
@@ -488,7 +488,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                         <div key={`${product.maSanPham}-${index}`} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col gap-2 relative">
                             <div className="flex justify-between items-start">
                                 <span className="font-bold text-sm text-[#003DA5] bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{product.maSanPham}</span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wide ${
+                                <span className={`px-2 py-0.5 rounded text-[0.625rem] font-bold border uppercase tracking-wide ${
                                     product.nhanHang === 'HTM' ? 'bg-[#003DA5]/10 text-[#003DA5] border-[#003DA5]/20' :
                                     product.nhanHang === 'VMA' ? 'bg-[#009183]/10 text-[#009183] border-[#009183]/20' :
                                     'bg-slate-100 text-slate-600 border-slate-200'
@@ -505,7 +505,7 @@ const ProductListModal: React.FC<Props> = ({ products, onClose, onImport, onAdd,
                                 {product.donViTinh && <span className="bg-slate-50 px-2 py-1 rounded border border-slate-100">{product.donViTinh}</span>}
                             </div>
 
-                            {product.GPLH && <div className="text-[10px] text-slate-400 mt-1">GPLH: {product.GPLH}</div>}
+                            {product.GPLH && <div className="text-[0.625rem] text-slate-400 mt-1">GPLH: {product.GPLH}</div>}
 
                             <button 
                                 onClick={() => onDelete(product.maSanPham)}

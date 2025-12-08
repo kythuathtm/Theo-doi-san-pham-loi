@@ -106,27 +106,33 @@ export const Header: React.FC<HeaderProps> = ({
             )}
             
             {/* Desktop Title: Company Name Large, App Name Small */}
-            <div className="hidden md:flex flex-col justify-center">
+            <div className="hidden md:flex flex-col justify-center items-start">
                <span 
-                  className="font-extrabold uppercase tracking-tight leading-none text-[#003DA5]"
-                  style={{ fontSize: 'var(--header-size, 1.1rem)' }}
+                  className="font-bold uppercase tracking-tight leading-tight text-[#003DA5]"
+                  style={{ fontSize: 'var(--header-size, 1.25rem)' }}
                >
                  {systemSettings.companyName || 'CÔNG TY CỔ PHẦN VẬT TƯ Y TẾ HỒNG THIỆN MỸ'}
                </span>
                <span 
-                  className="font-bold text-[#C5003E] uppercase tracking-widest mt-0.5"
-                  style={{ fontSize: 'calc(var(--header-size, 1.1rem) * 0.65)' }}
+                  className="font-semibold text-[#C5003E] uppercase tracking-wide mt-0.5 opacity-90"
+                  style={{ fontSize: 'calc(var(--header-size, 1.25rem) * 0.6)' }}
                >
                  {systemSettings.appName || 'THEO DÕI XỬ LÝ KHIẾU NẠI VỀ CHẤT LƯỢNG SẢN PHẨM'}
                </span>
             </div>
             
-            {/* Mobile Title Fallback */}
-            <div className="md:hidden flex flex-col justify-center">
-               <span className="text-sm font-bold uppercase leading-none text-[#003DA5]">
+            {/* Mobile Title Fallback - Scaled */}
+            <div className="md:hidden flex flex-col justify-center items-start">
+               <span 
+                 className="font-bold uppercase leading-none text-[#003DA5]"
+                 style={{ fontSize: 'calc(var(--header-size, 1.25rem) * 0.85)' }}
+               >
                  HTM JSC
                </span>
-               <span className="text-[10px] font-bold text-[#C5003E] uppercase tracking-wide mt-0.5">
+               <span 
+                 className="font-semibold text-[#C5003E] uppercase tracking-wide mt-0.5"
+                 style={{ fontSize: 'calc(var(--header-size, 1.25rem) * 0.5)' }}
+               >
                  THEO DÕI KHIẾU NẠI
                </span>
             </div>

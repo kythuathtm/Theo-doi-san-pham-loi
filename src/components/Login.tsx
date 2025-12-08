@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { User, SystemSettings } from '../types';
 import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, CompanyLogo } from './Icons';
@@ -127,7 +128,7 @@ const Login: React.FC<Props> = ({ onLogin, users, settings }) => {
                             )}
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">Hệ thống quản lý</span>
+                            <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] opacity-80">Hệ thống quản lý</span>
                             <span className="text-2xl font-black uppercase tracking-tight leading-none">{settings.companyName || 'Logo'}</span>
                         </div>
                     </div>
@@ -150,7 +151,7 @@ const Login: React.FC<Props> = ({ onLogin, users, settings }) => {
                             </p>
                         </div>
                         <div className="pt-6 border-t border-white/10">
-                             <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40">
+                             <p className="text-[0.625rem] font-bold tracking-[0.2em] uppercase text-white/40">
                                 © 2025 {settings.companyName || 'Hồng Thiện Mỹ'}
                              </p>
                         </div>
