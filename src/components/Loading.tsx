@@ -12,16 +12,10 @@ const Loading: React.FC = () => (
     </div>
     <div className="mt-6 flex flex-col items-center gap-2">
         <div className="h-1.5 w-32 bg-slate-200 rounded-full overflow-hidden">
-            <div className="h-full bg-[#003DA5] w-1/2 animate-[shimmer_1.5s_infinite_linear] rounded-full"></div>
+            <div className="h-full bg-[#003DA5] w-1/2 animate-shimmer rounded-full"></div>
         </div>
         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Đang tải dữ liệu...</span>
     </div>
-    <style>{`
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(200%); }
-        }
-    `}</style>
   </div>
 );
 
