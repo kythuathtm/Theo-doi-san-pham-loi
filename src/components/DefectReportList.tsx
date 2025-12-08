@@ -311,6 +311,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                 className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] shadow-sm outline-none appearance-none bg-white cursor-pointer"
                             >
                                 <option value="All">Tất cả trạng thái</option>
+                                <option value="Processing_Group">Đang xử lý (Tổng hợp)</option>
                                 <option value="Mới">Mới</option>
                                 <option value="Đang tiếp nhận">Đang tiếp nhận</option>
                                 <option value="Đang xác minh">Đang xác minh</option>
