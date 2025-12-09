@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { DefectReport, UserRole } from '../types';
 import { 
@@ -23,8 +22,8 @@ interface ColumnConfig {
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'stt', label: 'STT', visible: true, width: 60, align: 'center' },
-    { id: 'ngayPhanAnh', label: 'Ngày', visible: true, width: 110, align: 'left' },
-    { id: 'maSanPham', label: 'Mã SP', visible: true, width: 100, align: 'left' },
+    { id: 'ngayPhanAnh', label: 'Ngày khiếu nại', visible: true, width: 110, align: 'left' },
+    { id: 'maSanPham', label: 'Mã sản phẩm', visible: true, width: 100, align: 'left' },
     { id: 'tenThuongMai', label: 'Tên thương mại', visible: true, width: 220, align: 'left' }, 
     { id: 'noiDungPhanAnh', label: 'Nội dung khiếu nại', visible: true, width: 280, align: 'left' },
     { id: 'soLo', label: 'Số lô', visible: true, width: 90, align: 'left' },
@@ -158,12 +157,12 @@ const DashboardTab = ({ label, count, total, isActive, onClick, styleKey, icon }
         <button 
             onClick={onClick}
             className={`
-                relative flex flex-col justify-between px-4 py-3 rounded-2xl transition-all duration-300 select-none min-w-[140px] flex-1 lg:flex-none h-[88px] group
-                ${isActive ? styles.activeWrapper + ' scale-105 z-10' : styles.wrapper}
+                relative flex flex-col justify-between px-4 py-3 rounded-2xl transition-all duration-300 select-none w-full h-[88px] group
+                ${isActive ? styles.activeWrapper + ' scale-[1.02] shadow-md z-10' : styles.wrapper}
             `}
         >
             <div className="flex justify-between items-start w-full">
-                <span className={`text-[0.65rem] font-extrabold uppercase tracking-widest leading-tight ${isActive ? styles.activeText : styles.text}`}>
+                <span className={`text-[0.65rem] font-bold uppercase tracking-widest leading-tight ${isActive ? styles.activeText : styles.text}`}>
                     {label}
                 </span>
                 <div className={`p-1.5 rounded-lg transition-colors duration-300 ${isActive ? styles.activeIconBg : styles.iconBg} ${isActive ? styles.activeIconColor : styles.iconColor}`}>
@@ -172,7 +171,7 @@ const DashboardTab = ({ label, count, total, isActive, onClick, styleKey, icon }
             </div>
             
             <div className="flex items-end justify-between w-full mt-auto">
-                <span className={`text-2xl font-black leading-none tracking-tight tabular-nums ${isActive ? styles.activeText : 'text-slate-700'}`}>
+                <span className={`text-2xl font-bold leading-none tracking-tight tabular-nums ${isActive ? styles.activeText : 'text-slate-700'}`}>
                     {count.toLocaleString()}
                 </span>
                 {isActive && (
@@ -267,7 +266,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                 );
             case 'maSanPham':
                 return (
-                    <span className="font-bold text-[#003DA5] bg-blue-50 px-2 py-1 rounded-md border border-blue-100 text-xs">
+                    <span className="font-bold text-slate-700 group-hover:text-[#003DA5] transition-colors">
                         {report.maSanPham}
                     </span>
                 );
@@ -284,9 +283,9 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                     </div>
                 );
             case 'soLo':
-                return <span className="font-bold text-slate-700 text-xs tabular-nums bg-slate-50 px-2 py-1 rounded border border-slate-100">{report.soLo}</span>;
+                return <span className="font-bold text-slate-700 tabular-nums">{report.soLo}</span>;
             case 'maNgaySanXuat':
-                return <span className="font-bold text-slate-700 text-xs tabular-nums">{report.maNgaySanXuat}</span>;
+                return <span className="font-bold text-slate-700 tabular-nums">{report.maNgaySanXuat}</span>;
             case 'hanDung':
                 return <span className="text-slate-600 font-medium text-xs tabular-nums">{formatDate(report.hanDung)}</span>;
             case 'donViTinh':
@@ -330,11 +329,11 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
 
     return (
         <div className="h-full flex flex-col bg-[#F8FAFC]" style={{ fontSize: baseFontSize }}>
-            <div className="flex-1 flex flex-col p-4 sm:p-6 gap-6 overflow-hidden">
-                
-                {/* DASHBOARD TABS (Summary Container) */}
-                <div className="flex-shrink-0">
-                    <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-2 px-1">
+            
+            {/* 1. DASHBOARD CONTAINER */}
+            <div className="flex-shrink-0 w-full py-4 z-10 bg-[#F8FAFC]">
+                <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                         <DashboardTab 
                             label="Tổng phiếu" 
                             count={summaryStats.total}
@@ -363,7 +362,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                             icon={<ClockIcon/>}
                         />
                         <DashboardTab 
-                            label="Chưa rõ NN" 
+                            label="Chưa rõ nguyên nhân" 
                             count={summaryStats.chuaTimRaNguyenNhan} 
                             total={summaryStats.total}
                             isActive={filters.statusFilter === 'Chưa tìm ra nguyên nhân'}
@@ -382,114 +381,127 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                         />
                     </div>
                 </div>
+            </div>
 
-                {/* MAIN TABLE CONTAINER */}
-                <div className="flex-1 flex flex-col overflow-hidden">
+            {/* 2. DATA TABLE CONTAINER */}
+            <div className="flex-1 flex flex-col px-4 sm:px-6 pb-6 overflow-hidden min-h-0 w-full max-w-[1920px] mx-auto">
+                
+                {/* Header Row: Title & Search/Filter Combined */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 flex-shrink-0">
                     
-                    {/* TOOLBAR */}
-                    <div className="px-5 py-4 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-transparent z-20">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 text-[#003DA5] rounded-xl shadow-sm border border-blue-100">
-                                <ListBulletIcon className="w-5 h-5"/>
+                    {/* Name of Data Table */}
+                    <div className="flex items-center gap-3 pl-1">
+                        <div className="p-2 bg-[#003DA5] text-white rounded-lg shadow-sm shadow-blue-900/20">
+                            <ListBulletIcon className="w-5 h-5"/>
+                        </div>
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-800 uppercase tracking-tight whitespace-nowrap">DANH SÁCH KHIẾU NẠI</h2>
+                        <span className="hidden sm:inline-flex bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-200">
+                            {totalReports}
+                        </span>
+                    </div>
+
+                    {/* Search / Filter Group */}
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        
+                        {/* Search Input */}
+                        <div className="relative flex-1 sm:min-w-[280px] lg:min-w-[320px] group">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#003DA5] transition-colors">
+                                <MagnifyingGlassIcon className="h-4 w-4" />
                             </div>
-                            <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight">Danh sách khiếu nại</h2>
+                            <input 
+                                type="text" 
+                                placeholder="Tìm kiếm phiếu..." 
+                                value={filters.searchTerm}
+                                onChange={(e) => onSearchTermChange(e.target.value)}
+                                className="pl-9 pr-3 py-2.5 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] shadow-sm outline-none transition-all placeholder:text-slate-400 hover:border-slate-300"
+                            />
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
-                            <div className="relative flex-1 sm:w-64 group">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#003DA5] transition-colors">
-                                    <MagnifyingGlassIcon className="h-4 w-4" />
-                                </div>
-                                <input 
-                                    type="text" 
-                                    placeholder="Tìm kiếm..." 
-                                    value={filters.searchTerm}
-                                    onChange={(e) => onSearchTermChange(e.target.value)}
-                                    className="pl-9 pr-3 py-2 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] shadow-sm outline-none transition-all placeholder:text-slate-400 hover:border-slate-300"
-                                />
-                            </div>
-
-                            <div className="flex gap-2">
-                                <div className="relative">
-                                    <button 
-                                        onClick={() => setShowDateFilter(!showDateFilter)}
-                                        className={`flex items-center justify-center h-full px-3 border rounded-xl transition-all shadow-sm active:scale-95 gap-2 text-sm font-bold ${
-                                            filters.dateFilter.start || filters.dateFilter.end 
-                                            ? 'bg-blue-50 border-blue-200 text-blue-700 ring-2 ring-blue-500/20' 
-                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
-                                        }`}
-                                        title="Lọc theo ngày"
-                                    >
-                                        <CalendarIcon className="h-4 w-4" />
-                                        <span className="hidden sm:inline">Thời gian</span>
-                                    </button>
-                                    
-                                    {showDateFilter && (
-                                        <div className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 w-72 animate-fade-in-up ring-1 ring-black/5">
-                                            <h4 className="text-xs font-bold text-slate-400 uppercase mb-3 tracking-wider">Khoảng thời gian</h4>
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Từ ngày</label>
-                                                    <input 
-                                                        type="date" 
-                                                        value={filters.dateFilter.start}
-                                                        onChange={(e) => onDateFilterChange({...filters.dateFilter, start: e.target.value})}
-                                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-blue-500 outline-none focus:ring-2 focus:ring-blue-500/10"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Đến ngày</label>
-                                                    <input 
-                                                        type="date" 
-                                                        value={filters.dateFilter.end}
-                                                        onChange={(e) => onDateFilterChange({...filters.dateFilter, end: e.target.value})}
-                                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-blue-500 outline-none focus:ring-2 focus:ring-blue-500/10"
-                                                    />
-                                                </div>
-                                                <button 
-                                                    onClick={() => { onDateFilterChange({ start: '', end: '' }); setShowDateFilter(false); }}
-                                                    className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition-colors mt-2"
-                                                >
-                                                    Xóa bộ lọc
+                        {/* Filters */}
+                        <div className="flex gap-2">
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowDateFilter(!showDateFilter)}
+                                    className={`flex items-center justify-center h-full px-4 py-2.5 border rounded-xl transition-all shadow-sm active:scale-95 gap-2 text-sm font-bold whitespace-nowrap ${
+                                        filters.dateFilter.start || filters.dateFilter.end 
+                                        ? 'bg-blue-50 border-blue-200 text-blue-700 ring-2 ring-blue-500/20' 
+                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                                    }`}
+                                    title="Lọc theo ngày"
+                                >
+                                    <CalendarIcon className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Thời gian</span>
+                                </button>
+                                
+                                {showDateFilter && (
+                                    <div className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 w-72 animate-fade-in-up ring-1 ring-black/5">
+                                        <h4 className="text-xs font-bold text-slate-400 uppercase mb-3 tracking-wider">Khoảng thời gian</h4>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Từ ngày</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={filters.dateFilter.start}
+                                                    onChange={(e) => onDateFilterChange({...filters.dateFilter, start: e.target.value})}
+                                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-blue-500 outline-none focus:ring-2 focus:ring-blue-500/10"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Đến ngày</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={filters.dateFilter.end}
+                                                    onChange={(e) => onDateFilterChange({...filters.dateFilter, end: e.target.value})}
+                                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-blue-500 outline-none focus:ring-2 focus:ring-blue-500/10"
+                                                />
+                                            </div>
+                                            <button 
+                                                onClick={() => { onDateFilterChange({ start: '', end: '' }); setShowDateFilter(false); }}
+                                                className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold transition-colors mt-2"
+                                            >
+                                                Xóa bộ lọc
                                             </button>
                                         </div>
                                     </div>
                                 )}
-                                </div>
+                            </div>
 
-                                <div className="relative">
-                                    <button 
-                                        onClick={() => setShowColumnMenu(!showColumnMenu)}
-                                        className="flex items-center justify-center h-full px-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95"
-                                        title="Tùy chỉnh cột"
-                                    >
-                                        <AdjustmentsIcon className="h-5 w-5" />
-                                    </button>
-                                    {showColumnMenu && (
-                                        <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 animate-fade-in-up max-h-[400px] overflow-y-auto custom-scrollbar ring-1 ring-black/5">
-                                            <h4 className="text-xs font-bold text-slate-400 uppercase px-4 py-2 border-b border-slate-50 mb-1">Hiển thị cột</h4>
-                                            {columns.map(col => (
-                                                <label key={col.id} className="flex items-center px-4 py-2.5 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors group">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        checked={col.visible}
-                                                        onChange={() => toggleColumn(col.id)}
-                                                        className="rounded border-slate-300 text-[#003DA5] focus:ring-[#003DA5] cursor-pointer"
-                                                    />
-                                                    <span className="ml-3 text-sm text-slate-700 font-medium group-hover:text-slate-900">{col.label}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowColumnMenu(!showColumnMenu)}
+                                    className="flex items-center justify-center h-full px-3.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95"
+                                    title="Tùy chỉnh cột"
+                                >
+                                    <AdjustmentsIcon className="h-5 w-5" />
+                                </button>
+                                {showColumnMenu && (
+                                    <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 animate-fade-in-up max-h-[400px] overflow-y-auto custom-scrollbar ring-1 ring-black/5">
+                                        <h4 className="text-xs font-bold text-slate-400 uppercase px-4 py-2 border-b border-slate-50 mb-1">Hiển thị cột</h4>
+                                        {columns.map(col => (
+                                            <label key={col.id} className="flex items-center px-4 py-2.5 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors group">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={col.visible}
+                                                    onChange={() => toggleColumn(col.id)}
+                                                    className="rounded border-slate-300 text-[#003DA5] focus:ring-[#003DA5] cursor-pointer"
+                                                />
+                                                <span className="ml-3 text-sm text-slate-700 font-bold group-hover:text-slate-900">{col.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* TABLE */}
-                    <div className="flex-1 overflow-auto custom-scrollbar bg-white rounded-2xl shadow-sm border border-slate-200 ring-1 ring-black/5">
+                {/* Data Content (Table + List) */}
+                <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden ring-1 ring-black/5 relative">
+                    
+                    {/* DESKTOP TABLE VIEW */}
+                    <div className="hidden md:block flex-1 overflow-auto custom-scrollbar">
                         <table className="min-w-full" style={{ fontFamily: 'inherit', fontSize: '1rem', borderCollapse: 'separate', borderSpacing: '0 0' }}>
-                            <thead className="bg-slate-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+                            <thead className="bg-slate-50 sticky top-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
                                 <tr>
                                     {columns.filter(c => c.visible).map((col) => {
                                         const isSortable = onSort && ['ngayPhanAnh', 'maSanPham', 'tenThuongMai', 'trangThai', 'soLo'].includes(col.id);
@@ -500,7 +512,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                             <th 
                                                 key={col.id}
                                                 scope="col"
-                                                className={`px-4 py-4 text-left text-[0.6875rem] font-extrabold text-slate-500 uppercase tracking-widest whitespace-nowrap border-b border-slate-200
+                                                className={`px-4 py-4 text-left text-[0.6875rem] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-b border-slate-200
                                                     ${col.fixed ? 'sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.02)]' : ''}
                                                     ${isSortable ? 'cursor-pointer hover:bg-slate-100 hover:text-slate-700 transition-colors select-none group' : ''}
                                                 `}
@@ -568,8 +580,90 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                         </table>
                     </div>
 
+                    {/* MOBILE LIST VIEW */}
+                    <div className="md:hidden flex-1 overflow-auto custom-scrollbar p-4 space-y-4 bg-slate-50/30" style={{ fontSize: '0.875rem' }}>
+                        {isLoading ? (
+                            [...Array(3)].map((_, i) => (
+                                <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 animate-pulse">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="h-4 bg-slate-100 rounded w-1/3"></div>
+                                        <div className="h-5 bg-slate-100 rounded w-1/4"></div>
+                                    </div>
+                                    <div className="h-6 bg-slate-100 rounded w-3/4 mb-2"></div>
+                                    <div className="h-4 bg-slate-50 rounded w-1/2 mb-3"></div>
+                                    <div className="h-16 bg-slate-50 rounded w-full mb-3"></div>
+                                </div>
+                            ))
+                        ) : reports.length > 0 ? (
+                            reports.map((report, index) => (
+                                <div 
+                                    key={report.id} 
+                                    onClick={() => onSelectReport(report)} 
+                                    style={{ animationDelay: `${index * 50}ms` }}
+                                    className="bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-slate-100 active:scale-[0.98] transition-all flex flex-col gap-3 animate-fade-in-up ring-1 ring-black/5"
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[0.65rem] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
+                                                #{report.id.split('-')[1] || report.id}
+                                            </span>
+                                            <span className="text-[0.65rem] font-bold text-slate-400 flex items-center gap-1">
+                                                <CalendarIcon className="w-3 h-3"/> {formatDate(report.ngayPhanAnh)}
+                                            </span>
+                                        </div>
+                                        {getStatusBadge(report.trangThai)}
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                            <span className="font-bold text-[#003DA5] bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-100 text-xs">{report.maSanPham}</span>
+                                            {report.soLo && (
+                                                <span className="font-semibold text-slate-500 text-xs bg-slate-50 px-2 py-0.5 rounded border border-slate-100">Lô: {report.soLo}</span>
+                                            )}
+                                        </div>
+                                        <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2">{report.tenThuongMai}</h3>
+                                    </div>
+
+                                    <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 italic line-clamp-2 leading-relaxed">
+                                        "{report.noiDungPhanAnh}"
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-end gap-2 border-t border-slate-50 pt-3 mt-1">
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); onSelectReport(report); }}
+                                            className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+                                        >
+                                            <EyeIcon className="w-5 h-5" />
+                                        </button>
+                                        {currentUserRole !== 'Kho' && (
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); onDuplicate(report); }}
+                                                className="p-2 text-slate-500 bg-slate-50 hover:bg-slate-200 rounded-xl transition-colors"
+                                            >
+                                                <DocumentDuplicateIcon className="w-5 h-5" />
+                                            </button>
+                                        )}
+                                        {([UserRole.Admin, UserRole.KyThuat] as string[]).includes(currentUserRole) && (
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); if(window.confirm('Xóa phiếu này?')) onDelete(report.id); }}
+                                                className="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                                            >
+                                                <TrashIcon className="w-5 h-5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                <InboxIcon className="h-16 w-16 opacity-20 mb-4" />
+                                <p className="text-sm font-bold">Không tìm thấy dữ liệu.</p>
+                            </div>
+                        )}
+                    </div>
+
                     {/* PAGINATION */}
-                    <div className="border-t border-transparent px-4 py-3 sm:px-6">
+                    <div className="border-t border-slate-100 px-4 py-3 sm:px-6 bg-slate-50/50">
                         <Pagination 
                             currentPage={currentPage}
                             totalItems={totalReports}
@@ -579,88 +673,6 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                         />
                     </div>
                 </div>
-            </div>
-
-            {/* MOBILE LIST VIEW */}
-            <div className="md:hidden flex-1 overflow-auto custom-scrollbar p-4 space-y-4" style={{ fontSize: '0.875rem' }}>
-                {isLoading ? (
-                    [...Array(3)].map((_, i) => (
-                        <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 animate-pulse">
-                            <div className="flex justify-between items-center mb-3">
-                                <div className="h-4 bg-slate-100 rounded w-1/3"></div>
-                                <div className="h-5 bg-slate-100 rounded w-1/4"></div>
-                            </div>
-                            <div className="h-6 bg-slate-100 rounded w-3/4 mb-2"></div>
-                            <div className="h-4 bg-slate-50 rounded w-1/2 mb-3"></div>
-                            <div className="h-16 bg-slate-50 rounded w-full mb-3"></div>
-                        </div>
-                    ))
-                ) : reports.length > 0 ? (
-                    reports.map((report, index) => (
-                        <div 
-                            key={report.id} 
-                            onClick={() => onSelectReport(report)} 
-                            style={{ animationDelay: `${index * 50}ms` }}
-                            className="bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-slate-100 active:scale-[0.98] transition-all flex flex-col gap-3 animate-fade-in-up ring-1 ring-black/5"
-                        >
-                            <div className="flex justify-between items-start">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[0.65rem] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
-                                        #{report.id.split('-')[1] || report.id}
-                                    </span>
-                                    <span className="text-[0.65rem] font-bold text-slate-400 flex items-center gap-1">
-                                         <CalendarIcon className="w-3 h-3"/> {formatDate(report.ngayPhanAnh)}
-                                    </span>
-                                </div>
-                                {getStatusBadge(report.trangThai)}
-                            </div>
-
-                            <div>
-                                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                     <span className="font-bold text-[#003DA5] bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-100 text-xs">{report.maSanPham}</span>
-                                     {report.soLo && (
-                                        <span className="font-semibold text-slate-500 text-xs bg-slate-50 px-2 py-0.5 rounded border border-slate-100">Lô: {report.soLo}</span>
-                                     )}
-                                </div>
-                                <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2">{report.tenThuongMai}</h3>
-                            </div>
-
-                            <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 italic line-clamp-2 leading-relaxed">
-                                "{report.noiDungPhanAnh}"
-                            </div>
-                            
-                            <div className="flex items-center justify-end gap-2 border-t border-slate-50 pt-3 mt-1">
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); onSelectReport(report); }}
-                                    className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
-                                >
-                                    <EyeIcon className="w-5 h-5" />
-                                </button>
-                                {currentUserRole !== 'Kho' && (
-                                    <button 
-                                        onClick={(e) => { e.stopPropagation(); onDuplicate(report); }}
-                                        className="p-2 text-slate-500 bg-slate-50 hover:bg-slate-200 rounded-xl transition-colors"
-                                    >
-                                        <DocumentDuplicateIcon className="w-5 h-5" />
-                                    </button>
-                                )}
-                                {([UserRole.Admin, UserRole.KyThuat] as string[]).includes(currentUserRole) && (
-                                    <button 
-                                        onClick={(e) => { e.stopPropagation(); if(window.confirm('Xóa phiếu này?')) onDelete(report.id); }}
-                                        className="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
-                                    >
-                                        <TrashIcon className="w-5 h-5" />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                        <InboxIcon className="h-16 w-16 opacity-20 mb-4" />
-                        <p className="text-sm font-bold">Không tìm thấy dữ liệu.</p>
-                    </div>
-                )}
             </div>
         </div>
     );
