@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef, useCallback } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon, EllipsisHorizontalIcon } from './components/Icons';
@@ -25,6 +26,7 @@ const PermissionManagementModal = React.lazy(() => import('./components/Permissi
 const Login = React.lazy(() => import('./components/Login') as Promise<{ default: React.ComponentType<any> }>);
 const DashboardReport = React.lazy(() => import('./components/DashboardReport') as Promise<{ default: React.ComponentType<any> }>);
 const SystemSettingsModal = React.lazy(() => import('./components/SystemSettingsModal'));
+const ChatInterface = React.lazy(() => import('./components/ChatInterface'));
 
 interface ToastProps {
   message: string;
@@ -85,6 +87,7 @@ export const App: React.FC = () => {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
   const [isSystemSettingsModalOpen, setIsSystemSettingsModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   
   const [currentView, setCurrentView] = useState<'list' | 'dashboard'>('list');
 
@@ -337,6 +340,7 @@ export const App: React.FC = () => {
       setIsProductModalOpen(false);
       setIsPermissionModalOpen(false);
       setIsSystemSettingsModalOpen(false);
+      setIsChatOpen(false);
       
       // Reset Filters to Default to prevent leakage to next user
       setCurrentPage(1);
@@ -623,6 +627,7 @@ export const App: React.FC = () => {
         onOpenProductModal={() => setIsProductModalOpen(true)}
         onOpenUserModal={() => setIsUserModalOpen(true)}
         onOpenSystemSettingsModal={() => setIsSystemSettingsModalOpen(true)}
+        onToggleChat={() => setIsChatOpen(!isChatOpen)}
         isOffline={isOffline}
       />
       
@@ -679,6 +684,13 @@ export const App: React.FC = () => {
       {userPermissions.canCreate && <DraggableFAB onClick={handleCreateClick} />}
 
       <Suspense fallback={null}>
+          {isChatOpen && (
+              <ChatInterface 
+                  onClose={() => setIsChatOpen(false)} 
+                  data={filteredReports}
+              />
+          )}
+
           {selectedReport && (
             <div className="fixed inset-0 z-50 flex justify-center items-end sm:items-center sm:p-4">
                {/* Backdrop */}

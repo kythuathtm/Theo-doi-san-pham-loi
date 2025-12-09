@@ -6,7 +6,7 @@ import {
   ArrowDownTrayIcon, Cog8ToothIcon, ShieldCheckIcon, 
   TableCellsIcon, UserGroupIcon, ArrowRightOnRectangleIcon, CompanyLogo, BellIcon,
   ArrowUpTrayIcon, DocumentDuplicateIcon, CloudSlashIcon, ArrowDownIcon,
-  CheckCircleIcon, ExclamationCircleIcon, SparklesIcon, ClockIcon
+  CheckCircleIcon, ExclamationCircleIcon, SparklesIcon, ClockIcon, ChatBubbleOvalLeftEllipsisIcon
 } from './Icons';
 
 interface HeaderProps {
@@ -28,6 +28,7 @@ interface HeaderProps {
   onOpenProductModal: () => void;
   onOpenUserModal: () => void;
   onOpenSystemSettingsModal: () => void;
+  onToggleChat: () => void;
   isOffline?: boolean;
 }
 
@@ -58,6 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProductModal, 
   onOpenUserModal, 
   onOpenSystemSettingsModal,
+  onToggleChat,
   isOffline
 }) => {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
@@ -225,6 +227,15 @@ export const Header: React.FC<HeaderProps> = ({
                         <span>Offline</span>
                     </button>
                 )}
+
+                {/* AI Chat Button - NEW */}
+                <button 
+                    onClick={onToggleChat}
+                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border bg-white/60 hover:bg-white border-slate-200/60 text-slate-500 hover:text-[#003DA5] hover:border-slate-300 shadow-sm"
+                    title="Trợ lý AI"
+                >
+                    <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5" />
+                </button>
 
                 {/* Notification Center */}
                 <div className="relative" ref={notifMenuRef}>
