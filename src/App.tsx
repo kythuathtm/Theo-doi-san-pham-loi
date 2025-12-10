@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef, useCallback } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon, EllipsisHorizontalIcon } from './components/Icons';
@@ -149,13 +148,28 @@ export const App: React.FC = () => {
         root.style.removeProperty('--list-size');
     }
 
+    // Dashboard Settings
+    if (systemSettings.dashboardFontFamily) {
+        root.style.setProperty('--dashboard-font', systemSettings.dashboardFontFamily);
+    } else {
+        root.style.removeProperty('--dashboard-font');
+    }
+
+    if (systemSettings.dashboardFontSize) {
+        root.style.setProperty('--dashboard-size', systemSettings.dashboardFontSize);
+    } else {
+        root.style.removeProperty('--dashboard-size');
+    }
+
   }, [
       systemSettings.fontFamily, 
       systemSettings.baseFontSize,
       systemSettings.headerFontFamily,
       systemSettings.headerFontSize,
       systemSettings.listFontFamily,
-      systemSettings.listFontSize
+      systemSettings.listFontSize,
+      systemSettings.dashboardFontFamily,
+      systemSettings.dashboardFontSize
   ]);
 
   // Sync selectedReport with reports to ensure realtime updates in modal

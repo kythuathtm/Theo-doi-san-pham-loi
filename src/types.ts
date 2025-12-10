@@ -98,10 +98,14 @@ export interface SystemSettings {
   // Header Specifics
   headerBackgroundColor?: string; 
   headerTextColor?: string;
-  headerFontFamily?: string; // New
-  headerFontSize?: string; // New
+  headerFontFamily?: string; 
+  headerFontSize?: string; 
   
   // List/Table Specifics
-  listFontFamily?: string; // New
-  listFontSize?: string; // New
+  listFontFamily?: string; 
+  listFontSize?: string; 
+
+  // Dashboard Specifics (NEW)
+  dashboardFontFamily?: string;
+  dashboardFontSize?: string;
 }

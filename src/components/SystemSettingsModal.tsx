@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { SystemSettings } from '../types';
 import { db } from '../firebaseConfig';
-import { XIcon, CheckCircleIcon, ArrowUpTrayIcon, TrashIcon, TagIcon, WrenchIcon, SparklesIcon, ShoppingBagIcon, ListBulletIcon, TableCellsIcon, ServerStackIcon, ArrowPathIcon, ExclamationCircleIcon, CloudIcon, CloudSlashIcon } from './Icons';
+import { XIcon, CheckCircleIcon, ArrowUpTrayIcon, TrashIcon, TagIcon, WrenchIcon, SparklesIcon, ShoppingBagIcon, ListBulletIcon, TableCellsIcon, ServerStackIcon, ArrowPathIcon, ExclamationCircleIcon, CloudIcon, CloudSlashIcon, ChartPieIcon } from './Icons';
 
 interface Props {
   currentSettings: SystemSettings;
@@ -51,18 +51,18 @@ const compressImage = (file: File): Promise<string> => {
 
 const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose, isOffline, connectionError }) => {
   const [settings, setSettings] = useState<SystemSettings>(currentSettings);
-  const [activeTab, setActiveTab] = useState<'general' | 'header' | 'list' | 'database'>(isOffline ? 'database' : 'general');
+  const [activeTab, setActiveTab] = useState<'general' | 'header' | 'list' | 'dashboard' | 'database'>(isOffline ? 'database' : 'general');
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const fontOptions = [
-      { label: 'Inter (Mặc định)', value: "'Inter', sans-serif" },
-      { label: 'Arial', value: "'Arial', sans-serif" },
-      { label: 'Times New Roman', value: "'Times New Roman', serif" },
-      { label: 'Tahoma', value: "'Tahoma', sans-serif" },
-      { label: 'Verdana', value: "'Verdana', sans-serif" },
-      { label: 'Courier New', value: "'Courier New', monospace" },
-      { label: 'Segoe UI', value: "'Segoe UI', sans-serif" },
-      { label: 'Roboto', value: "'Roboto', sans-serif" },
+      { label: 'Inter (Chuẩn UI)', value: "'Inter', sans-serif" },
+      { label: 'Roboto (Google)', value: "'Roboto', sans-serif" },
+      { label: 'Segoe UI (Windows)', value: "'Segoe UI', sans-serif" },
+      { label: 'Arial (Cổ điển)', value: "'Arial', sans-serif" },
+      { label: 'Tahoma (Gọn gàng)', value: "'Tahoma', sans-serif" },
+      { label: 'Verdana (Rộng)', value: "'Verdana', sans-serif" },
+      { label: 'Times New Roman (Serif)', value: "'Times New Roman', serif" },
+      { label: 'Courier New (Monospace)', value: "'Courier New', monospace" },
   ];
 
   const fontSizeOptions = [
@@ -155,9 +155,10 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                   </select>
               </div>
           </div>
-          <div className="mt-3 p-3 bg-white border border-slate-100 rounded-lg">
-              <p className="text-slate-800" style={{ fontFamily: fontFamilyValue || defaultFamily, fontSize: fontSizeValue || defaultSize }}>
-                  Mẫu hiển thị: Công ty Hồng Thiện Mỹ
+          <div className="mt-3 p-3 bg-white border border-slate-100 rounded-lg shadow-inner">
+              <p className="text-slate-800 leading-snug" style={{ fontFamily: fontFamilyValue || defaultFamily, fontSize: fontSizeValue || defaultSize }}>
+                  <strong>Demo Tiêu đề:</strong> Báo cáo chất lượng<br/>
+                  <span className="opacity-80">Demo nội dung: 123,456 sản phẩm lỗi.</span>
               </p>
           </div>
       </div>
@@ -171,7 +172,7 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
         <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
           <div>
             <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Cấu hình Hệ thống</h2>
-            <p className="text-sm text-slate-500">Tùy chỉnh giao diện và thông tin hiển thị</p>
+            <p className="text-sm text-slate-500">Tùy chỉnh giao diện, font chữ và hiển thị</p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-slate-100 transition-all active:scale-95">
             <XIcon className="h-6 w-6" />
@@ -185,26 +186,32 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                 <div className="space-y-1">
                     <button 
                         onClick={() => setActiveTab('general')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'general' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'general' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
                     >
                         <TagIcon className="w-5 h-5" /> Thông tin chung
                     </button>
                     <button 
                         onClick={() => setActiveTab('header')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'header' ? 'bg-orange-50 text-orange-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'header' ? 'bg-orange-50 text-orange-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
                     >
                         <WrenchIcon className="w-5 h-5" /> Header & Tiêu đề
                     </button>
                     <button 
                         onClick={() => setActiveTab('list')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'list' ? 'bg-purple-50 text-purple-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'list' ? 'bg-purple-50 text-purple-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
                     >
                         <TableCellsIcon className="w-5 h-5" /> Bảng & Danh sách
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('dashboard')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'dashboard' ? 'bg-teal-50 text-teal-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        <ChartPieIcon className="w-5 h-5" /> Dashboard & Báo cáo
                     </button>
                     <div className="my-2 h-px bg-slate-100"></div>
                     <button 
                         onClick={() => setActiveTab('database')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'database' ? 'bg-red-50 text-red-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'database' ? 'bg-red-50 text-red-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
                     >
                         <ServerStackIcon className="w-5 h-5" /> 
                         <div className="flex justify-between w-full items-center">
@@ -411,7 +418,28 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                     </div>
                 )}
 
-                {/* TAB: DATABASE - NEW */}
+                {/* TAB: DASHBOARD - NEW */}
+                {activeTab === 'dashboard' && (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <SectionTitle title="Dashboard & Báo cáo" icon={<ChartPieIcon className="w-5 h-5" />} colorClass="bg-teal-100 text-teal-600" />
+                            <p className="text-sm text-slate-500 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                Tùy chỉnh hiển thị cho màn hình Dashboard tổng quan. Chọn font chữ đậm nét hoặc đơn giản để tăng tính dễ đọc cho các số liệu.
+                            </p>
+                            
+                            <FontSelector 
+                                label="Phông chữ Dashboard"
+                                fontFamilyValue={settings.dashboardFontFamily}
+                                fontSizeValue={settings.dashboardFontSize}
+                                onFontFamilyChange={(val: string) => setSettings({...settings, dashboardFontFamily: val})}
+                                onFontSizeChange={(val: string) => setSettings({...settings, dashboardFontSize: val})}
+                                defaultSize="15px"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* TAB: DATABASE */}
                 {activeTab === 'database' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
