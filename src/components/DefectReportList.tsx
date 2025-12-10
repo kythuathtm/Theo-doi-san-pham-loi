@@ -8,7 +8,7 @@ import {
   CheckCircleIcon, WrenchIcon, ShoppingBagIcon, 
   TagIcon, UserIcon, ClockIcon, ArrowUpIcon, ArrowDownIcon,
   ChartPieIcon, InboxIcon, ExclamationCircleIcon,
-  ListBulletIcon
+  ListBulletIcon, Squares2X2Icon, CubeIcon
 } from './Icons';
 import Pagination from './Pagination';
 
@@ -18,15 +18,17 @@ interface ColumnConfig {
   visible: boolean;
   width?: number | string;
   align?: 'left' | 'center' | 'right';
+  headerAlign?: 'left' | 'center' | 'right';
+  cellAlign?: 'left' | 'center' | 'right';
   fixed?: boolean;
 }
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'stt', label: 'STT', visible: true, width: 60, align: 'center' },
     { id: 'ngayPhanAnh', label: 'Ngày khiếu nại', visible: true, width: 110, align: 'center' },
-    { id: 'maSanPham', label: 'Mã sản phẩm', visible: true, width: 100, align: 'center' },
-    { id: 'tenThuongMai', label: 'Tên thương mại', visible: true, width: 220, align: 'center' }, 
-    { id: 'noiDungPhanAnh', label: 'Nội dung khiếu nại', visible: true, width: 280, align: 'center' },
+    { id: 'maSanPham', label: 'Mã sản phẩm', visible: true, width: 100, headerAlign: 'center', cellAlign: 'left' },
+    { id: 'tenThuongMai', label: 'Tên thương mại', visible: true, width: 220, headerAlign: 'center', cellAlign: 'left' }, 
+    { id: 'noiDungPhanAnh', label: 'Nội dung khiếu nại', visible: true, width: 280, headerAlign: 'center', cellAlign: 'left' },
     { id: 'soLo', label: 'Số lô', visible: true, width: 90, align: 'center' },
     { id: 'maNgaySanXuat', label: 'Mã NSX', visible: true, width: 90, align: 'center' },
     { id: 'hanDung', label: 'Hạn dùng', visible: false, width: 110, align: 'center' },
@@ -212,6 +214,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
     const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
     const [showColumnMenu, setShowColumnMenu] = useState(false);
     const [showDateFilter, setShowDateFilter] = useState(false);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
     useEffect(() => {
         const savedColumns = localStorage.getItem(`columns_${currentUsername}`);
@@ -470,6 +473,21 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                     )}
                                 </div>
 
+                                {/* View Mode Toggle */}
+                                <div className="relative">
+                                    <button 
+                                        onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border ${
+                                            viewMode === 'grid' 
+                                            ? 'bg-blue-50 border-blue-200 text-blue-600' 
+                                            : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 shadow-sm'
+                                        }`}
+                                        title={viewMode === 'list' ? "Chuyển sang chế độ lưới" : "Chuyển sang chế độ danh sách"}
+                                    >
+                                        {viewMode === 'list' ? <Squares2X2Icon className="h-5 w-5" /> : <ListBulletIcon className="h-5 w-5" />}
+                                    </button>
+                                </div>
+
                                 <div className="relative">
                                     <button 
                                         onClick={() => setShowColumnMenu(!showColumnMenu)}
@@ -513,133 +531,219 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                         </div>
                     </div>
 
-                    {/* Table Area */}
-                    <div className="flex-1 overflow-auto custom-scrollbar bg-white/40">
-                        {/* Desktop Table */}
-                        <table className="min-w-full border-collapse" style={{ fontFamily: 'inherit', fontSize: '1rem' }}>
-                            <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-20 shadow-sm border-b border-slate-200/60">
-                                <tr>
-                                    {columns.filter(c => c.visible).map((col, idx, arr) => {
-                                        const isSortable = onSort && ['ngayPhanAnh', 'maSanPham', 'tenThuongMai', 'trangThai', 'soLo'].includes(col.id);
-                                        const isSorted = sortConfig?.key === col.id;
-                                        const sortDirection = sortConfig?.direction;
-
-                                        return (
-                                            <th 
-                                                key={col.id}
-                                                scope="col"
-                                                className={`px-4 py-3 text-left text-[0.6875rem] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap relative
-                                                    ${col.fixed ? 'sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.02)]' : ''}
-                                                    ${isSortable ? 'cursor-pointer hover:bg-slate-100/50 hover:text-slate-800 transition-colors select-none group' : ''}
-                                                `}
-                                                style={{ width: col.width, textAlign: col.align || 'left' }}
-                                                onClick={() => isSortable && onSort && onSort(col.id)}
-                                            >
-                                                <div className={`flex items-center gap-1.5 ${col.align === 'center' ? 'justify-center' : ''}`}>
-                                                    {col.label}
-                                                    {isSortable && (
-                                                        <span className={`transition-opacity duration-200 ${isSorted ? 'opacity-100 text-[#003DA5]' : 'opacity-30 group-hover:opacity-60'}`}>
-                                                            {/* Custom Sort Icon Style */}
-                                                            <div className="flex flex-col -space-y-1">
-                                                                <ArrowUpIcon className={`w-2.5 h-2.5 ${isSorted && sortDirection === 'asc' ? 'text-[#003DA5]' : 'text-slate-400'}`} />
-                                                                <ArrowDownIcon className={`w-2.5 h-2.5 ${isSorted && sortDirection === 'desc' ? 'text-[#003DA5]' : 'text-slate-400'}`} />
-                                                            </div>
+                    {/* Content Area */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar bg-white/40 relative">
+                        {isLoading ? (
+                            <div className="p-4 space-y-4">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="h-16 bg-slate-100/50 rounded-xl animate-pulse"></div>
+                                ))}
+                            </div>
+                        ) : viewMode === 'grid' ? (
+                            // GRID VIEW
+                            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 animate-fade-in">
+                                {reports.length > 0 ? (
+                                    reports.map(report => (
+                                        <div 
+                                            key={report.id} 
+                                            onClick={() => onSelectReport(report)}
+                                            className="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-300 cursor-pointer group flex flex-col h-full overflow-hidden hover:-translate-y-1 relative"
+                                        >
+                                            {/* Image Cover */}
+                                            <div className="h-32 bg-slate-100 relative overflow-hidden flex items-center justify-center border-b border-slate-100">
+                                                {report.images && report.images.length > 0 ? (
+                                                    <img src={report.images[0]} alt="thumbnail" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                                ) : (
+                                                    <div className="text-slate-300 flex flex-col items-center">
+                                                        <CubeIcon className="w-8 h-8 opacity-50" />
+                                                        <span className="text-[0.6rem] font-bold uppercase mt-1 tracking-wider opacity-60">No Image</span>
+                                                    </div>
+                                                )}
+                                                {/* Status Badge Overlay */}
+                                                <div className="absolute top-2 right-2 shadow-sm">
+                                                    {getStatusBadge(report.trangThai)}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="p-4 flex-1 flex flex-col">
+                                                <div className="flex justify-between items-start mb-2">
+                                                     <span className="text-[0.6rem] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{report.id}</span>
+                                                     <span className="text-[0.6rem] font-bold text-slate-400 flex items-center gap-1">
+                                                        <CalendarIcon className="w-3 h-3" />
+                                                        {formatDate(report.ngayPhanAnh)}
+                                                     </span>
+                                                </div>
+                                                
+                                                <h3 className="text-sm font-bold text-slate-800 leading-snug mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors" title={report.tenThuongMai}>
+                                                    {report.tenThuongMai}
+                                                </h3>
+                                                
+                                                <div className="text-xs text-slate-500 font-medium mb-3 flex items-center gap-1.5 flex-wrap">
+                                                    <span className="flex items-center gap-1 text-[#003DA5] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                                                        <TagIcon className="w-3 h-3" />
+                                                        {report.maSanPham}
+                                                    </span>
+                                                    {report.soLo && (
+                                                        <span className="text-[0.65rem] bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 text-slate-500">
+                                                            Lô: {report.soLo}
                                                         </span>
                                                     )}
                                                 </div>
-                                                
-                                                {/* Vertical Divider - 50% Height, Centered */}
-                                                {idx < arr.length - 1 && (
-                                                    <div className="absolute right-0 top-1/4 h-2/4 w-px bg-slate-300/60"></div>
-                                                )}
-                                            </th>
-                                        );
-                                    })}
-                                </tr>
-                            </thead>
-                            <tbody className="bg-transparent divide-y divide-slate-100/60">
-                                {isLoading ? (
-                                    [...Array(5)].map((_, i) => (
-                                        <tr key={i} className="animate-pulse">
-                                            {columns.filter(c => c.visible).map((col, j) => (
-                                                <td key={j} className="px-4 py-4 whitespace-nowrap">
-                                                    <div className="h-4 bg-slate-100/50 rounded w-3/4"></div>
-                                                </td>
-                                            ))}
-                                        </tr>
+
+                                                {/* Footer Actions */}
+                                                <div className="mt-auto pt-3 border-t border-slate-100 flex justify-between items-center h-6">
+                                                     <div className="flex-1 min-w-0">
+                                                         {report.loaiLoi && (
+                                                            <span className="text-[0.6rem] font-bold text-slate-500 truncate block" title={report.loaiLoi}>{report.loaiLoi}</span>
+                                                         )}
+                                                     </div>
+                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {currentUserRole !== 'Kho' && (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); onDuplicate(report); }}
+                                                                className="p-1 text-slate-400 hover:text-blue-600 rounded hover:bg-blue-50"
+                                                                title="Nhân bản"
+                                                            >
+                                                                <DocumentDuplicateIcon className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        )}
+                                                        {([UserRole.Admin, UserRole.KyThuat] as string[]).includes(currentUserRole) && (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); if(window.confirm('Xóa phiếu này?')) onDelete(report.id); }}
+                                                                className="p-1 text-slate-400 hover:text-red-600 rounded hover:bg-red-50"
+                                                                title="Xóa"
+                                                            >
+                                                                <TrashIcon className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        )}
+                                                     </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ))
                                 ) : (
-                                    reports.map((report, index) => (
-                                        <tr 
-                                            key={report.id} 
-                                            onClick={() => onSelectReport(report)}
-                                            className={`hover:bg-blue-50/40 transition-colors group cursor-pointer ${selectedReport?.id === report.id ? 'bg-blue-50/60' : 'bg-white/40'}`}
-                                        >
-                                            {columns.filter(c => c.visible).map((col, idx, arr) => {
-                                                return (
-                                                    <td 
-                                                        key={col.id} 
-                                                        className={`px-4 py-3 align-middle border-b border-slate-100/50 ${
-                                                            col.fixed ? 'sticky right-0 bg-white/90 group-hover:bg-blue-50/50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.02)]' : ''
-                                                        }`}
-                                                        style={{ textAlign: col.align || 'left', width: col.width }}
-                                                    >
-                                                        {renderCell(report, col.id, index)}
-                                                    </td>
-                                                )
-                                            })}
-                                        </tr>
-                                    ))
+                                    <div className="col-span-full flex flex-col items-center justify-center py-12 text-slate-400">
+                                        <InboxIcon className="h-10 w-10 opacity-30 mb-2" />
+                                        <p className="text-sm font-bold">Không tìm thấy dữ liệu</p>
+                                    </div>
                                 )}
-                            </tbody>
-                        </table>
-                        
-                        {reports.length === 0 && !isLoading && (
-                            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                                <div className="bg-slate-50 p-4 rounded-full mb-3">
-                                    <InboxIcon className="h-10 w-10 opacity-30" />
-                                </div>
-                                <p className="text-sm font-bold">Không tìm thấy dữ liệu</p>
-                                <p className="text-xs opacity-70 mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
                             </div>
-                        )}
-                    </div>
+                        ) : (
+                            // LIST VIEW
+                            <>
+                                {/* Desktop Table */}
+                                <div className="hidden md:block h-full">
+                                    <table className="min-w-full border-collapse" style={{ fontFamily: 'inherit', fontSize: '1rem' }}>
+                                        <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-20 shadow-sm border-b border-slate-200/60">
+                                            <tr>
+                                                {columns.filter(c => c.visible).map((col, idx, arr) => {
+                                                    const isSortable = onSort && ['ngayPhanAnh', 'maSanPham', 'tenThuongMai', 'trangThai', 'soLo'].includes(col.id);
+                                                    const isSorted = sortConfig?.key === col.id;
+                                                    const sortDirection = sortConfig?.direction;
+                                                    const headerAlign = col.headerAlign || col.align || 'left';
 
-                    {/* MOBILE LIST VIEW (Keep existing logic for mobile) */}
-                    <div className="md:hidden flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3 bg-transparent">
-                        {isLoading ? (
-                            [...Array(3)].map((_, i) => (
-                                <div key={i} className="bg-white/60 p-4 rounded-xl shadow-sm border border-white/50 animate-pulse h-32"></div>
-                            ))
-                        ) : reports.length > 0 ? (
-                            reports.map((report) => (
-                                <div 
-                                    key={report.id}
-                                    onClick={() => onSelectReport(report)}
-                                    className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-white/60 active:scale-[0.98] transition-all relative overflow-hidden"
-                                >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="text-[0.6rem] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">{report.id}</span>
-                                        {getStatusBadge(report.trangThai)}
-                                    </div>
-                                    <h3 className="text-sm font-bold text-slate-800 leading-tight mb-1 line-clamp-2">{report.tenThuongMai}</h3>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                                        <span className="font-medium text-[#003DA5]">{report.maSanPham}</span>
-                                        <span>•</span>
-                                        <span>{formatDate(report.ngayPhanAnh)}</span>
-                                    </div>
-                                    {report.loaiLoi && (
-                                        <div className="inline-block text-[0.6rem] font-bold bg-slate-50 text-slate-600 px-2 py-1 rounded border border-slate-200">
-                                            {report.loaiLoi}
+                                                    return (
+                                                        <th 
+                                                            key={col.id}
+                                                            scope="col"
+                                                            className={`px-4 py-3 text-left text-[0.6875rem] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap relative
+                                                                ${col.fixed ? 'sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.02)]' : ''}
+                                                                ${isSortable ? 'cursor-pointer hover:bg-slate-100/50 hover:text-slate-800 transition-colors select-none group' : ''}
+                                                            `}
+                                                            style={{ width: col.width, textAlign: headerAlign }}
+                                                            onClick={() => isSortable && onSort && onSort(col.id)}
+                                                        >
+                                                            <div className={`flex items-center gap-1.5 ${headerAlign === 'center' ? 'justify-center' : headerAlign === 'right' ? 'justify-end' : 'justify-start'}`}>
+                                                                {col.label}
+                                                                {isSortable && (
+                                                                    <span className={`transition-opacity duration-200 ${isSorted ? 'opacity-100 text-[#003DA5]' : 'opacity-30 group-hover:opacity-60'}`}>
+                                                                        <div className="flex flex-col -space-y-1">
+                                                                            <ArrowUpIcon className={`w-2.5 h-2.5 ${isSorted && sortDirection === 'asc' ? 'text-[#003DA5]' : 'text-slate-400'}`} />
+                                                                            <ArrowDownIcon className={`w-2.5 h-2.5 ${isSorted && sortDirection === 'desc' ? 'text-[#003DA5]' : 'text-slate-400'}`} />
+                                                                        </div>
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {idx < arr.length - 1 && (
+                                                                <div className="absolute right-0 top-1/4 h-2/4 w-px bg-slate-300/60"></div>
+                                                            )}
+                                                        </th>
+                                                    );
+                                                })}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-transparent divide-y divide-slate-100/60">
+                                            {reports.length > 0 ? (
+                                                reports.map((report, index) => (
+                                                    <tr 
+                                                        key={report.id} 
+                                                        onClick={() => onSelectReport(report)}
+                                                        className={`hover:bg-blue-50/40 transition-colors group cursor-pointer ${selectedReport?.id === report.id ? 'bg-blue-50/60' : 'bg-white/40'}`}
+                                                    >
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            const cellAlign = col.cellAlign || col.align || 'left';
+                                                            return (
+                                                                <td 
+                                                                    key={col.id} 
+                                                                    className={`px-4 py-3 align-middle border-b border-slate-100/50 ${
+                                                                        col.fixed ? 'sticky right-0 bg-white/90 group-hover:bg-blue-50/50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.02)]' : ''
+                                                                    }`}
+                                                                    style={{ textAlign: cellAlign, width: col.width }}
+                                                                >
+                                                                    {renderCell(report, col.id, index)}
+                                                                </td>
+                                                            )
+                                                        })}
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={columns.filter(c => c.visible).length} className="py-12 text-center text-slate-400">
+                                                        <div className="flex flex-col items-center justify-center">
+                                                            <InboxIcon className="h-10 w-10 opacity-30 mb-2" />
+                                                            <p className="text-sm font-bold">Không tìm thấy dữ liệu</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Mobile List */}
+                                <div className="md:hidden p-4 space-y-3">
+                                    {reports.length > 0 ? (
+                                        reports.map((report) => (
+                                            <div 
+                                                key={report.id}
+                                                onClick={() => onSelectReport(report)}
+                                                className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-white/60 active:scale-[0.98] transition-all relative overflow-hidden"
+                                            >
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className="text-[0.6rem] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">{report.id}</span>
+                                                    {getStatusBadge(report.trangThai)}
+                                                </div>
+                                                <h3 className="text-sm font-bold text-slate-800 leading-tight mb-1 line-clamp-2">{report.tenThuongMai}</h3>
+                                                <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                                                    <span className="font-medium text-[#003DA5]">{report.maSanPham}</span>
+                                                    <span>•</span>
+                                                    <span>{formatDate(report.ngayPhanAnh)}</span>
+                                                </div>
+                                                {report.loaiLoi && (
+                                                    <div className="inline-block text-[0.6rem] font-bold bg-slate-50 text-slate-600 px-2 py-1 rounded border border-slate-200">
+                                                        {report.loaiLoi}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                                            <InboxIcon className="h-10 w-10 opacity-30 mb-2" />
+                                            <p className="text-xs font-bold">Không có dữ liệu</p>
                                         </div>
                                     )}
                                 </div>
-                            ))
-                        ) : (
-                            <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-                                <InboxIcon className="h-10 w-10 opacity-30 mb-2" />
-                                <p className="text-xs font-bold">Không có dữ liệu</p>
-                            </div>
+                            </>
                         )}
                     </div>
 
