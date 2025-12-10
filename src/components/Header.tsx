@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { User, SystemSettings, UserRole } from '../types';
 import { 
@@ -108,13 +109,13 @@ export const Header: React.FC<HeaderProps> = ({
   const getUserInitials = (name: string) => name ? name.charAt(0).toUpperCase() : '?';
 
   // Common Dropdown Style classes
-  const dropdownClasses = "absolute right-0 top-full mt-3 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-white/60 ring-1 ring-slate-200/50 py-2 z-50 animate-fade-in-up origin-top-right overflow-hidden";
+  const dropdownClasses = "absolute right-0 top-full mt-3 bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/60 ring-1 ring-white/50 py-2 z-50 animate-fade-in-up origin-top-right overflow-hidden";
 
   return (
     <header 
-        className="backdrop-blur-xl border-b border-white/40 sticky top-0 z-40 transition-all shadow-sm"
+        className="backdrop-blur-xl border-b border-white/40 sticky top-0 z-40 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.03)]"
         style={{
-            backgroundColor: systemSettings.headerBackgroundColor || 'rgba(255, 255, 255, 0.85)',
+            backgroundColor: systemSettings.headerBackgroundColor || 'rgba(255, 255, 255, 0.6)',
             color: systemSettings.headerTextColor || '#0f172a',
             fontFamily: 'var(--header-font, inherit)'
         }}
@@ -129,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <img src={systemSettings.logoUrl} alt="Logo" className="h-10 w-auto object-contain flex-shrink-0 relative z-10 transition-transform duration-300 group-hover:scale-105" />
                 </div>
             ) : (
-                <div className="w-11 h-11 rounded-2xl shadow-lg shadow-blue-600/10 flex-shrink-0 bg-gradient-to-br from-white to-blue-50 border border-white flex items-center justify-center overflow-hidden relative z-10 group-hover:shadow-blue-600/20 transition-all duration-300 group-hover:-translate-y-0.5">
+                <div className="w-11 h-11 rounded-2xl shadow-lg shadow-blue-600/10 flex-shrink-0 bg-gradient-to-br from-white to-blue-50 border border-white/60 flex items-center justify-center overflow-hidden relative z-10 group-hover:shadow-blue-600/20 transition-all duration-300 group-hover:-translate-y-0.5">
                    <CompanyLogo className="h-7 w-7 text-[#003DA5]" />
                 </div>
             )}
@@ -147,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
                        </div>
                    )}
                    <div className="w-full mt-1">
-                        <div className="font-bold text-slate-400 uppercase group-hover:text-slate-400 transition-colors">
+                        <div className="font-bold text-slate-500/80 uppercase group-hover:text-slate-600 transition-colors">
                             {systemSettings.appName || 'QUALITY MANAGEMENT SYSTEM'}
                         </div>
                    </div>
@@ -170,7 +171,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {isLoadingReports && (
-                <div className="hidden sm:flex items-center gap-2 ml-3 bg-blue-50/80 backdrop-blur text-blue-600 px-3 py-1.5 rounded-full border border-blue-100/50 animate-pulse">
+                <div className="hidden sm:flex items-center gap-2 ml-3 bg-blue-50/60 backdrop-blur text-blue-600 px-3 py-1.5 rounded-full border border-blue-100/50 animate-pulse shadow-sm">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -185,12 +186,12 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* View Switcher - Modern Pill Style */}
             {canViewDashboard && (
-                <div className="hidden md:flex items-center bg-slate-100/50 p-1 rounded-xl border border-slate-200/50 backdrop-blur-sm">
+                <div className="hidden md:flex items-center bg-white/40 p-1 rounded-xl border border-white/60 backdrop-blur-sm shadow-inner">
                     <button
                         onClick={() => setCurrentView('list')}
                         className={`relative flex items-center px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 gap-2 ${
                             currentView === 'list' 
-                            ? 'bg-white text-[#003DA5] shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] ring-1 ring-black/5' 
+                            ? 'bg-white text-[#003DA5] shadow-sm ring-1 ring-black/5' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-white/40'
                         }`}
                     >
@@ -201,7 +202,7 @@ export const Header: React.FC<HeaderProps> = ({
                         onClick={() => setCurrentView('dashboard')}
                         className={`relative flex items-center px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 gap-2 ${
                             currentView === 'dashboard' 
-                            ? 'bg-white text-[#003DA5] shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] ring-1 ring-black/5' 
+                            ? 'bg-white text-[#003DA5] shadow-sm ring-1 ring-black/5' 
                             : 'text-slate-500 hover:text-slate-700 hover:bg-white/40'
                         }`}
                     >
@@ -220,7 +221,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <select 
                         value={yearFilter} 
                         onChange={(e) => setYearFilter(e.target.value)}
-                        className="bg-white/60 hover:bg-white border border-slate-200/60 text-slate-700 text-xs font-bold rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] block w-full pl-9 pr-8 py-2 cursor-pointer hover:border-slate-300 transition-all outline-none appearance-none shadow-sm backdrop-blur-sm"
+                        className="bg-white/40 hover:bg-white/60 border border-white/60 text-slate-700 text-xs font-bold rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] block w-full pl-9 pr-8 py-2 cursor-pointer hover:border-white transition-all outline-none appearance-none shadow-sm backdrop-blur-sm"
                     >
                         <option value="All">Tất cả năm</option>
                         {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
@@ -231,7 +232,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
             )}
 
-            <div className="h-6 w-px bg-slate-200/60 hidden sm:block"></div>
+            <div className="h-6 w-px bg-slate-300/40 hidden sm:block"></div>
 
             {/* Icons Group */}
             <div className="flex items-center gap-2">
@@ -250,7 +251,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* AI Chat Button - NEW */}
                 <button 
                     onClick={onToggleChat}
-                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border bg-white/60 hover:bg-white border-slate-200/60 text-slate-500 hover:text-[#003DA5] hover:border-slate-300 shadow-sm"
+                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border bg-white/40 hover:bg-white/80 border-white/60 text-slate-500 hover:text-[#003DA5] hover:border-white shadow-sm backdrop-blur-md"
                     title="Trợ lý AI"
                 >
                     <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5" />
@@ -260,7 +261,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="relative" ref={notifMenuRef}>
                     <button 
                         onClick={() => setIsNotifOpen(!isNotifOpen)}
-                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border relative ${isNotifOpen ? 'bg-blue-50 border-blue-200 text-[#003DA5]' : 'bg-white/60 hover:bg-white border-slate-200/60 text-slate-500 hover:text-slate-700 hover:border-slate-300 shadow-sm'}`}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border relative backdrop-blur-md ${isNotifOpen ? 'bg-blue-50 border-blue-200 text-[#003DA5]' : 'bg-white/40 hover:bg-white/80 border-white/60 text-slate-500 hover:text-slate-700 hover:border-white shadow-sm'}`}
                         title="Thông báo"
                     >
                         <BellIcon className={`h-5 w-5 ${unreadCount > 0 ? 'animate-shake' : ''}`} />
@@ -273,7 +274,7 @@ export const Header: React.FC<HeaderProps> = ({
 
                     {isNotifOpen && (
                         <div className={`${dropdownClasses} w-80 sm:w-96 py-0`}>
-                            <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 backdrop-blur">
+                            <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-white/60 backdrop-blur">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Thông báo</span>
                                     {unreadCount > 0 && <span className="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-md animate-pulse">{unreadCount} mới</span>}
@@ -293,7 +294,7 @@ export const Header: React.FC<HeaderProps> = ({
                                         <div 
                                             key={notif.id} 
                                             onClick={() => markAsRead(notif.id)}
-                                            className={`p-4 border-b border-slate-50 hover:bg-slate-50/80 transition-colors cursor-pointer group flex gap-3 items-start relative ${notif.read ? 'opacity-70 bg-transparent' : 'bg-blue-50/20'}`}
+                                            className={`p-4 border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer group flex gap-3 items-start relative ${notif.read ? 'opacity-70 bg-transparent' : 'bg-blue-50/10'}`}
                                         >
                                             {!notif.read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#003DA5]"></div>}
                                             <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-white ${
@@ -327,8 +328,8 @@ export const Header: React.FC<HeaderProps> = ({
                                     </div>
                                 )}
                             </div>
-                            <div className="p-2 bg-slate-50/50 border-t border-slate-100 text-center backdrop-blur">
-                                <button className="text-xs font-bold text-slate-500 hover:text-[#003DA5] transition-colors py-1 w-full rounded-lg hover:bg-slate-100">
+                            <div className="p-2 bg-white/40 border-t border-slate-100 text-center backdrop-blur">
+                                <button className="text-xs font-bold text-slate-500 hover:text-[#003DA5] transition-colors py-1 w-full rounded-lg hover:bg-slate-50/50">
                                     Xem lịch sử thông báo
                                 </button>
                             </div>
@@ -341,7 +342,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="relative" ref={dataMenuRef}>
                         <button 
                             onClick={() => setIsDataMenuOpen(!isDataMenuOpen)} 
-                            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border ${isDataMenuOpen ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white/60 hover:bg-white border-slate-200/60 text-slate-500 hover:text-slate-700 hover:border-slate-300 shadow-sm'}`}
+                            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border backdrop-blur-md ${isDataMenuOpen ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white/40 hover:bg-white/80 border-white/60 text-slate-500 hover:text-slate-700 hover:border-white shadow-sm'}`}
                             title="Công cụ dữ liệu"
                         >
                             <ArrowDownTrayIcon className="h-5 w-5" />
@@ -353,7 +354,7 @@ export const Header: React.FC<HeaderProps> = ({
                                     <p className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Excel Tools</p>
                                 </div>
                                 <div className="p-1 space-y-0.5">
-                                    <button onClick={() => { onExport(); setIsDataMenuOpen(false); }} className="flex w-full items-center px-3 py-2.5 text-sm font-bold text-slate-700 hover:bg-blue-50 hover:text-[#003DA5] rounded-xl transition-colors text-left group">
+                                    <button onClick={() => { onExport(); setIsDataMenuOpen(false); }} className="flex w-full items-center px-3 py-2.5 text-sm font-bold text-slate-700 hover:bg-blue-50/80 hover:text-[#003DA5] rounded-xl transition-colors text-left group">
                                         <div className="p-1.5 bg-blue-100/50 text-blue-600 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors shadow-sm"><ArrowDownTrayIcon className="h-4 w-4" /></div>
                                         <span>Xuất dữ liệu (.xlsx)</span>
                                     </button>
@@ -379,31 +380,31 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* Admin Settings Menu */}
                 {currentUser.role === UserRole.Admin && (
                     <div className="relative" ref={adminMenuRef}>
-                        <button onClick={() => setIsAdminMenuOpen(!isAdminMenuOpen)} className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border ${isAdminMenuOpen ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-white/60 hover:bg-white border-slate-200/60 text-slate-500 hover:text-slate-700 hover:border-slate-300 shadow-sm'}`} title="Cài đặt">
+                        <button onClick={() => setIsAdminMenuOpen(!isAdminMenuOpen)} className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border backdrop-blur-md ${isAdminMenuOpen ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-white/40 hover:bg-white/80 border-white/60 text-slate-500 hover:text-slate-700 hover:border-white shadow-sm'}`} title="Cài đặt">
                             <Cog8ToothIcon className={`h-5 w-5 transition-transform duration-500 ${isAdminMenuOpen ? 'rotate-90' : ''}`} />
                         </button>
                         {isAdminMenuOpen && (
                             <div className={`${dropdownClasses} w-72`}>
-                                <div className="px-4 py-2 border-b border-slate-100 mb-1 bg-orange-50/30 backdrop-blur-sm">
+                                <div className="px-4 py-2 border-b border-slate-100 mb-1 bg-orange-50/20 backdrop-blur-sm">
                                     <p className="text-[0.65rem] font-bold text-orange-600 uppercase tracking-widest flex items-center gap-2">
                                         <Cog8ToothIcon className="w-3 h-3" /> System Control
                                     </p>
                                 </div>
                                 <div className="flex flex-col p-1 space-y-0.5">
-                                    <button onClick={() => { onOpenPermissionModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-[#003DA5] transition-colors text-left group">
+                                    <button onClick={() => { onOpenPermissionModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-blue-50/80 hover:text-[#003DA5] transition-colors text-left group">
                                         <div className="p-1.5 bg-blue-100/50 text-blue-500 rounded-lg mr-3 group-hover:bg-blue-200 transition-colors shadow-sm"><ShieldCheckIcon className="h-4 w-4" /></div>
                                         <span>Phân quyền & Vai trò</span>
                                     </button>
-                                    <button onClick={() => { onOpenProductModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-violet-50 hover:text-violet-600 transition-colors text-left group">
+                                    <button onClick={() => { onOpenProductModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-violet-50/80 hover:text-violet-600 transition-colors text-left group">
                                         <div className="p-1.5 bg-violet-100/50 text-violet-500 rounded-lg mr-3 group-hover:bg-violet-200 transition-colors shadow-sm"><TableCellsIcon className="h-4 w-4" /></div>
                                         <span>Danh mục sản phẩm</span>
                                     </button>
-                                    <button onClick={() => { onOpenUserModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-left group">
+                                    <button onClick={() => { onOpenUserModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-emerald-50/80 hover:text-emerald-600 transition-colors text-left group">
                                         <div className="p-1.5 bg-emerald-100/50 text-emerald-500 rounded-lg mr-3 group-hover:bg-emerald-200 transition-colors shadow-sm"><UserGroupIcon className="h-4 w-4" /></div>
                                         <span>Quản lý người dùng</span>
                                     </button>
                                     <div className="h-px bg-slate-100 my-1 mx-2"></div>
-                                    <button onClick={() => { onOpenSystemSettingsModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-colors text-left group">
+                                    <button onClick={() => { onOpenSystemSettingsModal(); setIsAdminMenuOpen(false); }} className="flex w-full items-center justify-start px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-orange-50/80 hover:text-orange-600 transition-colors text-left group">
                                         <div className="p-1.5 bg-orange-100/50 text-orange-500 rounded-lg mr-3 group-hover:bg-orange-200 transition-colors shadow-sm"><Cog8ToothIcon className="h-4 w-4" /></div>
                                         <span>Cấu hình hệ thống</span>
                                     </button>
@@ -415,7 +416,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Profile Menu */}
-            <div className="relative pl-3 border-l border-slate-200/60 ml-1" ref={profileMenuRef}>
+            <div className="relative pl-3 border-l border-slate-300/40 ml-1" ref={profileMenuRef}>
                 <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="focus:outline-none transition-transform active:scale-95 block group" title="Thông tin tài khoản">
                     {currentUser.avatarUrl ? (
                         <div className="relative">
@@ -435,7 +436,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
                 {isProfileMenuOpen && (
                     <div className={`${dropdownClasses} w-72 mt-4`}>
-                        <div className="px-6 py-6 border-b border-slate-100 text-center flex flex-col items-center bg-gradient-to-b from-blue-50/30 to-transparent">
+                        <div className="px-6 py-6 border-b border-slate-100 text-center flex flex-col items-center bg-gradient-to-b from-blue-50/10 to-transparent">
                             {currentUser.avatarUrl ? (
                                 <img src={currentUser.avatarUrl} alt="Avatar" className="h-20 w-20 rounded-full object-cover border-4 border-white shadow-lg mb-3" />
                             ) : (
@@ -449,20 +450,20 @@ export const Header: React.FC<HeaderProps> = ({
                             </div>
                         </div>
                         <div className="p-2 space-y-1">
-                            <button className="flex w-full items-center justify-start px-4 py-3 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-[#003DA5] transition-colors text-left group">
+                            <button className="flex w-full items-center justify-start px-4 py-3 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50/80 hover:text-[#003DA5] transition-colors text-left group">
                                 <div className="p-2 bg-slate-100 rounded-xl mr-3 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                                     <UserGroupIcon className="h-4 w-4" />
                                 </div>
                                 <span>Hồ sơ cá nhân</span>
                             </button>
-                            <button onClick={onLogout} className="flex w-full items-center justify-start px-4 py-3 rounded-2xl text-sm font-bold text-red-600 hover:bg-red-50 transition-colors text-left group">
+                            <button onClick={onLogout} className="flex w-full items-center justify-start px-4 py-3 rounded-2xl text-sm font-bold text-red-600 hover:bg-red-50/80 transition-colors text-left group">
                                 <div className="p-2 bg-red-50 rounded-xl mr-3 text-red-500 group-hover:bg-red-100 transition-colors">
                                     <ArrowRightOnRectangleIcon className="h-4 w-4" />
                                 </div>
                                 <span>Đăng xuất</span>
                             </button>
                         </div>
-                        <div className="bg-slate-50 py-2 text-center border-t border-slate-100 backdrop-blur-sm">
+                        <div className="bg-slate-50/50 py-2 text-center border-t border-slate-100 backdrop-blur-sm">
                             <p className="text-[0.6rem] text-slate-400 font-medium">Phiên bản 1.2.0</p>
                         </div>
                     </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useTransition, Suspense, useRef, useCallback } from 'react';
 import { DefectReport, UserRole, ToastType, User, RoleSettings, PermissionField, SystemSettings, Product } from './types';
 import { PlusIcon, BarChartIcon, ArrowDownTrayIcon, ListBulletIcon, ArrowRightOnRectangleIcon, UserGroupIcon, ChartPieIcon, TableCellsIcon, ShieldCheckIcon, CalendarIcon, Cog8ToothIcon, EllipsisHorizontalIcon } from './components/Icons';
@@ -40,15 +41,15 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   }, [onClose]);
 
   const config = {
-    success: { bg: 'bg-green-500', icon: '✅' },
-    error: { bg: 'bg-red-500', icon: '❌' },
-    info: { bg: 'bg-blue-500', icon: 'ℹ️' },
+    success: { bg: 'bg-green-500/90 backdrop-blur-md', icon: '✅' },
+    error: { bg: 'bg-red-500/90 backdrop-blur-md', icon: '❌' },
+    info: { bg: 'bg-blue-500/90 backdrop-blur-md', icon: 'ℹ️' },
   };
 
   const { bg, icon } = config[type];
 
   return (
-    <div className={`fixed bottom-5 right-5 ${bg} text-white py-3 px-5 rounded-xl shadow-2xl flex items-center z-[60] animate-fade-in-up`}>
+    <div className={`fixed bottom-5 right-5 ${bg} text-white py-3 px-5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 flex items-center z-[60] animate-fade-in-up`}>
       <span className="mr-3 text-xl">{icon}</span>
       <span className="font-medium">{message}</span>
     </div>
@@ -209,16 +210,43 @@ export const App: React.FC = () => {
       return Object.keys(roleSettings);
   }, [roleSettings]);
 
-  // Filter Logic
-  const filteredReports = useMemo(() => {
+  // --- FILTER LOGIC SEPARATION ---
+
+  // 1. Dashboard Reports: Only affected by Time Filters (Year, Date) and User Permissions
+  const dashboardReports = useMemo(() => {
     let result = [...reports];
 
+    // Role-based permission filter
     if (currentUser) {
         const config = roleSettings[currentUser.role];
         if (config && !config.viewableDefectTypes.includes('All')) {
             result = result.filter(r => config.viewableDefectTypes.includes(r.loaiLoi));
         }
     }
+
+    // Time Filters
+    if (yearFilter !== 'All') {
+        result = result.filter((r) => {
+            if (!r.ngayPhanAnh) return false;
+            const year = new Date(r.ngayPhanAnh).getFullYear().toString();
+            return year === yearFilter;
+        });
+    }
+
+    if (dateFilter.start) {
+      result = result.filter((r) => r.ngayPhanAnh >= dateFilter.start);
+    }
+
+    if (dateFilter.end) {
+      result = result.filter((r) => r.ngayPhanAnh <= dateFilter.end);
+    }
+
+    return result;
+  }, [reports, yearFilter, dateFilter, currentUser, roleSettings]);
+
+  // 2. List Reports: Dashboard Reports + List specific filters (Search, Status, Defect Type)
+  const filteredReports = useMemo(() => {
+    let result = [...dashboardReports]; // Start with the time-filtered set
 
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
@@ -248,22 +276,6 @@ export const App: React.FC = () => {
         result = result.filter((r) => r.loaiLoi === defectTypeFilter);
     }
 
-    if (yearFilter !== 'All') {
-        result = result.filter((r) => {
-            if (!r.ngayPhanAnh) return false;
-            const year = new Date(r.ngayPhanAnh).getFullYear().toString();
-            return year === yearFilter;
-        });
-    }
-
-    if (dateFilter.start) {
-      result = result.filter((r) => r.ngayPhanAnh >= dateFilter.start);
-    }
-
-    if (dateFilter.end) {
-      result = result.filter((r) => r.ngayPhanAnh <= dateFilter.end);
-    }
-
     // Sorting Logic
     if (sortConfig.key) {
         result.sort((a, b) => {
@@ -285,7 +297,7 @@ export const App: React.FC = () => {
     }
 
     return result;
-  }, [reports, searchTerm, statusFilter, defectTypeFilter, yearFilter, dateFilter, currentUser, roleSettings, sortConfig]);
+  }, [dashboardReports, searchTerm, statusFilter, defectTypeFilter, sortConfig]);
 
   const paginatedReports = useMemo(() => {
       const start = (currentPage - 1) * itemsPerPage;
@@ -293,20 +305,9 @@ export const App: React.FC = () => {
   }, [filteredReports, currentPage, itemsPerPage]);
 
   const summaryStats = useMemo(() => {
-      // Calculate based on the CURRENT VIEW (respecting year/search filters) to be more dynamic
-      // Or use the 'reports' base if we want global stats regardless of other filters.
-      // Usually dashboard stats respect the global filters (Year).
-      
-      let baseData = reports;
-      
-      // Respect Year Filter for Summary
-      if (yearFilter !== 'All') {
-          baseData = baseData.filter((r) => {
-            if (!r.ngayPhanAnh) return false;
-            const year = new Date(r.ngayPhanAnh).getFullYear().toString();
-            return year === yearFilter;
-        });
-      }
+      // Stats for List View tabs should be based on the broad time-filtered data
+      // so user knows how many "New", "Processing" etc. exist within the selected year
+      const baseData = dashboardReports; 
 
       return {
           total: baseData.length,
@@ -317,7 +318,7 @@ export const App: React.FC = () => {
           chuaTimRaNguyenNhan: baseData.filter(r => r.trangThai === 'Chưa tìm ra nguyên nhân').length,
           hoanThanh: baseData.filter(r => r.trangThai === 'Hoàn thành').length,
       }
-  }, [reports, yearFilter]);
+  }, [dashboardReports]);
   
   const availableYears = useMemo(() => {
       const years = new Set<string>();
@@ -443,10 +444,30 @@ export const App: React.FC = () => {
       }));
   }, []);
 
-  const handleDashboardFilterSelect = (filterType: 'status' | 'defectType' | 'all' | 'search' | 'brand', value?: string) => {
+  const handleDashboardFilterSelect = (filterType: 'status' | 'defectType' | 'all' | 'search' | 'brand' | 'month', value?: string) => {
       startTransition(() => {
-          setYearFilter('All');
-          if (filterType === 'search' && value) {
+          if (filterType === 'month' && value) {
+              // value format "MM/YYYY"
+              const [month, year] = value.split('/').map(Number);
+              if (!isNaN(month) && !isNaN(year)) {
+                  const startDate = new Date(year, month - 1, 1); 
+                  const endDate = new Date(year, month, 0); 
+                  
+                  const format = (d: Date) => {
+                      const y = d.getFullYear();
+                      const m = ('0' + (d.getMonth() + 1)).slice(-2);
+                      const day = ('0' + d.getDate()).slice(-2);
+                      return `${y}-${m}-${day}`;
+                  };
+
+                  setDateFilter({ start: format(startDate), end: format(endDate) });
+                  setStatusFilter('All');
+                  setDefectTypeFilter('All');
+                  setSearchTerm('');
+                  setYearFilter(year.toString());
+                  setCurrentView('list');
+              }
+          } else if (filterType === 'search' && value) {
               setSearchTerm(value);
               setStatusFilter('All');
               setDefectTypeFilter('All');
@@ -458,9 +479,12 @@ export const App: React.FC = () => {
               setCurrentView('list');
           } else if (filterType === 'status' && value) {
               setStatusFilter(value);
+              setSearchTerm(''); 
               setCurrentView('list');
           } else if (filterType === 'defectType' && value) {
               setDefectTypeFilter(value);
+              setStatusFilter('All');
+              setSearchTerm('');
               setCurrentView('list');
           } else if (filterType === 'brand' && value) {
               setSearchTerm(value);
@@ -626,7 +650,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-slate-100 text-slate-900 relative">
+    <div className="flex flex-col h-dvh text-slate-900 relative overflow-hidden bg-transparent">
       <Header 
         currentUser={currentUser}
         systemSettings={systemSettings}
@@ -659,7 +683,7 @@ export const App: React.FC = () => {
           accept=".xlsx, .xls" 
       />
 
-      <main className="flex-1 overflow-hidden relative">
+      <main className="flex-1 overflow-hidden relative z-10">
         <Suspense fallback={<Loading />}>
             <div key={currentView} className="animate-zoom-in h-full flex flex-col origin-top">
                 {currentView === 'list' || !canViewDashboard ? (
@@ -691,7 +715,7 @@ export const App: React.FC = () => {
                     />
                 ) : (
                     <DashboardReport 
-                        reports={filteredReports} 
+                        reports={dashboardReports} 
                         onFilterSelect={handleDashboardFilterSelect}
                         onSelectReport={setSelectedReport} 
                         onOpenAiAnalysis={() => setIsChatOpen(true)}
@@ -712,15 +736,15 @@ export const App: React.FC = () => {
           )}
 
           {selectedReport && (
-            <div className="fixed inset-0 z-50 flex justify-center items-end sm:items-center sm:p-4">
+            <div className="fixed inset-0 z-[50] flex justify-center items-end sm:items-center sm:p-4">
                {/* Backdrop */}
                <div 
-                  className={`absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity ${isModalClosing ? 'animate-fade-out' : 'animate-backdrop-in'}`} 
+                  className={`absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity ${isModalClosing ? 'animate-fade-out' : 'animate-backdrop-in'}`} 
                   onClick={handleCloseDetailModal}
                ></div>
                
                {/* Modal Card - WIDENED to max-w-7xl/95vw for better layout */}
-               <div className={`relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-[95vw] xl:max-w-7xl bg-white rounded-none sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col ring-1 ring-slate-900/5 z-50 will-change-transform ${isModalClosing ? 'animate-slide-down' : 'animate-slide-up'}`}>
+               <div className={`relative w-full h-full sm:h-auto sm:max-h-[90vh] max-w-[95vw] xl:max-w-7xl bg-white/90 backdrop-blur-xl rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col ring-1 ring-white/60 z-50 will-change-transform ${isModalClosing ? 'animate-slide-down' : 'animate-slide-up'}`}>
                   <DefectReportDetail
                     report={selectedReport}
                     onEdit={handleEditClick}

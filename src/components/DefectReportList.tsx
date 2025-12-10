@@ -83,6 +83,7 @@ const formatDate = (dateStr: string) => {
     } catch(e) { return dateStr; }
 };
 
+// --- UPDATED DASHBOARD TAB STYLES (Glassmorphism Cards) ---
 type TabStyleKey = 'All' | 'Mới' | 'Processing' | 'Unknown' | 'Hoàn thành';
 
 const TAB_STYLES: Record<TabStyleKey, { 
@@ -94,92 +95,116 @@ const TAB_STYLES: Record<TabStyleKey, {
     activeIconColor: string,
     text: string,
     activeText: string,
-    barColor: string 
+    barColor: string,
+    accentColor: string
 }> = {
     'All': {
-        wrapper: 'bg-white/60 backdrop-blur-sm border border-white/50 hover:bg-white/80 shadow-sm ring-1 ring-white/50',
-        activeWrapper: 'bg-white ring-2 ring-slate-400 border-transparent shadow-lg',
+        wrapper: 'bg-white/40 backdrop-blur-md border border-white/50 hover:bg-white/60 shadow-sm',
+        activeWrapper: 'bg-white/80 backdrop-blur-xl ring-1 ring-slate-300 border-white shadow-lg',
         iconBg: 'bg-slate-100',
         activeIconBg: 'bg-slate-800',
         iconColor: 'text-slate-400',
         activeIconColor: 'text-white',
         text: 'text-slate-500',
         activeText: 'text-slate-800',
-        barColor: 'bg-slate-800'
+        barColor: 'bg-slate-800',
+        accentColor: '#1e293b'
     },
     'Mới': {
-        wrapper: 'bg-white/60 backdrop-blur-sm border border-white/50 hover:bg-white/80 shadow-sm ring-1 ring-white/50',
-        activeWrapper: 'bg-white ring-2 ring-blue-400 border-transparent shadow-lg',
+        wrapper: 'bg-white/40 backdrop-blur-md border border-white/50 hover:bg-blue-50/40 shadow-sm',
+        activeWrapper: 'bg-white/80 backdrop-blur-xl ring-1 ring-blue-400 border-white shadow-lg shadow-blue-500/10',
         iconBg: 'bg-blue-50',
         activeIconBg: 'bg-blue-600',
         iconColor: 'text-blue-400',
         activeIconColor: 'text-white',
         text: 'text-slate-500',
         activeText: 'text-blue-700',
-        barColor: 'bg-blue-600'
+        barColor: 'bg-blue-600',
+        accentColor: '#2563eb'
     },
     'Processing': {
-        wrapper: 'bg-white/60 backdrop-blur-sm border border-white/50 hover:bg-white/80 shadow-sm ring-1 ring-white/50',
-        activeWrapper: 'bg-white ring-2 ring-amber-400 border-transparent shadow-lg',
+        wrapper: 'bg-white/40 backdrop-blur-md border border-white/50 hover:bg-amber-50/40 shadow-sm',
+        activeWrapper: 'bg-white/80 backdrop-blur-xl ring-1 ring-amber-400 border-white shadow-lg shadow-amber-500/10',
         iconBg: 'bg-amber-50',
         activeIconBg: 'bg-amber-500',
         iconColor: 'text-amber-400',
         activeIconColor: 'text-white',
         text: 'text-slate-500',
         activeText: 'text-amber-700',
-        barColor: 'bg-amber-500'
+        barColor: 'bg-amber-500',
+        accentColor: '#f59e0b'
     },
     'Unknown': {
-        wrapper: 'bg-white/60 backdrop-blur-sm border border-white/50 hover:bg-white/80 shadow-sm ring-1 ring-white/50',
-        activeWrapper: 'bg-white ring-2 ring-purple-400 border-transparent shadow-lg',
+        wrapper: 'bg-white/40 backdrop-blur-md border border-white/50 hover:bg-purple-50/40 shadow-sm',
+        activeWrapper: 'bg-white/80 backdrop-blur-xl ring-1 ring-purple-400 border-white shadow-lg shadow-purple-500/10',
         iconBg: 'bg-purple-50',
         activeIconBg: 'bg-purple-600',
         iconColor: 'text-purple-400',
         activeIconColor: 'text-white',
         text: 'text-slate-500',
         activeText: 'text-purple-700',
-        barColor: 'bg-purple-600'
+        barColor: 'bg-purple-600',
+        accentColor: '#9333ea'
     },
     'Hoàn thành': {
-        wrapper: 'bg-white/60 backdrop-blur-sm border border-white/50 hover:bg-white/80 shadow-sm ring-1 ring-white/50',
-        activeWrapper: 'bg-white ring-2 ring-emerald-400 border-transparent shadow-lg',
+        wrapper: 'bg-white/40 backdrop-blur-md border border-white/50 hover:bg-emerald-50/40 shadow-sm',
+        activeWrapper: 'bg-white/80 backdrop-blur-xl ring-1 ring-emerald-400 border-white shadow-lg shadow-emerald-500/10',
         iconBg: 'bg-emerald-50',
         activeIconBg: 'bg-emerald-600',
         iconColor: 'text-emerald-400',
         activeIconColor: 'text-white',
         text: 'text-slate-500',
         activeText: 'text-emerald-700',
-        barColor: 'bg-emerald-600'
+        barColor: 'bg-emerald-600',
+        accentColor: '#059669'
     }
 };
 
 const DashboardTab = ({ label, count, total, isActive, onClick, styleKey, icon }: { label: string, count: number, total: number, isActive: boolean, onClick: () => void, styleKey: TabStyleKey, icon?: React.ReactNode }) => {
     const styles = TAB_STYLES[styleKey];
     
+    // Calculate simple percentage for visual bar if needed, or just use as decoration
+    const percent = total > 0 ? (count / total) * 100 : 0;
+
     return (
         <button 
             onClick={onClick}
             className={`
-                relative flex flex-col justify-between px-4 py-3 rounded-2xl transition-all duration-300 select-none w-full h-[88px] group
+                relative flex flex-col justify-between p-4 rounded-2xl transition-all duration-300 select-none w-full h-[100px] group hover:-translate-y-1 overflow-hidden
                 ${isActive ? styles.activeWrapper + ' scale-[1.02] z-10' : styles.wrapper}
             `}
         >
-            <div className="flex justify-between items-start w-full">
-                <span className={`text-[0.65rem] font-bold uppercase tracking-widest leading-tight ${isActive ? styles.activeText : styles.text}`}>
-                    {label}
-                </span>
-                <div className={`p-1.5 rounded-lg transition-colors duration-300 ${isActive ? styles.activeIconBg : styles.iconBg} ${isActive ? styles.activeIconColor : styles.iconColor}`}>
-                    {icon && React.cloneElement(icon as React.ReactElement<any>, { className: "w-3.5 h-3.5" })}
+            {/* Background Glow */}
+            <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none`} style={{ backgroundColor: styles.accentColor }}></div>
+
+            <div className="flex justify-between items-start w-full relative z-10">
+                <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg transition-colors duration-300 shadow-sm border border-white/50 ${isActive ? styles.activeIconBg : styles.iconBg} ${isActive ? styles.activeIconColor : styles.iconColor}`}>
+                        {icon && React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}
+                    </div>
+                    <span className={`text-[0.65rem] font-bold uppercase tracking-widest leading-tight ${isActive ? styles.activeText : styles.text}`}>
+                        {label}
+                    </span>
                 </div>
             </div>
             
-            <div className="flex items-end justify-between w-full mt-auto">
-                <span className={`text-2xl font-bold leading-none tracking-tight tabular-nums ${isActive ? styles.activeText : 'text-slate-700'}`}>
+            <div className="flex items-end justify-between w-full mt-auto relative z-10">
+                <span className={`text-3xl font-bold leading-none tracking-tighter tabular-nums transition-colors ${isActive ? styles.activeText : 'text-slate-700'}`}>
                     {count.toLocaleString()}
                 </span>
-                {isActive && (
-                    <div className={`h-1 w-8 rounded-full ${styles.barColor}`}></div>
-                )}
+                
+                {/* Visual Indicator Line */}
+                <div className="flex flex-col items-end gap-1">
+                     {isActive && <div className={`h-1.5 w-1.5 rounded-full ${styles.barColor} animate-pulse`}></div>}
+                </div>
+            </div>
+            
+            {/* Bottom Progress Bar (Visual Flair) */}
+            <div className="absolute bottom-0 left-0 h-1 bg-slate-100 w-full opacity-50">
+                <div 
+                    className={`h-full ${styles.barColor} transition-all duration-1000 ease-out`} 
+                    style={{ width: isActive ? '100%' : `${percent}%`, opacity: isActive ? 1 : 0.5 }}
+                ></div>
             </div>
         </button>
     );
@@ -276,13 +301,13 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                 );
             case 'tenThuongMai':
                 return (
-                    <div className="font-medium text-slate-800 line-clamp-2 leading-snug group-hover:text-[#003DA5] transition-colors" title={report.tenThuongMai} style={{ fontSize: 'inherit' }}>
+                    <div className="font-medium text-slate-700 line-clamp-2 leading-snug group-hover:text-[#003DA5] transition-colors" title={report.tenThuongMai} style={{ fontSize: 'inherit' }}>
                         {report.tenThuongMai}
                     </div>
                 );
             case 'noiDungPhanAnh':
                 return (
-                    <div className="text-slate-500 line-clamp-2 text-sm italic leading-relaxed" title={report.noiDungPhanAnh}>
+                    <div className="text-slate-700 line-clamp-2 text-sm italic leading-relaxed bg-slate-50/50 p-1.5 rounded-lg" title={report.noiDungPhanAnh}>
                         {report.noiDungPhanAnh}
                     </div>
                 );
@@ -293,7 +318,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
             case 'hanDung':
                 return <span className="text-slate-600 font-medium text-xs">{formatDate(report.hanDung || '')}</span>;
             case 'donViTinh':
-                return <span className="text-slate-600 text-xs font-medium bg-slate-50 px-2 py-1 rounded-md">{report.donViTinh}</span>;
+                return <span className="text-slate-600 text-xs font-bold bg-slate-50 px-2 py-1 rounded-md border border-slate-100">{report.donViTinh}</span>;
             case 'trangThai':
                 return getStatusBadge(report.trangThai);
             case 'actions':
@@ -301,7 +326,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                     <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
                         <button 
                             onClick={(e) => { e.stopPropagation(); onSelectReport(report); }}
-                            className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100"
+                            className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100 shadow-sm"
                             title="Xem chi tiết"
                         >
                             <EyeIcon className="w-4 h-4" />
@@ -309,7 +334,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                         {currentUserRole !== 'Kho' && (
                             <button 
                                 onClick={(e) => { e.stopPropagation(); onDuplicate(report); }}
-                                className="p-1.5 text-slate-500 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
+                                className="p-1.5 text-slate-500 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200 shadow-sm"
                                 title="Nhân bản"
                             >
                                 <DocumentDuplicateIcon className="w-4 h-4" />
@@ -318,7 +343,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                         {([UserRole.Admin, UserRole.KyThuat] as string[]).includes(currentUserRole) && (
                             <button 
                                 onClick={(e) => { e.stopPropagation(); if(window.confirm('Xóa phiếu này?')) onDelete(report.id); }}
-                                className="p-1.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100"
+                                className="p-1.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100 shadow-sm"
                                 title="Xóa"
                             >
                                 <TrashIcon className="w-4 h-4" />
@@ -332,10 +357,10 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
     };
 
     return (
-        <div className="h-full flex flex-col bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50" style={{ fontSize: baseFontSize }}>
+        <div className="h-full flex flex-col bg-transparent" style={{ fontSize: baseFontSize }}>
             
-            {/* 1. DASHBOARD CONTAINER (KPIs) */}
-            <div className="flex-shrink-0 w-full py-4 z-10">
+            {/* 1. DASHBOARD CONTAINER (KPIs) - Redesigned as Cards */}
+            <div className="flex-shrink-0 w-full py-5 z-10 animate-fade-in-up">
                 <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6">
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                         <DashboardTab 
@@ -388,17 +413,20 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
             </div>
 
             {/* 2. DATA TABLE CONTAINER - Glassmorphism Panel */}
-            <div className="flex-1 flex flex-col px-4 sm:px-6 pb-6 overflow-hidden min-h-0 w-full max-w-[1920px] mx-auto">
+            <div className="flex-1 flex flex-col px-4 sm:px-6 pb-6 overflow-hidden min-h-0 w-full max-w-[1920px] mx-auto animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                 
-                <div className="flex-1 bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 flex flex-col overflow-hidden ring-1 ring-white/50">
+                <div className="flex-1 bg-white/70 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 flex flex-col overflow-hidden ring-1 ring-white/50">
                     
                     {/* Header Bar within container */}
-                    <div className="bg-slate-50/50 border-b border-slate-200/60 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0 backdrop-blur-sm relative z-30">
+                    <div className="bg-slate-50/50 border-b border-slate-200/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0 backdrop-blur-sm relative z-30">
                         
                         {/* Title Section */}
                         <div className="flex items-center gap-3">
-                            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Danh sách khiếu nại</h2>
-                            <span className="bg-white/80 text-slate-600 text-xs font-bold px-2.5 py-0.5 rounded border border-slate-200 shadow-sm">
+                            <h2 className="font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                                <ListBulletIcon className="w-4 h-4 text-[#003DA5]" />
+                                Danh sách khiếu nại
+                            </h2>
+                            <span className="bg-white/80 text-slate-600 text-xs font-bold px-2.5 py-0.5 rounded-md border border-slate-200 shadow-sm backdrop-blur-sm">
                                 {totalReports}
                             </span>
                         </div>
@@ -407,16 +435,16 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-center">
                             
                             {/* Search Input - Clean Look */}
-                            <div className="relative flex-1 sm:min-w-[300px] max-w-md group w-full">
+                            <div className="relative flex-1 sm:min-w-[320px] max-w-md group w-full">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#003DA5] transition-colors">
                                     <MagnifyingGlassIcon className="h-5 w-5" />
                                 </div>
                                 <input 
                                     type="text" 
-                                    placeholder="Tìm kiếm..." 
+                                    placeholder="Tìm kiếm mã, tên, lô..." 
                                     value={filters.searchTerm}
                                     onChange={(e) => onSearchTermChange(e.target.value)}
-                                    className="pl-10 pr-4 h-10 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-[#003DA5] outline-none transition-all placeholder:text-slate-400 shadow-sm"
+                                    className="pl-10 pr-4 h-10 w-full bg-white/80 border border-slate-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-[#003DA5] outline-none transition-all placeholder:text-slate-400 shadow-sm backdrop-blur-sm"
                                 />
                             </div>
 
@@ -428,7 +456,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                         className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border ${
                                             filters.dateFilter.start || filters.dateFilter.end 
                                             ? 'bg-[#003DA5] border-[#003DA5] text-white shadow-md' 
-                                            : 'bg-white border-slate-200 text-slate-500 hover:text-[#003DA5] hover:border-blue-300 shadow-sm'
+                                            : 'bg-white/80 border-slate-200 text-slate-500 hover:text-[#003DA5] hover:border-blue-300 shadow-sm backdrop-blur-sm'
                                         }`}
                                         title="Lọc theo ngày"
                                     >
@@ -439,7 +467,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                     {showDateFilter && (
                                         <>
                                             <div className="fixed inset-0 z-40" onClick={() => setShowDateFilter(false)}></div>
-                                            <div className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 p-5 z-50 w-72 animate-fade-in-up ring-1 ring-black/5">
+                                            <div className="absolute top-full right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/60 p-5 z-50 w-72 animate-fade-in-up ring-1 ring-black/5">
                                                 <div className="space-y-4">
                                                     <div className="space-y-1.5">
                                                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Từ ngày</label>
@@ -447,7 +475,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                                             type="date" 
                                                             value={filters.dateFilter.start}
                                                             onChange={(e) => onDateFilterChange({...filters.dateFilter, start: e.target.value})}
-                                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:border-[#003DA5] focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                                            className="w-full px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:border-[#003DA5] focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                                                         />
                                                     </div>
                                                     <div className="space-y-1.5">
@@ -456,7 +484,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                                             type="date" 
                                                             value={filters.dateFilter.end}
                                                             onChange={(e) => onDateFilterChange({...filters.dateFilter, end: e.target.value})}
-                                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:border-[#003DA5] focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                                            className="w-full px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:border-[#003DA5] focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                                                         />
                                                     </div>
                                                     <div className="pt-2">
@@ -480,7 +508,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                         className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border ${
                                             viewMode === 'grid' 
                                             ? 'bg-blue-50 border-blue-200 text-blue-600' 
-                                            : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 shadow-sm'
+                                            : 'bg-white/80 border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 shadow-sm backdrop-blur-sm'
                                         }`}
                                         title={viewMode === 'list' ? "Chuyển sang chế độ lưới" : "Chuyển sang chế độ danh sách"}
                                     >
@@ -494,7 +522,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                         className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border ${
                                             showColumnMenu
                                             ? 'bg-blue-50 border-blue-200 text-blue-600'
-                                            : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 shadow-sm'
+                                            : 'bg-white/80 border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 shadow-sm backdrop-blur-sm'
                                         }`}
                                         title="Tùy chỉnh cột"
                                     >
@@ -534,58 +562,58 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                     {/* Content Area */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar bg-white/40 relative">
                         {isLoading ? (
-                            <div className="p-4 space-y-4">
-                                {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="h-16 bg-slate-100/50 rounded-xl animate-pulse"></div>
+                            <div className="p-6 space-y-4">
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="h-14 bg-slate-100/50 rounded-xl animate-pulse"></div>
                                 ))}
                             </div>
                         ) : viewMode === 'grid' ? (
                             // GRID VIEW
-                            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 animate-fade-in">
+                            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 animate-fade-in">
                                 {reports.length > 0 ? (
                                     reports.map(report => (
                                         <div 
                                             key={report.id} 
                                             onClick={() => onSelectReport(report)}
-                                            className="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-300 cursor-pointer group flex flex-col h-full overflow-hidden hover:-translate-y-1 relative"
+                                            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 cursor-pointer group flex flex-col h-full overflow-hidden hover:-translate-y-1 relative"
                                         >
                                             {/* Image Cover */}
-                                            <div className="h-32 bg-slate-100 relative overflow-hidden flex items-center justify-center border-b border-slate-100">
+                                            <div className="h-36 bg-slate-50 relative overflow-hidden flex items-center justify-center border-b border-slate-100 group-hover:border-blue-100 transition-colors">
                                                 {report.images && report.images.length > 0 ? (
-                                                    <img src={report.images[0]} alt="thumbnail" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                                    <img src={report.images[0]} alt="thumbnail" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                                 ) : (
                                                     <div className="text-slate-300 flex flex-col items-center">
-                                                        <CubeIcon className="w-8 h-8 opacity-50" />
-                                                        <span className="text-[0.6rem] font-bold uppercase mt-1 tracking-wider opacity-60">No Image</span>
+                                                        <CubeIcon className="w-10 h-10 opacity-30" />
+                                                        <span className="text-[0.6rem] font-bold uppercase mt-2 tracking-widest opacity-50">No Image</span>
                                                     </div>
                                                 )}
                                                 {/* Status Badge Overlay */}
-                                                <div className="absolute top-2 right-2 shadow-sm">
+                                                <div className="absolute top-3 right-3 shadow-md">
                                                     {getStatusBadge(report.trangThai)}
                                                 </div>
                                             </div>
                                             
                                             <div className="p-4 flex-1 flex flex-col">
                                                 <div className="flex justify-between items-start mb-2">
-                                                     <span className="text-[0.6rem] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{report.id}</span>
-                                                     <span className="text-[0.6rem] font-bold text-slate-400 flex items-center gap-1">
+                                                     <span className="text-[0.6rem] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">{report.id}</span>
+                                                     <span className="text-[0.6rem] font-bold text-slate-400 flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-slate-100">
                                                         <CalendarIcon className="w-3 h-3" />
                                                         {formatDate(report.ngayPhanAnh)}
                                                      </span>
                                                 </div>
                                                 
-                                                <h3 className="text-sm font-bold text-slate-800 leading-snug mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors" title={report.tenThuongMai}>
+                                                <h3 className="text-sm font-bold text-slate-800 leading-snug mb-2 line-clamp-2 group-hover:text-[#003DA5] transition-colors" title={report.tenThuongMai}>
                                                     {report.tenThuongMai}
                                                 </h3>
                                                 
-                                                <div className="text-xs text-slate-500 font-medium mb-3 flex items-center gap-1.5 flex-wrap">
-                                                    <span className="flex items-center gap-1 text-[#003DA5] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-                                                        <TagIcon className="w-3 h-3" />
+                                                <div className="text-xs text-slate-500 font-medium mb-4 flex items-center gap-1.5 flex-wrap">
+                                                    <span className="flex items-center gap-1 text-[#003DA5] bg-blue-50/50 px-2 py-1 rounded-md border border-blue-100/50 font-bold text-[0.65rem]">
+                                                        <TagIcon className="w-3 h-3 opacity-70" />
                                                         {report.maSanPham}
                                                     </span>
                                                     {report.soLo && (
-                                                        <span className="text-[0.65rem] bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 text-slate-500">
-                                                            Lô: {report.soLo}
+                                                        <span className="text-[0.65rem] bg-slate-50 px-2 py-1 rounded-md border border-slate-100 text-slate-500">
+                                                            #{report.soLo}
                                                         </span>
                                                     )}
                                                 </div>
@@ -594,14 +622,14 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                                 <div className="mt-auto pt-3 border-t border-slate-100 flex justify-between items-center h-6">
                                                      <div className="flex-1 min-w-0">
                                                          {report.loaiLoi && (
-                                                            <span className="text-[0.6rem] font-bold text-slate-500 truncate block" title={report.loaiLoi}>{report.loaiLoi}</span>
+                                                            <span className="text-[0.6rem] font-bold text-slate-500 truncate block bg-slate-50 px-2 py-0.5 rounded w-fit" title={report.loaiLoi}>{report.loaiLoi}</span>
                                                          )}
                                                      </div>
-                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
                                                         {currentUserRole !== 'Kho' && (
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); onDuplicate(report); }}
-                                                                className="p-1 text-slate-400 hover:text-blue-600 rounded hover:bg-blue-50"
+                                                                className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
                                                                 title="Nhân bản"
                                                             >
                                                                 <DocumentDuplicateIcon className="w-3.5 h-3.5" />
@@ -610,7 +638,7 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                                         {([UserRole.Admin, UserRole.KyThuat] as string[]).includes(currentUserRole) && (
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); if(window.confirm('Xóa phiếu này?')) onDelete(report.id); }}
-                                                                className="p-1 text-slate-400 hover:text-red-600 rounded hover:bg-red-50"
+                                                                className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
                                                                 title="Xóa"
                                                             >
                                                                 <TrashIcon className="w-3.5 h-3.5" />
@@ -622,8 +650,8 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="col-span-full flex flex-col items-center justify-center py-12 text-slate-400">
-                                        <InboxIcon className="h-10 w-10 opacity-30 mb-2" />
+                                    <div className="col-span-full flex flex-col items-center justify-center py-16 text-slate-400">
+                                        <InboxIcon className="h-12 w-12 opacity-20 mb-3" />
                                         <p className="text-sm font-bold">Không tìm thấy dữ liệu</p>
                                     </div>
                                 )}
@@ -646,9 +674,9 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                                         <th 
                                                             key={col.id}
                                                             scope="col"
-                                                            className={`px-4 py-3 text-left text-[0.6875rem] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap relative
-                                                                ${col.fixed ? 'sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.02)]' : ''}
-                                                                ${isSortable ? 'cursor-pointer hover:bg-slate-100/50 hover:text-slate-800 transition-colors select-none group' : ''}
+                                                            className={`px-4 py-4 text-left text-[0.6875rem] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap relative
+                                                                ${col.fixed ? 'sticky right-0 bg-slate-50/90 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.02)] z-30' : ''}
+                                                                ${isSortable ? 'cursor-pointer hover:bg-slate-100/50 hover:text-slate-900 transition-colors select-none group' : ''}
                                                             `}
                                                             style={{ width: col.width, textAlign: headerAlign }}
                                                             onClick={() => isSortable && onSort && onSort(col.id)}
@@ -658,14 +686,14 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                                                 {isSortable && (
                                                                     <span className={`transition-opacity duration-200 ${isSorted ? 'opacity-100 text-[#003DA5]' : 'opacity-30 group-hover:opacity-60'}`}>
                                                                         <div className="flex flex-col -space-y-1">
-                                                                            <ArrowUpIcon className={`w-2.5 h-2.5 ${isSorted && sortDirection === 'asc' ? 'text-[#003DA5]' : 'text-slate-400'}`} />
-                                                                            <ArrowDownIcon className={`w-2.5 h-2.5 ${isSorted && sortDirection === 'desc' ? 'text-[#003DA5]' : 'text-slate-400'}`} />
+                                                                            <ArrowUpIcon className={`w-2 h-2 ${isSorted && sortDirection === 'asc' ? 'text-[#003DA5]' : 'text-slate-400'}`} />
+                                                                            <ArrowDownIcon className={`w-2 h-2 ${isSorted && sortDirection === 'desc' ? 'text-[#003DA5]' : 'text-slate-400'}`} />
                                                                         </div>
                                                                     </span>
                                                                 )}
                                                             </div>
                                                             {idx < arr.length - 1 && (
-                                                                <div className="absolute right-0 top-1/4 h-2/4 w-px bg-slate-300/60"></div>
+                                                                <div className="absolute right-0 top-1/3 h-1/3 w-px bg-slate-300/30"></div>
                                                             )}
                                                         </th>
                                                     );
@@ -678,31 +706,25 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                                     <tr 
                                                         key={report.id} 
                                                         onClick={() => onSelectReport(report)}
-                                                        className={`hover:bg-blue-50/40 transition-colors group cursor-pointer ${selectedReport?.id === report.id ? 'bg-blue-50/60' : 'bg-white/40'}`}
+                                                        className={`hover:bg-blue-50/30 transition-colors group cursor-pointer border-b border-slate-50 ${selectedReport?.id === report.id ? 'bg-blue-50/60' : 'bg-white/40 odd:bg-slate-50/30'}`}
                                                     >
-                                                        {columns.filter(c => c.visible).map((col) => {
-                                                            const cellAlign = col.cellAlign || col.align || 'left';
-                                                            return (
-                                                                <td 
-                                                                    key={col.id} 
-                                                                    className={`px-4 py-3 align-middle border-b border-slate-100/50 ${
-                                                                        col.fixed ? 'sticky right-0 bg-white/90 group-hover:bg-blue-50/50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.02)]' : ''
-                                                                    }`}
-                                                                    style={{ textAlign: cellAlign, width: col.width }}
-                                                                >
-                                                                    {renderCell(report, col.id, index)}
-                                                                </td>
-                                                            )
-                                                        })}
+                                                        {columns.filter(c => c.visible).map(col => (
+                                                            <td 
+                                                                key={col.id} 
+                                                                className={`px-4 py-3 align-middle text-sm relative ${col.fixed ? 'sticky right-0 bg-white/90 group-hover:bg-blue-50/90 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.02)]' : ''}`}
+                                                                style={{ textAlign: col.cellAlign || col.align || 'left' }}
+                                                            >
+                                                                {renderCell(report, col.id, index)}
+                                                            </td>
+                                                        ))}
                                                     </tr>
                                                 ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan={columns.filter(c => c.visible).length} className="py-12 text-center text-slate-400">
-                                                        <div className="flex flex-col items-center justify-center">
-                                                            <InboxIcon className="h-10 w-10 opacity-30 mb-2" />
-                                                            <p className="text-sm font-bold">Không tìm thấy dữ liệu</p>
-                                                        </div>
+                                                    <td colSpan={columns.filter(c => c.visible).length} className="px-6 py-16 text-center text-slate-400">
+                                                        <InboxIcon className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                                                        <p className="font-bold text-sm">Không tìm thấy dữ liệu</p>
+                                                        <p className="text-xs opacity-60 mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
                                                     </td>
                                                 </tr>
                                             )}
@@ -710,36 +732,31 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                     </table>
                                 </div>
 
-                                {/* Mobile List */}
-                                <div className="md:hidden p-4 space-y-3">
+                                {/* Mobile List View */}
+                                <div className="md:hidden space-y-3 p-4">
                                     {reports.length > 0 ? (
-                                        reports.map((report) => (
+                                        reports.map(report => (
                                             <div 
-                                                key={report.id}
+                                                key={report.id} 
                                                 onClick={() => onSelectReport(report)}
-                                                className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-white/60 active:scale-[0.98] transition-all relative overflow-hidden"
+                                                className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-slate-200 active:scale-[0.98] transition-transform"
                                             >
                                                 <div className="flex justify-between items-start mb-2">
-                                                    <span className="text-[0.6rem] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">{report.id}</span>
+                                                    <span className="text-xs font-bold text-[#003DA5] bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{report.maSanPham}</span>
                                                     {getStatusBadge(report.trangThai)}
                                                 </div>
-                                                <h3 className="text-sm font-bold text-slate-800 leading-tight mb-1 line-clamp-2">{report.tenThuongMai}</h3>
-                                                <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                                                    <span className="font-medium text-[#003DA5]">{report.maSanPham}</span>
-                                                    <span>•</span>
+                                                <h3 className="text-sm font-bold text-slate-800 line-clamp-2 mb-1">{report.tenThuongMai}</h3>
+                                                <div className="text-xs text-slate-500 mb-2 line-clamp-1">{report.noiDungPhanAnh}</div>
+                                                <div className="flex justify-between items-center text-xs text-slate-400 border-t border-slate-100 pt-2 mt-2">
                                                     <span>{formatDate(report.ngayPhanAnh)}</span>
+                                                    {report.soLo && <span className="font-bold bg-slate-50 px-1.5 rounded text-slate-500">#{report.soLo}</span>}
                                                 </div>
-                                                {report.loaiLoi && (
-                                                    <div className="inline-block text-[0.6rem] font-bold bg-slate-50 text-slate-600 px-2 py-1 rounded border border-slate-200">
-                                                        {report.loaiLoi}
-                                                    </div>
-                                                )}
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-                                            <InboxIcon className="h-10 w-10 opacity-30 mb-2" />
-                                            <p className="text-xs font-bold">Không có dữ liệu</p>
+                                        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                                            <InboxIcon className="h-10 w-10 opacity-20 mb-2" />
+                                            <p className="text-sm font-bold">Không tìm thấy dữ liệu</p>
                                         </div>
                                     )}
                                 </div>
@@ -747,8 +764,8 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                         )}
                     </div>
 
-                    {/* Pagination Footer */}
-                    <div className="p-3 border-t border-slate-200/60 bg-white/60 backdrop-blur-md z-10 flex-shrink-0">
+                    {/* Pagination */}
+                    <div className="border-t border-slate-200/60 bg-white/60 backdrop-blur-md px-5 py-3 flex-shrink-0">
                         <Pagination 
                             currentPage={currentPage}
                             totalItems={totalReports}
@@ -763,4 +780,4 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
     );
 };
 
-export default React.memo(DefectReportList);
+export default DefectReportList;

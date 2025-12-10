@@ -25,7 +25,18 @@ body {
   font-family: var(--app-font);
   line-height: 1.5;
   color: #1e293b;              /* Slate 800 */
-  background-color: #f8fafc;   /* Slate 50 */
+  background-color: #f0f4f8;   /* Slate 50 base */
+  
+  /* Modern Mesh Gradient Background for Glassmorphism */
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(210, 100%, 93%, 1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(220, 100%, 96%, 1) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(200, 100%, 93%, 1) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(230, 100%, 96%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(210, 100%, 94%, 1) 0, transparent 50%);
+    
+  background-attachment: fixed;
+  background-size: cover;
   
   /* Rendering Optimization */
   -webkit-font-smoothing: antialiased;
@@ -33,14 +44,13 @@ body {
   text-rendering: optimizeLegibility;
   
   /* Advanced Font Features for Inter */
-  /* cv05: l with tail, cv11: single-story a, salt: stylistic alternates */
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "salt"; 
 }
 
 /* --- Modern Scrollbar Styling --- */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -49,7 +59,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background-color: var(--sb-thumb);
-  border: 3px solid transparent; /* Creates padding/floating effect */
+  border: 2px solid transparent; 
   border-radius: 99px;
   background-clip: content-box;
   transition: background-color 0.2s ease;
@@ -63,11 +73,11 @@ body {
 
 /* Compact Scrollbar for lists/cards */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  border-width: 1px;
+  border-width: 0px;
 }
 
 /* Hide Scrollbar */
@@ -84,4 +94,21 @@ input, button, textarea, select {
   font: inherit;
   color: inherit;
   letter-spacing: inherit;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
 }

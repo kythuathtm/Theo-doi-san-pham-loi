@@ -21,7 +21,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, data }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [chatSession, setChatSession] = useState<Chat | null>(null);
   
-  // Use ref to hold the latest data without triggering re-initialization automatically
   const dataRef = useRef(data);
 
   useEffect(() => {
@@ -40,7 +39,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, data }) => {
 
       const ai = new GoogleGenAI({ apiKey });
       
-      // Prepare context from data (simplified to save tokens)
       const simplifiedData = dataRef.current.slice(0, 200).map(r => ({
           id: r.id,
           sp: r.maSanPham,
@@ -89,13 +87,11 @@ QUY TẮC TRẢ LỜI:
     }
   };
 
-  // Initial load only
   useEffect(() => {
     initChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -137,7 +133,6 @@ QUY TẮC TRẢ LỜI:
   const renderMessageText = (text: string) => {
       const lines = text.split('\n');
       return lines.map((line, i) => {
-          // Check for list item
           const isListItem = /^\s*[\*\-]\s+(.*)/.test(line);
           const isBold = /\*\*(.*?)\*\*/g;
           
@@ -152,15 +147,15 @@ QUY TẮC TRẢ LỜI:
           if (isListItem) {
               const content = line.replace(/^\s*[\*\-]\s+/, '');
               return (
-                  <div key={i} className="flex gap-2 ml-1 mb-1.5">
-                      <span className="text-blue-500 mt-1.5 text-[8px]">•</span>
-                      <span>{processInline(content)}</span>
+                  <div key={i} className="flex gap-2 ml-1 mb-1.5 items-start">
+                      <span className="text-indigo-500 mt-1.5 text-[6px] flex-shrink-0">●</span>
+                      <span className="leading-relaxed">{processInline(content)}</span>
                   </div>
               );
           }
 
           return (
-              <p key={i} className={`min-h-[1em] mb-1.5 last:mb-0 ${line.trim() === '' ? 'h-2' : ''}`}>
+              <p key={i} className={`min-h-[1em] mb-1.5 last:mb-0 leading-relaxed ${line.trim() === '' ? 'h-2' : ''}`}>
                   {processInline(line)}
               </p>
           );
@@ -168,44 +163,48 @@ QUY TẮC TRẢ LỜI:
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[95vw] sm:w-[450px] h-[650px] max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden z-50 animate-fade-in-up ring-1 ring-black/5 font-sans">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[95vw] sm:w-[420px] h-[650px] max-h-[85vh] bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl border border-white/50 flex flex-col overflow-hidden z-50 animate-pop ring-1 ring-white/50 font-sans">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#003DA5] to-blue-600 p-4 flex justify-between items-center text-white shrink-0 shadow-md">
-        <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm shadow-inner">
-                <SparklesIcon className="w-5 h-5 animate-pulse" />
+      <div className="bg-gradient-to-r from-[#003DA5] to-indigo-600 p-5 flex justify-between items-center text-white shrink-0 shadow-lg relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div className="flex items-center gap-3 relative z-10">
+            <div className="w-11 h-11 bg-white/20 rounded-2xl backdrop-blur-md shadow-inner flex items-center justify-center border border-white/20">
+                <SparklesIcon className="w-6 h-6 animate-pulse text-white" />
             </div>
             <div>
-                <h3 className="font-bold text-sm leading-tight">Trợ lý Chất lượng AI</h3>
-                <p className="text-[10px] opacity-90 font-medium text-blue-100">Powered by Gemini 2.5 Flash</p>
+                <h3 className="font-extrabold text-base leading-tight tracking-wide drop-shadow-md">Trợ lý AI</h3>
+                <p className="text-[10px] opacity-90 font-bold text-blue-100 flex items-center gap-1.5 bg-white/10 px-2 py-0.5 rounded-full border border-white/10 w-fit mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse box-shadow-glow"></span>
+                    Gemini 2.5 Flash
+                </p>
             </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 relative z-10">
             <button 
                 onClick={() => initChat(true)} 
-                className="p-2 hover:bg-white/20 rounded-full transition-colors active:scale-95 text-blue-100 hover:text-white"
-                title="Cập nhật dữ liệu mới nhất từ màn hình"
+                className="w-9 h-9 flex items-center justify-center hover:bg-white/20 rounded-full transition-colors active:scale-95 text-blue-100 hover:text-white"
+                title="Cập nhật ngữ cảnh"
             >
                 <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
-            <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition-colors active:scale-95 text-blue-100 hover:text-white">
+            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center hover:bg-white/20 rounded-full transition-colors active:scale-95 text-blue-100 hover:text-white">
                 <XIcon className="w-5 h-5" />
             </button>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-slate-50 scroll-smooth custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-slate-50/30 scroll-smooth custom-scrollbar">
         {messages.map((msg, idx) => (
             <div key={idx} className={`flex gap-3 animate-fade-in ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-white ${msg.role === 'user' ? 'bg-slate-200 text-slate-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white'}`}>
-                    {msg.role === 'user' ? <UserIcon className="w-4 h-4" /> : <SparklesIcon className="w-4 h-4" />}
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border border-white mt-auto mb-1 ${msg.role === 'user' ? 'bg-slate-200 text-slate-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white'}`}>
+                    {msg.role === 'user' ? <UserIcon className="w-5 h-5" /> : <SparklesIcon className="w-5 h-5" />}
                 </div>
                 <div 
-                    className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                    className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm backdrop-blur-sm ${
                         msg.role === 'user' 
-                        ? 'bg-white text-slate-800 border border-slate-100 rounded-tr-none' 
-                        : 'bg-white text-slate-700 border border-blue-100/50 rounded-tl-none shadow-blue-100/50'
+                        ? 'bg-white/90 text-slate-800 border border-slate-100 rounded-br-sm' 
+                        : 'bg-white/80 text-slate-700 border border-indigo-100 rounded-bl-sm shadow-indigo-100/50'
                     }`}
                 >
                     {renderMessageText(msg.text)}
@@ -214,13 +213,13 @@ QUY TẮC TRẢ LỜI:
         ))}
         {isLoading && (
             <div className="flex gap-3 animate-fade-in">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm border border-white">
-                    <SparklesIcon className="w-4 h-4 animate-spin-slow" />
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm border border-white mt-auto mb-1">
+                    <SparklesIcon className="w-5 h-5 animate-spin-slow" />
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm rounded-tl-none flex gap-1.5 items-center h-10">
-                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
-                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                <div className="bg-white/80 p-4 rounded-2xl border border-indigo-100 shadow-sm rounded-bl-sm flex gap-1.5 items-center h-12 backdrop-blur-sm">
+                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                 </div>
             </div>
         )}
@@ -228,28 +227,28 @@ QUY TẮC TRẢ LỜI:
       </div>
 
       {/* Input Area */}
-      <div className="p-3 bg-white border-t border-slate-100 shrink-0">
-          <form onSubmit={handleSendMessage} className="flex gap-2 relative bg-white rounded-2xl p-1.5 border border-slate-200 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all shadow-sm">
+      <div className="p-4 bg-white/70 backdrop-blur-xl border-t border-white/50 shrink-0">
+          <form onSubmit={handleSendMessage} className="flex gap-2 relative bg-white/50 rounded-[1.2rem] p-1.5 border border-white shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400 transition-all">
             <input 
                 type="text" 
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Hỏi về dữ liệu, xu hướng lỗi..."
-                className="flex-1 px-4 py-2.5 bg-transparent border-none text-sm outline-none text-slate-800 placeholder:text-slate-400 font-medium"
+                className="flex-1 px-4 py-3 bg-transparent border-none text-sm outline-none text-slate-800 placeholder:text-slate-400 font-medium"
                 disabled={isLoading}
                 autoFocus
             />
             <button 
                 type="submit" 
                 disabled={!inputValue.trim() || isLoading}
-                className="p-2.5 bg-[#003DA5] text-white rounded-xl hover:bg-[#002a70] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md active:scale-95 flex-shrink-0 shadow-blue-900/10"
+                className="p-3 bg-[#003DA5] text-white rounded-2xl hover:bg-[#002a70] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/10 active:scale-95 flex-shrink-0"
             >
                 <PaperAirplaneIcon className="w-5 h-5" />
             </button>
           </form>
-          <p className="text-[10px] text-center text-slate-400 mt-2 font-medium flex items-center justify-center gap-1">
-              <SparklesIcon className="w-3 h-3 text-blue-300"/> 
-              AI có thể mắc lỗi. Vui lòng kiểm chứng thông tin.
+          <p className="text-[10px] text-center text-slate-400 mt-2 font-semibold flex items-center justify-center gap-1 opacity-70">
+              <SparklesIcon className="w-3 h-3 text-indigo-400"/> 
+              AI có thể mắc lỗi. Vui lòng kiểm chứng.
           </p>
       </div>
     </div>
