@@ -568,12 +568,17 @@ export const App: React.FC = () => {
         'Nhãn hàng': r.nhanHang || '',
         'Nhà phân phối': r.nhaPhanPhoi,
         'Đơn vị sử dụng': r.donViSuDung,
+        'Người liên hệ': r.nguoiLienHe || '',
+        'SĐT': r.soDienThoai || '',
         'Nội dung phản ánh': r.noiDungPhanAnh,
         'Số lô': r.soLo,
+        'Hạn dùng': r.hanDung ? new Date(r.hanDung).toLocaleDateString('en-GB') : '',
         'Mã ngày sản xuất': r.maNgaySanXuat,
         'Số lượng lỗi': r.soLuongLoi,
+        'ĐVT': r.donViTinh || '',
         'Số lượng đã nhập': r.soLuongDaNhap,
         'Số lượng đổi': r.soLuongDoi,
+        'Ngày đổi hàng': r.ngayDoiHang ? new Date(r.ngayDoiHang).toLocaleDateString('en-GB') : '',
         'Nguyên nhân': r.nguyenNhan || '',
         'Hướng khắc phục': r.huongKhacPhuc || '',
         'Trạng thái': r.trangThai,
@@ -583,7 +588,7 @@ export const App: React.FC = () => {
     const worksheet = xlsxLib.utils.json_to_sheet(dataToExport);
     const workbook = xlsxLib.utils.book_new();
     xlsxLib.utils.book_append_sheet(workbook, worksheet, "BaoCao");
-    xlsxLib.writeFile(workbook, `bao_cao_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    xlsxLib.writeFile(workbook, `bao_cao_chi_tiet_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   // --- Excel Import Logic ---
