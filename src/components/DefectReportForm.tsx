@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
-import { XIcon, CheckCircleIcon, TagIcon, WrenchIcon, LockClosedIcon, ShieldCheckIcon, ClipboardDocumentListIcon, CalendarIcon, BuildingStoreIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, UserIcon } from './Icons';
+import { XIcon, CheckCircleIcon, TagIcon, WrenchIcon, LockClosedIcon, ShieldCheckIcon, ClipboardDocumentListIcon, CalendarIcon, BuildingStoreIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, UserIcon, ExclamationTriangleIcon } from './Icons';
 
 interface Props {
   initialData: DefectReport | null;
@@ -65,6 +66,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     donViSuDung: '', nguoiLienHe: '', soDienThoai: '', noiDungPhanAnh: '', soLo: '', maNgaySanXuat: '', hanDung: '', donViTinh: '',
     soLuongLoi: 0, soLuongDaNhap: 0, soLuongDoi: 0, ngayDoiHang: '',
     nguyenNhan: '', huongKhacPhuc: '', trangThai: 'Mới',
+    mucDoUuTien: 'Trung bình',
     ngayHoanThanh: '', 
     loaiLoi: '' as any, 
     nhanHang: 'HTM', 
@@ -229,6 +231,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
           soLuongLoi: initialData.soLuongLoi || 0,
           soLuongDaNhap: initialData.soLuongDaNhap || 0,
           soLuongDoi: initialData.soLuongDoi || 0,
+          mucDoUuTien: initialData.mucDoUuTien || 'Trung bình',
       });
       const product = products.find(p => p.maSanPham.toLowerCase() === initialData.maSanPham.toLowerCase());
       setIsProductInfoLocked(!!product && !initialData.id.startsWith('new_'));
@@ -239,7 +242,8 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
           images: [],
           loaiLoi: '' as any,
           nguoiLienHe: '',
-          soDienThoai: ''
+          soDienThoai: '',
+          mucDoUuTien: 'Trung bình',
       }));
       setIsProductInfoLocked(false);
     }
@@ -554,7 +558,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 group transition-all hover:shadow-md">
                    <SectionHeader title="Nội dung Khiếu nại" icon={<ShieldCheckIcon className="w-5 h-5"/>} />
                    <div className="grid grid-cols-1 gap-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ngày phản ánh <span className="text-red-500">*</span></label>
                                 <input type="date" name="ngayPhanAnh" value={formData.ngayPhanAnh.split('T')[0]} onChange={handleChange} onBlur={handleBlur} className={getInputClasses('ngayPhanAnh')} disabled={isFieldDisabled('ngayPhanAnh')} />
@@ -570,6 +574,17 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                                     <option value="Lỗi Khác">Lỗi Khác</option>
                                 </select>
                                 <ErrorMessage field="loaiLoi" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                                    <ExclamationTriangleIcon className="w-3.5 h-3.5"/> Mức độ ưu tiên
+                                </label>
+                                <select name="mucDoUuTien" value={formData.mucDoUuTien} onChange={handleChange} className={getInputClasses('mucDoUuTien')} disabled={isFieldDisabled('mucDoUuTien')}>
+                                    <option value="Thấp">Thấp</option>
+                                    <option value="Trung bình">Trung bình</option>
+                                    <option value="Cao">Cao</option>
+                                    <option value="Khẩn cấp">Khẩn cấp</option>
+                                </select>
                             </div>
                         </div>
 

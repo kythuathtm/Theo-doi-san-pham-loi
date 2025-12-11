@@ -352,6 +352,18 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                 <div className={`hidden sm:flex px-3 py-1.5 rounded-xl text-[0.6rem] font-bold border uppercase tracking-wider ring-4 shadow-sm ${getStatusColor(report.trangThai)}`}>
                         {report.trangThai}
                 </div>
+                
+                {report.mucDoUuTien && report.mucDoUuTien !== 'Trung bình' && (
+                    <div className={`hidden sm:flex px-2 py-1 rounded-lg text-[0.6rem] font-bold uppercase tracking-wider border items-center gap-1 ${
+                        report.mucDoUuTien === 'Khẩn cấp' ? 'bg-red-50 text-red-600 border-red-200' :
+                        report.mucDoUuTien === 'Cao' ? 'bg-orange-50 text-orange-600 border-orange-200' :
+                        'bg-slate-50 text-slate-600 border-slate-200'
+                    }`}>
+                        {report.mucDoUuTien === 'Khẩn cấp' && <span className="relative flex h-2 w-2 mr-1"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span>}
+                        {report.mucDoUuTien}
+                    </div>
+                )}
+
                 <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                             <span className="text-[0.625rem] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">#{report.id}</span>

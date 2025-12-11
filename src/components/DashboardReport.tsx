@@ -23,7 +23,7 @@ import {
 
 interface Props {
   reports: DefectReport[];
-  onFilterSelect: (filterType: 'status' | 'defectType' | 'all' | 'search' | 'brand' | 'month', value?: string) => void;
+  onFilterSelect: (filterType: 'status' | 'defectType' | 'all' | 'search' | 'brand' | 'month' | 'overdue', value?: string) => void;
   onSelectReport: (report: DefectReport) => void;
   onOpenAiAnalysis: () => void;
   isLoading?: boolean;
@@ -625,7 +625,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                     subValue="Chưa hoàn thành"
                     icon={<ExclamationCircleIcon className="w-5 h-5"/>}
                     color={COLORS.DANGER}
-                    onClick={() => { /* Filter logic for overdue if implemented in parent */ }}
+                    onClick={() => onFilterSelect('overdue')}
                     delay={50}
                 />
                 <KpiCard 

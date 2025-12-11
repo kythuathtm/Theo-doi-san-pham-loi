@@ -25,7 +25,7 @@ interface ColumnConfig {
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'stt', label: 'STT', visible: true, width: 60, align: 'center' },
-    { id: 'ngayPhanAnh', label: 'Ngày khiếu nại', visible: true, width: 130, align: 'center' },
+    { id: 'ngayPhanAnh', label: 'Ngày khiếu nại', visible: true, width: 140, align: 'center' },
     { id: 'duration', label: 'Thời gian XL', visible: true, width: 100, align: 'center' },
     { id: 'maSanPham', label: 'Mã sản phẩm', visible: true, width: 100, headerAlign: 'center', cellAlign: 'left' },
     { id: 'tenThuongMai', label: 'Tên thương mại', visible: true, width: 250, headerAlign: 'center', cellAlign: 'left' }, 
@@ -329,9 +329,15 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                 return <span className="font-medium text-slate-700 text-sm">{(currentPage - 1) * itemsPerPage + index + 1}</span>;
             case 'ngayPhanAnh':
                 const overdue = isOverdue(report.ngayPhanAnh, report.trangThai);
+                let priorityDot = null;
+                if (report.mucDoUuTien === 'Khẩn cấp') priorityDot = <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.6)]" title="Khẩn cấp"></span>;
+                else if (report.mucDoUuTien === 'Cao') priorityDot = <span className="w-2 h-2 rounded-full bg-orange-500" title="Cao"></span>;
+                else if (report.mucDoUuTien === 'Thấp') priorityDot = <span className="w-2 h-2 rounded-full bg-slate-400" title="Thấp"></span>;
+
                 return (
                     <div className="flex flex-col items-center">
                         <div className="flex items-center gap-1.5">
+                            {priorityDot}
                             <span className={`block font-bold text-sm ${overdue ? 'text-red-600' : 'text-slate-700'}`}>{formatDate(report.ngayPhanAnh)}</span>
                             {overdue && (
                                 <div className="group/tooltip relative">
@@ -682,6 +688,16 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                             onClick={() => onSelectReport(report)}
                                             className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 cursor-pointer group flex flex-col h-full overflow-hidden hover:-translate-y-1 relative"
                                         >
+                                            {/* Priority Badge */}
+                                            {report.mucDoUuTien === 'Khẩn cấp' && (
+                                                <div className="absolute top-2 left-2 z-10">
+                                                    <span className="relative flex h-3 w-3">
+                                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                                    </span>
+                                                </div>
+                                            )}
+
                                             {/* Image Cover */}
                                             <div className="h-36 bg-slate-50 relative overflow-hidden flex items-center justify-center border-b border-slate-100 group-hover:border-blue-100 transition-colors">
                                                 {report.images && report.images.length > 0 ? (
@@ -838,9 +854,19 @@ const DefectReportList: React.FC<DefectReportListProps> = ({
                                             <div 
                                                 key={report.id} 
                                                 onClick={() => onSelectReport(report)}
-                                                className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-slate-200 active:scale-[0.98] transition-transform"
+                                                className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-slate-200 active:scale-[0.98] transition-transform relative"
                                             >
-                                                <div className="flex justify-between items-start mb-2">
+                                                {/* Priority Dot Mobile */}
+                                                {report.mucDoUuTien === 'Khẩn cấp' && (
+                                                    <div className="absolute top-4 right-4">
+                                                        <span className="relative flex h-2 w-2">
+                                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex justify-between items-start mb-2 pr-6">
                                                     <div className="flex items-center gap-1.5">
                                                         <span className="text-xs font-bold text-[#003DA5] bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{report.maSanPham}</span>
                                                     </div>

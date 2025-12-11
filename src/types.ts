@@ -64,6 +64,7 @@ export interface DefectReport {
   nguyenNhan?: string;
   huongKhacPhuc?: string;
   trangThai: 'Mới' | 'Đang tiếp nhận' | 'Đang xác minh' | 'Đang xử lý' | 'Chưa tìm ra nguyên nhân' | 'Hoàn thành';
+  mucDoUuTien?: 'Thấp' | 'Trung bình' | 'Cao' | 'Khẩn cấp'; // New field: Priority
   ngayHoanThanh?: string;
   loaiLoi: 'Lỗi Sản xuất' | 'Lỗi Nhà cung cấp' | 'Lỗi Hỗn hợp' | 'Lỗi Khác';
   nhanHang: 'HTM' | 'VMA' | 'Khác';
