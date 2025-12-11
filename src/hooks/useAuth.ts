@@ -36,6 +36,14 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
                 if (usersData.length > 0) {
                     setUsers(usersData);
                     localStorage.setItem(LS_USERS, JSON.stringify(usersData));
+                    
+                    // Sync currentUser if updated from remote
+                    if (currentUser) {
+                        const me = usersData.find(u => u.username === currentUser.username);
+                        if (me && JSON.stringify(me) !== JSON.stringify(currentUser)) {
+                            setCurrentUser(me);
+                        }
+                    }
                 }
                 setIsLoadingUsers(false);
             },
@@ -54,7 +62,7 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
         setIsLoadingUsers(false);
     }
     return () => unsubscribe();
-  }, []);
+  }, [currentUser]); // Add currentUser dependency to allow sync
 
   const login = (user: User) => {
     setCurrentUser(user);
@@ -69,6 +77,11 @@ export const useAuth = (showToast: (msg: string, type: ToastType) => void) => {
     let newUsers = [...users];
     if (isEdit) {
         newUsers = newUsers.map(u => u.username === user.username ? user : u);
+        
+        // Update currentUser if we are editing ourselves
+        if (currentUser && currentUser.username === user.username) {
+            setCurrentUser(user);
+        }
     } else {
         if (newUsers.some(u => u.username === user.username)) {
             showToast("Tên đăng nhập đã tồn tại", "error");

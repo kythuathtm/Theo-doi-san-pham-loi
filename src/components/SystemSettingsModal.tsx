@@ -53,6 +53,8 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
   const [settings, setSettings] = useState<SystemSettings>(currentSettings);
   const [activeTab, setActiveTab] = useState<'general' | 'header' | 'list' | 'dashboard' | 'database'>(isOffline ? 'database' : 'general');
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const logoHTMInputRef = useRef<HTMLInputElement>(null);
+  const logoVMAInputRef = useRef<HTMLInputElement>(null);
 
   const fontOptions = [
       { label: 'Inter (Chuẩn UI)', value: "'Inter', sans-serif" },
@@ -92,6 +94,35 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
         console.error("Logo compression error", e);
         alert("Lỗi xử lý ảnh.");
     }
+  };
+
+  const handleBrandLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, brand: 'HTM' | 'VMA') => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+          const compressed = await compressImage(file);
+          setSettings(prev => ({
+              ...prev,
+              brandLogos: {
+                  ...prev.brandLogos,
+                  [brand]: compressed
+              }
+          }));
+      } catch (e) {
+          console.error("Brand Logo compression error", e);
+          alert("Lỗi xử lý ảnh.");
+      }
+  };
+
+  const handleRemoveBrandLogo = (brand: 'HTM' | 'VMA') => {
+      setSettings(prev => ({
+          ...prev,
+          brandLogos: {
+              ...prev.brandLogos,
+              [brand]: ''
+          }
+      }));
   };
 
   const handleBackgroundTypeChange = (type: 'default' | 'image' | 'color') => {
@@ -280,6 +311,66 @@ const SystemSettingsModal: React.FC<Props> = ({ currentSettings, onSave, onClose
                                                 >
                                                     <TrashIcon className="w-3 h-3 mr-1.5" /> Xóa
                                                 </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Brand Logos Config */}
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <SectionTitle title="Logo Nhãn Hàng (Dashboard)" icon={<ShoppingBagIcon className="w-5 h-5" />} colorClass="bg-indigo-100 text-indigo-600" />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                {/* HTM Logo */}
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Logo HTM</label>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-14 h-14 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden">
+                                            {settings.brandLogos?.HTM ? (
+                                                <img src={settings.brandLogos.HTM} alt="HTM" className="w-full h-full object-contain" />
+                                            ) : (
+                                                <span className="text-[10px] text-slate-400 font-bold">Mặc định</span>
+                                            )}
+                                        </div>
+                                        <input 
+                                            type="file" 
+                                            ref={logoHTMInputRef}
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={(e) => handleBrandLogoUpload(e, 'HTM')}
+                                        />
+                                        <div className="flex flex-col gap-1.5">
+                                            <button onClick={() => logoHTMInputRef.current?.click()} className="text-[10px] font-bold bg-white border border-slate-300 px-2 py-1 rounded hover:bg-slate-50">Upload</button>
+                                            {settings.brandLogos?.HTM && (
+                                                <button onClick={() => handleRemoveBrandLogo('HTM')} className="text-[10px] font-bold bg-red-50 border border-red-100 text-red-500 px-2 py-1 rounded hover:bg-red-100">Xóa</button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* VMA Logo */}
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Logo VMA</label>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-14 h-14 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden">
+                                            {settings.brandLogos?.VMA ? (
+                                                <img src={settings.brandLogos.VMA} alt="VMA" className="w-full h-full object-contain" />
+                                            ) : (
+                                                <span className="text-[10px] text-slate-400 font-bold">Mặc định</span>
+                                            )}
+                                        </div>
+                                        <input 
+                                            type="file" 
+                                            ref={logoVMAInputRef}
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={(e) => handleBrandLogoUpload(e, 'VMA')}
+                                        />
+                                        <div className="flex flex-col gap-1.5">
+                                            <button onClick={() => logoVMAInputRef.current?.click()} className="text-[10px] font-bold bg-white border border-slate-300 px-2 py-1 rounded hover:bg-slate-50">Upload</button>
+                                            {settings.brandLogos?.VMA && (
+                                                <button onClick={() => handleRemoveBrandLogo('VMA')} className="text-[10px] font-bold bg-red-50 border border-red-100 text-red-500 px-2 py-1 rounded hover:bg-red-100">Xóa</button>
                                             )}
                                         </div>
                                     </div>

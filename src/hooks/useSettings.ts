@@ -19,6 +19,7 @@ const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   logoUrl: '',
   backgroundType: 'default',
   backgroundValue: '',
+  brandLogos: { HTM: '', VMA: '' },
   fontFamily: "'Inter', sans-serif",
   baseFontSize: '15px',
   headerBackgroundColor: 'rgba(255, 255, 255, 0.9)',

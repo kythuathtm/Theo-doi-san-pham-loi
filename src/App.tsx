@@ -27,6 +27,7 @@ const Login = React.lazy(() => import('./components/Login') as Promise<{ default
 const DashboardReport = React.lazy(() => import('./components/DashboardReport') as Promise<{ default: React.ComponentType<any> }>);
 const SystemSettingsModal = React.lazy(() => import('./components/SystemSettingsModal'));
 const ChatInterface = React.lazy(() => import('./components/ChatInterface'));
+const UserProfileModal = React.lazy(() => import('./components/UserProfileModal'));
 
 interface ToastProps {
   message: string;
@@ -87,6 +88,7 @@ export const App: React.FC = () => {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
   const [isSystemSettingsModalOpen, setIsSystemSettingsModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   
   const [currentView, setCurrentView] = useState<'list' | 'dashboard'>('list');
@@ -343,7 +345,14 @@ export const App: React.FC = () => {
   // Handlers
   const handleLogin = async (user: User) => {
       login(user);
-      setCurrentView('list'); 
+      
+      // Determine default view based on role permissions
+      const config = roleSettings[user.role];
+      if (config && config.canViewDashboard) {
+          setCurrentView('dashboard');
+      } else {
+          setCurrentView('list');
+      }
   };
 
   const handleLogout = () => {
@@ -355,6 +364,7 @@ export const App: React.FC = () => {
       setIsProductModalOpen(false);
       setIsPermissionModalOpen(false);
       setIsSystemSettingsModalOpen(false);
+      setIsProfileModalOpen(false);
       setIsChatOpen(false);
       
       // Reset Filters to Default to prevent leakage to next user
@@ -376,6 +386,11 @@ export const App: React.FC = () => {
           setEditingReport(null);
           setSelectedReport(null);
       }
+  };
+
+  const handleUpdateProfile = (user: User) => {
+      // Reuse saveUser logic but ensure it's treated as an edit
+      saveUser(user, true);
   };
 
   const handleDeleteReportWrapper = useCallback(async (id: string) => {
@@ -670,6 +685,7 @@ export const App: React.FC = () => {
         onOpenProductModal={() => setIsProductModalOpen(true)}
         onOpenUserModal={() => setIsUserModalOpen(true)}
         onOpenSystemSettingsModal={() => setIsSystemSettingsModalOpen(true)}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
         isOffline={isOffline}
       />
@@ -719,6 +735,8 @@ export const App: React.FC = () => {
                         onFilterSelect={handleDashboardFilterSelect}
                         onSelectReport={setSelectedReport} 
                         onOpenAiAnalysis={() => setIsChatOpen(true)}
+                        currentUser={currentUser}
+                        systemSettings={systemSettings}
                     />
                 )}
             </div>
@@ -809,6 +827,14 @@ export const App: React.FC = () => {
                 onClose={() => setIsSystemSettingsModalOpen(false)}
                 isOffline={isOffline}
                 connectionError={connectionError}
+              />
+          )}
+
+          {isProfileModalOpen && (
+              <UserProfileModal
+                currentUser={currentUser}
+                onSave={handleUpdateProfile}
+                onClose={() => setIsProfileModalOpen(false)}
               />
           )}
       </Suspense>

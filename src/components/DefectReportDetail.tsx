@@ -6,7 +6,7 @@ import {
   PencilIcon, TrashIcon, XIcon, WrenchIcon, 
   TagIcon, ChatBubbleLeftIcon, ClockIcon, CheckCircleIcon, 
   BuildingStoreIcon, CalendarIcon, PaperAirplaneIcon, MapPinIcon, UserGroupIcon,
-  ArchiveBoxIcon, ExclamationTriangleIcon, CubeIcon, PrinterIcon, ArrowRightOnRectangleIcon
+  ArchiveBoxIcon, ExclamationTriangleIcon, CubeIcon, PrinterIcon, ArrowRightOnRectangleIcon, UserIcon
 } from './Icons';
 
 // Handle ReactToPrint import compatibility
@@ -34,6 +34,14 @@ const formatDate = (dateStr: string | undefined) => {
         }
         return dateStr;
     } catch(e) { return dateStr || ''; }
+};
+
+const getProcessingDays = (startDate: string, endDate?: string) => {
+    if (!startDate) return 0;
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
 // --- Helper Components ---
@@ -307,6 +315,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
       }
   };
 
+  const daysOpen = getProcessingDays(report.ngayPhanAnh, report.ngayHoanThanh);
+
   return (
     <div className="flex flex-col h-full sm:h-auto bg-[#f8fafc] font-sans">
       <style type="text/css" media="print">
@@ -333,6 +343,10 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                             <span className="text-sm font-black text-[#003DA5] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-100 flex items-center gap-1">
                                 <TagIcon className="w-3 h-3 text-[#003DA5] opacity-50"/>
                                 {report.maSanPham}
+                            </span>
+
+                            <span className="text-[0.625rem] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100 flex items-center gap-1">
+                                <ClockIcon className="w-3 h-3"/> {daysOpen} ngày xử lý
                             </span>
                         </div>
                         <h2 className="text-lg sm:text-xl font-bold text-slate-800 leading-tight truncate" title={report.tenThuongMai}>
@@ -415,6 +429,10 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                 <div className="grid grid-cols-12 gap-4">
                                     <DetailRow label="Nhà phân phối" value={report.nhaPhanPhoi} icon={<BuildingStoreIcon className="w-3 h-3"/>} wrapperClass="col-span-12 sm:col-span-6" />
                                     <DetailRow label="Đơn vị sử dụng" value={report.donViSuDung} icon={<MapPinIcon className="w-3 h-3"/>} wrapperClass="col-span-12 sm:col-span-6" />
+                                    
+                                    <DetailRow label="Người liên hệ" value={report.nguoiLienHe} icon={<UserIcon className="w-3 h-3"/>} wrapperClass="col-span-12 sm:col-span-6" />
+                                    <DetailRow label="SĐT liên hệ" value={report.soDienThoai} icon={<PaperAirplaneIcon className="w-3 h-3"/>} wrapperClass="col-span-12 sm:col-span-6" />
+
                                     <DetailRow label="Ngày khiếu nại" value={formatDate(report.ngayPhanAnh)} icon={<CalendarIcon className="w-3 h-3"/>} wrapperClass="col-span-12" className="text-blue-700 bg-blue-50 border-blue-100 font-bold"/>
                                 </div>
 

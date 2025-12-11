@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DefectReport, UserRole, PermissionField, Product } from '../types';
-import { XIcon, CheckCircleIcon, TagIcon, WrenchIcon, LockClosedIcon, ShieldCheckIcon, ClipboardDocumentListIcon, CalendarIcon, BuildingStoreIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon } from './Icons';
+import { XIcon, CheckCircleIcon, TagIcon, WrenchIcon, LockClosedIcon, ShieldCheckIcon, ClipboardDocumentListIcon, CalendarIcon, BuildingStoreIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, UserIcon } from './Icons';
 
 interface Props {
   initialData: DefectReport | null;
@@ -63,7 +62,7 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
     ngayTao: new Date().toISOString(),
     ngayPhanAnh: getTodayDateString(),
     maSanPham: '', dongSanPham: '', tenThuongMai: '', tenThietBi: '', nhaPhanPhoi: '',
-    donViSuDung: '', noiDungPhanAnh: '', soLo: '', maNgaySanXuat: '', hanDung: '', donViTinh: '',
+    donViSuDung: '', nguoiLienHe: '', soDienThoai: '', noiDungPhanAnh: '', soLo: '', maNgaySanXuat: '', hanDung: '', donViTinh: '',
     soLuongLoi: 0, soLuongDaNhap: 0, soLuongDoi: 0, ngayDoiHang: '',
     nguyenNhan: '', huongKhacPhuc: '', trangThai: 'Mới',
     ngayHoanThanh: '', 
@@ -238,7 +237,9 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
           ...prev, 
           ngayPhanAnh: getTodayDateString(), 
           images: [],
-          loaiLoi: '' as any 
+          loaiLoi: '' as any,
+          nguoiLienHe: '',
+          soDienThoai: ''
       }));
       setIsProductInfoLocked(false);
     }
@@ -522,9 +523,9 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                    </div>
                </div>
 
-               {/* Distribution Section */}
+               {/* Distribution Section - Updated with Contact Info */}
                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 group transition-all hover:shadow-md">
-                   <SectionHeader title="Thông tin Phân phối" icon={<BuildingStoreIcon className="w-5 h-5"/>} />
+                   <SectionHeader title="Thông tin Phân phối & Liên hệ" icon={<BuildingStoreIcon className="w-5 h-5"/>} />
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nhà phân phối <span className="text-red-500">*</span></label>
@@ -534,6 +535,17 @@ const DefectReportForm: React.FC<Props> = ({ initialData, onSave, onClose, curre
                         <div>
                              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Đơn vị sử dụng</label>
                              <input type="text" name="donViSuDung" value={formData.donViSuDung} onChange={handleChange} className={getInputClasses('donViSuDung')} disabled={isFieldDisabled('donViSuDung')} placeholder="Bệnh viện / Phòng khám..." />
+                        </div>
+                        <div>
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Người liên hệ</label>
+                             <div className="relative">
+                                 <input type="text" name="nguoiLienHe" value={formData.nguoiLienHe || ''} onChange={handleChange} className={getInputClasses('nguoiLienHe')} disabled={isFieldDisabled('nguoiLienHe')} placeholder="Họ tên người báo..." />
+                                 <div className="absolute right-3 top-3 text-slate-400 pointer-events-none"><UserIcon className="w-4 h-4"/></div>
+                             </div>
+                        </div>
+                        <div>
+                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">SĐT liên hệ</label>
+                             <input type="text" name="soDienThoai" value={formData.soDienThoai || ''} onChange={handleChange} className={getInputClasses('soDienThoai')} disabled={isFieldDisabled('soDienThoai')} placeholder="Số điện thoại..." />
                         </div>
                    </div>
                </div>

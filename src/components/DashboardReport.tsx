@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { DefectReport } from '../types';
+import { DefectReport, User, SystemSettings } from '../types';
 import { 
     CheckCircleIcon, ClockIcon, 
     ShoppingBagIcon, TagIcon, 
@@ -10,7 +10,11 @@ import {
     TableCellsIcon,
     BuildingStoreIcon,
     BarChartIcon,
-    XIcon
+    XIcon,
+    CalendarIcon,
+    ArrowRightOnRectangleIcon,
+    ExclamationCircleIcon,
+    ArrowUpIcon
 } from './Icons';
 
 interface Props {
@@ -19,18 +23,63 @@ interface Props {
   onSelectReport: (report: DefectReport) => void;
   onOpenAiAnalysis: () => void;
   isLoading?: boolean;
+  currentUser?: User;
+  systemSettings?: SystemSettings;
 }
 
 // --- COLOR PALETTE ---
 const COLORS = {
     PRIMARY: '#003DA5', // HTM Blue
-    SUCCESS: '#059669', // Emerald
+    SUCCESS: '#059669', // Emerald (VMA)
     WARNING: '#D97706', // Amber
     DANGER: '#DC2626',  // Red
     VIOLET: '#7C3AED',  // Violet
     TEAL: '#0D9488',    // Teal
     SLATE: '#64748B',   // Slate
 };
+
+// --- LOGO COMPONENTS ---
+const BrandLogoHTM = ({ className = "w-10 h-10", textSize = "text-[10px]", imageUrl }: { className?: string, textSize?: string, imageUrl?: string }) => {
+    if (imageUrl) {
+        return (
+            <div className={`${className} rounded-xl shadow-md border border-slate-200 overflow-hidden bg-white group-hover:scale-105 transition-transform`}>
+                <img src={imageUrl} alt="HTM" className="w-full h-full object-contain p-1" />
+            </div>
+        );
+    }
+    return (
+        <div className={`${className} bg-gradient-to-br from-[#003DA5] to-[#002a70] rounded-xl shadow-md flex flex-col items-center justify-center text-white border border-blue-800/20 relative overflow-hidden group-hover:scale-105 transition-transform`}>
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
+            <span className={`${textSize} font-black tracking-tighter leading-none relative z-10`}>HTM</span>
+            <div className="h-[2px] w-1/2 bg-red-500 mt-0.5 rounded-full relative z-10"></div>
+        </div>
+    );
+};
+
+const BrandLogoVMA = ({ className = "w-10 h-10", textSize = "text-[10px]", imageUrl }: { className?: string, textSize?: string, imageUrl?: string }) => {
+    if (imageUrl) {
+        return (
+            <div className={`${className} rounded-xl shadow-md border border-slate-200 overflow-hidden bg-white group-hover:scale-105 transition-transform`}>
+                <img src={imageUrl} alt="VMA" className="w-full h-full object-contain p-1" />
+            </div>
+        );
+    }
+    return (
+        <div className={`${className} bg-gradient-to-br from-[#059669] to-[#047857] rounded-xl shadow-md flex flex-col items-center justify-center text-white border border-emerald-800/20 relative overflow-hidden group-hover:scale-105 transition-transform`}>
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-20 transition-opacity"></div>
+            <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-white/10 rounded-full blur-sm"></div>
+            <span className={`${textSize} font-black tracking-tighter leading-none relative z-10`}>VMA</span>
+            <div className="h-[2px] w-1/2 bg-yellow-400 mt-0.5 rounded-full relative z-10"></div>
+        </div>
+    );
+};
+
+const BrandLogoETC = ({ className = "w-10 h-10", textSize = "text-[10px]" }: { className?: string, textSize?: string }) => (
+    <div className={`${className} bg-slate-100 rounded-xl shadow-inner flex items-center justify-center text-slate-500 border border-slate-200`}>
+        <span className={`${textSize} font-bold tracking-tight`}>Khác</span>
+    </div>
+);
 
 // --- ANIMATED COUNT COMPONENT ---
 const CountUp = ({ value, duration = 1000, suffix = "" }: { value: number, duration?: number, suffix?: string }) => {
@@ -64,7 +113,7 @@ const CountUp = ({ value, duration = 1000, suffix = "" }: { value: number, durat
 
 // --- SUB-COMPONENTS ---
 
-const GlassCard = ({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) => (
+const GlassCard = ({ children, className = "", delay = 0 }: { children?: React.ReactNode, className?: string, delay?: number }) => (
     <div 
         className={`bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] relative overflow-hidden animate-slide-up ring-1 ring-white/40 ${className}`}
         style={{ animationDelay: `${delay}ms` }}
@@ -97,44 +146,50 @@ const KpiCard = ({ title, value, icon, subLabel, color, onClick, delay }: any) =
     </button>
 );
 
-const BrandStatRow = ({ brand, label, color, data, onClick }: any) => (
-    <div 
-        onClick={onClick}
-        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white/30 border border-white/50 hover:bg-white/60 hover:border-white/80 transition-all cursor-pointer group backdrop-blur-sm"
-    >
-        <div className="flex items-center gap-4 mb-3 sm:mb-0">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md font-black text-sm tracking-tighter transition-transform group-hover:scale-110" style={{ backgroundColor: color }}>
-                {brand}
-            </div>
-            <div>
-                <h4 className="font-bold text-slate-800 text-sm">{label}</h4>
-                <div className="h-1 w-12 rounded-full mt-1.5 opacity-30" style={{ backgroundColor: color }}></div>
-            </div>
-        </div>
-        
-        <div className="flex gap-6 sm:gap-10">
-            <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Số phiếu</span>
-                <div className="flex items-baseline gap-1.5">
-                    <span className="text-lg font-black text-slate-700">{data.count}</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white/50 text-slate-500 border border-white/50 backdrop-blur-sm">
-                        {data.pct.toFixed(1)}%
-                    </span>
+const BrandStatRow = ({ brand, label, color, data, onClick, logoUrl }: any) => {
+    const renderLogo = () => {
+        if (brand === 'HTM') return <BrandLogoHTM className="w-12 h-12" textSize="text-xs" imageUrl={logoUrl} />;
+        if (brand === 'VMA') return <BrandLogoVMA className="w-12 h-12" textSize="text-xs" imageUrl={logoUrl} />;
+        return <BrandLogoETC className="w-12 h-12" textSize="text-[10px]" />;
+    };
+
+    return (
+        <div 
+            onClick={onClick}
+            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white/30 border border-white/50 hover:bg-white/60 hover:border-white/80 transition-all cursor-pointer group backdrop-blur-sm"
+        >
+            <div className="flex items-center gap-4 mb-3 sm:mb-0">
+                {renderLogo()}
+                <div>
+                    <h4 className="font-bold text-slate-800 text-sm">{label}</h4>
+                    <div className="h-1 w-12 rounded-full mt-1.5 opacity-30" style={{ backgroundColor: color }}></div>
                 </div>
             </div>
             
-            <div className="flex flex-col border-l border-slate-300/30 pl-6 sm:pl-10">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Sản phẩm (SKU)</span>
-                <div className="flex items-baseline gap-1.5">
-                    <span className="text-lg font-black text-slate-700">{data.skuCount}</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white/50 text-slate-500 border border-white/50 backdrop-blur-sm">
-                        {data.skuPct.toFixed(1)}%
-                    </span>
+            <div className="flex gap-6 sm:gap-10">
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Số phiếu</span>
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-lg font-black text-slate-700">{data.count}</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white/50 text-slate-500 border border-white/50 backdrop-blur-sm">
+                            {data.pct.toFixed(1)}%
+                        </span>
+                    </div>
+                </div>
+                
+                <div className="flex flex-col border-l border-slate-300/30 pl-6 sm:pl-10">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Sản phẩm (SKU)</span>
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-lg font-black text-slate-700">{data.skuCount}</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white/50 text-slate-500 border border-white/50 backdrop-blur-sm">
+                            {data.skuPct.toFixed(1)}%
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 const ProgressBarChart = ({ data, color, onBarClick }: { data: any[], color: string, onBarClick?: (label: string) => void }) => (
     <div className="space-y-5">
@@ -210,19 +265,24 @@ const MonthlyTrendChart = ({ data, onBarClick }: { data: { month: string, count:
 interface DataModalProps {
     title: string;
     onClose: () => void;
-    children: React.ReactNode;
+    children?: React.ReactNode;
 }
 
 const DataModal = ({ title, onClose, children }: DataModalProps) => (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[60] flex items-center justify-center p-4 transition-opacity animate-fade-in">
-        <div className="bg-white/80 backdrop-blur-2xl w-full max-w-4xl h-full max-h-[80vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-zoom-in ring-1 ring-white/60">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white/50">
-                <h3 className="text-lg font-bold text-slate-800">{title}</h3>
-                <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-800 rounded-full hover:bg-white/60 transition-all active:scale-95">
+        <div className="bg-white/80 backdrop-blur-2xl w-full max-w-6xl h-full max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-zoom-in ring-1 ring-white/60 border border-white/40">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white/50 backdrop-blur-lg sticky top-0 z-20">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 text-[#003DA5] rounded-xl border border-blue-100">
+                        <ShoppingBagIcon className="w-5 h-5"/>
+                    </div>
+                    <h3 className="text-lg font-black text-slate-800 tracking-tight">{title}</h3>
+                </div>
+                <button onClick={onClose} className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-red-50 transition-all active:scale-95 border border-transparent hover:border-red-100">
                     <XIcon className="h-6 w-6" />
                 </button>
             </div>
-            <div className="flex-1 overflow-auto p-0 custom-scrollbar bg-transparent">
+            <div className="flex-1 overflow-auto p-0 custom-scrollbar bg-[#f8fafc]/50">
                 {children}
             </div>
         </div>
@@ -231,11 +291,18 @@ const DataModal = ({ title, onClose, children }: DataModalProps) => (
 
 // --- MAIN COMPONENT ---
 
-const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectReport, onOpenAiAnalysis, isLoading }) => {
+const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectReport, onOpenAiAnalysis, isLoading, currentUser, systemSettings }) => {
     
-    const [activeOriginTab, setActiveOriginTab] = useState<'All' | 'HTM' | 'VMA' | 'Khác'>('All');
     const [showDistributorModal, setShowDistributorModal] = useState(false);
     const [showProductModal, setShowProductModal] = useState(false);
+    const [showBrandStatsModal, setShowBrandStatsModal] = useState(false);
+    const [selectedBrandDetail, setSelectedBrandDetail] = useState<'All' | 'HTM' | 'VMA' | 'Khác'>('All');
+
+    const getVietnameseDate = () => {
+        const date = new Date();
+        const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        return `${days[date.getDay()]}, ngày ${date.getDate()} tháng ${date.getMonth() + 1} năm ${date.getFullYear()}`;
+    };
 
     // DATA CALCULATION
     const metrics = useMemo(() => {
@@ -369,6 +436,75 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
         };
     }, [reports]);
 
+    // --- Detailed Brand Stats Calculation for Modal ---
+    const brandDetailedStats = useMemo(() => {
+        const brands = ['HTM', 'VMA', 'Khác'] as const;
+        const totalReports = reports.length;
+
+        return brands.map(brand => {
+            const subset = reports.filter(r => brand === 'Khác' ? !['HTM', 'VMA'].includes(r.nhanHang) : r.nhanHang === brand);
+            const reportCount = subset.length;
+            const skuCount = new Set(subset.map(r => r.maSanPham)).size;
+            
+            // Completion Rate
+            const completed = subset.filter(r => r.trangThai === 'Hoàn thành').length;
+            const completionRate = reportCount > 0 ? (completed / reportCount) * 100 : 0;
+
+            // Origins
+            const originCounts: Record<string, number> = {};
+            subset.forEach(r => {
+                const o = r.loaiLoi || 'Chưa phân loại';
+                originCounts[o] = (originCounts[o] || 0) + 1;
+            });
+            const originData = Object.entries(originCounts).map(([label, value]) => ({
+                label, value, percentage: reportCount > 0 ? (value / reportCount) * 100 : 0,
+                color: label === 'Lỗi Sản xuất' ? COLORS.DANGER : label === 'Lỗi Nhà cung cấp' ? COLORS.WARNING : COLORS.VIOLET
+            })).sort((a,b) => b.value - a.value);
+
+            // Statuses
+            const statusCounts: Record<string, number> = {};
+            subset.forEach(r => {
+                statusCounts[r.trangThai] = (statusCounts[r.trangThai] || 0) + 1;
+            });
+            const statusData = Object.entries(statusCounts).map(([label, value]) => ({
+                label, value, percentage: reportCount > 0 ? (value / reportCount) * 100 : 0,
+                color: label === 'Hoàn thành' ? COLORS.SUCCESS : label === 'Mới' ? '#3B82F6' : COLORS.WARNING
+            })).sort((a,b) => b.value - a.value);
+
+            // Top Products for this brand
+            const productCounts: Record<string, { count: number, name: string }> = {};
+            subset.forEach(r => {
+                const key = r.maSanPham || 'Unknown';
+                if (!productCounts[key]) productCounts[key] = { count: 0, name: r.tenThuongMai || '' };
+                productCounts[key].count++;
+                if (r.tenThuongMai && r.tenThuongMai.length > productCounts[key].name.length) productCounts[key].name = r.tenThuongMai;
+            });
+            const topProducts = Object.entries(productCounts)
+                .map(([code, d]) => ({ code, name: d.name, count: d.count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 3); // Take top 3
+
+            return {
+                brand,
+                reportCount,
+                skuCount,
+                completionRate,
+                pctTotal: totalReports > 0 ? (reportCount / totalReports) * 100 : 0,
+                reportsPerSku: skuCount > 0 ? (reportCount / skuCount) : 0,
+                originData,
+                statusData,
+                topProducts
+            };
+        });
+    }, [reports]);
+
+    // Data for the detailed chart in modal (for specific brand selection)
+    const detailedChartData = useMemo(() => {
+        const data = brandDetailedStats.find(b => b.brand === selectedBrandDetail);
+        return data || { originData: [], statusData: [], topProducts: [] };
+    }, [selectedBrandDetail, brandDetailedStats]);
+
+
     // --- Modal Data Aggregation ---
     const distributorStats = useMemo(() => {
         const stats: Record<string, { name: string, reportCount: number, skus: Set<string>, exchangeCount: number }> = {};
@@ -406,14 +542,19 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
             {/* Header Area */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2 drop-shadow-sm">
-                        <ChartPieIcon className="w-8 h-8 text-[#003DA5]" />
-                        Dashboard Báo Cáo
+                    <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-2 drop-shadow-sm">
+                        Xin chào, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#003DA5] to-blue-600">{currentUser?.fullName || currentUser?.username}</span>
+                        <span className="text-2xl animate-pulse">👋</span>
                     </h2>
-                    <p className="text-sm font-semibold text-slate-500 mt-1 ml-10 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse box-shadow-glow"></span>
-                        Cập nhật theo thời gian thực
-                    </p>
+                    
+                    <div className="flex items-center gap-2 mt-2">
+                        <div className="p-1.5 bg-blue-50 text-[#003DA5] rounded-lg border border-blue-100">
+                            <CalendarIcon className="w-4 h-4" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wide">
+                            {getVietnameseDate()}
+                        </p>
+                    </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -552,11 +693,22 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                 
                 {/* Brand Statistics */}
                 <GlassCard className="p-8 flex flex-col" delay={600}>
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                            <ShoppingBagIcon className="w-5 h-5" />
+                    <div className="flex items-center justify-between gap-3 mb-6">
+                        <div 
+                            className="flex items-center gap-3 cursor-pointer group/title"
+                            onClick={() => setShowBrandStatsModal(true)}
+                        >
+                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl group-hover/title:bg-indigo-100 transition-colors">
+                                <ShoppingBagIcon className="w-5 h-5" />
+                            </div>
+                            <h3 className="font-bold text-slate-800 text-lg group-hover/title:text-indigo-700 transition-colors">Thống kê theo Nhãn hàng</h3>
                         </div>
-                        <h3 className="font-bold text-slate-800 text-lg">Thống kê theo Nhãn hàng</h3>
+                        <button 
+                            onClick={() => setShowBrandStatsModal(true)}
+                            className="text-xs font-bold text-[#003DA5] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 active:scale-95"
+                        >
+                            Chi tiết <ArrowRightOnRectangleIcon className="w-3 h-3" />
+                        </button>
                     </div>
                     
                     <div className="flex flex-col gap-4 flex-1 justify-center">
@@ -566,6 +718,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                             color={COLORS.PRIMARY} 
                             data={metrics.brandStats.HTM} 
                             onClick={() => onFilterSelect('brand', 'HTM')}
+                            logoUrl={systemSettings?.brandLogos?.HTM}
                         />
                         <BrandStatRow 
                             brand="VMA" 
@@ -573,6 +726,7 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                             color={COLORS.SUCCESS} 
                             data={metrics.brandStats.VMA} 
                             onClick={() => onFilterSelect('brand', 'VMA')}
+                            logoUrl={systemSettings?.brandLogos?.VMA}
                         />
                         {metrics.brandStats.Other.count > 0 && (
                             <BrandStatRow 
@@ -586,36 +740,19 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                     </div>
                 </GlassCard>
 
-                {/* Error Origin with Tabs */}
+                {/* Error Origin - ONLY TOTAL (Removed Tabs) */}
                 <GlassCard className="p-8" delay={700}>
-                    <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                    <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-rose-50 text-rose-600 rounded-xl">
                                 <ShieldCheckIcon className="w-5 h-5" />
                             </div>
-                            <h3 className="font-bold text-slate-800 text-lg">Nguồn gốc Lỗi</h3>
-                        </div>
-                        
-                        {/* Tab Switcher */}
-                        <div className="flex bg-slate-100/50 p-1 rounded-xl shadow-inner border border-slate-200/50 backdrop-blur-sm">
-                            {(['All', 'HTM', 'VMA', 'Khác'] as const).map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={(e) => { e.stopPropagation(); setActiveOriginTab(tab); }}
-                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${
-                                        activeOriginTab === tab 
-                                        ? 'bg-white text-[#003DA5] shadow-sm ring-1 ring-black/5' 
-                                        : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
-                                    }`}
-                                >
-                                    {tab === 'All' ? 'Tất cả' : tab}
-                                </button>
-                            ))}
+                            <h3 className="font-bold text-slate-800 text-lg">Nguồn gốc Lỗi (Tổng hợp)</h3>
                         </div>
                     </div>
                     <div className="mt-2 min-h-[200px]">
                         <ProgressBarChart 
-                            data={metrics.originData[activeOriginTab]} 
+                            data={metrics.originData['All']} 
                             color={COLORS.DANGER}
                             onBarClick={(label) => onFilterSelect('defectType', label)} 
                         />
@@ -707,6 +844,215 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
                             ))}
                         </tbody>
                     </table>
+                </DataModal>
+            )}
+
+            {showBrandStatsModal && (
+                <DataModal title="Chi tiết Thống kê Nhãn hàng" onClose={() => setShowBrandStatsModal(false)}>
+                    <div className="p-6 space-y-8 bg-slate-50/30">
+                        {/* 1. Brand Selector Cards */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* All Card */}
+                            <button 
+                                onClick={() => setSelectedBrandDetail('All')}
+                                className={`rounded-2xl p-4 border transition-all cursor-pointer hover:shadow-lg flex flex-col gap-2 group relative overflow-hidden text-left ${selectedBrandDetail === 'All' ? 'bg-indigo-50 border-indigo-200 ring-2 ring-indigo-500/20 shadow-md' : 'bg-white border-slate-200 hover:border-indigo-200'}`}
+                            >
+                                <div className="flex justify-between items-center w-full">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-xs shadow-sm">All</div>
+                                        <h4 className="font-bold text-slate-800 text-sm">Tất cả</h4>
+                                    </div>
+                                    {selectedBrandDetail === 'All' && <CheckCircleIcon className="w-5 h-5 text-indigo-500" />}
+                                </div>
+                                <div className="mt-2 w-full">
+                                    <div className="flex justify-between items-end">
+                                        <p className="text-2xl font-black text-slate-800">{metrics.totalReports}</p>
+                                        <span className="text-[10px] font-bold text-slate-500 bg-white/60 px-2 py-0.5 rounded shadow-sm border border-slate-100">Tổng phiếu</span>
+                                    </div>
+                                    <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="h-full bg-indigo-500 w-full"></div>
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* Brand Cards */}
+                            {brandDetailedStats.map((stat, idx) => {
+                                const isSelected = selectedBrandDetail === stat.brand;
+                                let logoUrl = undefined;
+                                if (stat.brand === 'HTM') logoUrl = systemSettings?.brandLogos?.HTM;
+                                if (stat.brand === 'VMA') logoUrl = systemSettings?.brandLogos?.VMA;
+
+                                return (
+                                    <button 
+                                        key={idx} 
+                                        onClick={() => setSelectedBrandDetail(stat.brand as any)}
+                                        className={`rounded-2xl p-4 border transition-all cursor-pointer hover:shadow-lg flex flex-col gap-2 group relative overflow-hidden text-left ${isSelected ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-500/20 shadow-md' : 'bg-white border-slate-200 hover:border-blue-200'}`}
+                                    >
+                                        <div className="flex justify-between items-center w-full">
+                                            <div className="flex items-center gap-3">
+                                                {stat.brand === 'HTM' ? <BrandLogoHTM className="w-8 h-8 rounded-lg shadow-sm" textSize="text-[8px]" imageUrl={logoUrl} /> :
+                                                 stat.brand === 'VMA' ? <BrandLogoVMA className="w-8 h-8 rounded-lg shadow-sm" textSize="text-[8px]" imageUrl={logoUrl} /> :
+                                                 <BrandLogoETC className="w-8 h-8 rounded-lg shadow-sm" textSize="text-[8px]" />}
+                                                <h4 className="font-bold text-slate-800 text-sm">{stat.brand}</h4>
+                                            </div>
+                                            {isSelected && <CheckCircleIcon className="w-5 h-5 text-blue-500" />}
+                                        </div>
+                                        
+                                        <div className="mt-2 w-full">
+                                            <div className="flex justify-between items-end">
+                                                <div className="flex items-baseline gap-1">
+                                                    <p className="text-2xl font-black text-slate-800">{stat.reportCount}</p>
+                                                    <span className="text-xs font-bold text-slate-400">/ {stat.skuCount} SKU</span>
+                                                </div>
+                                                <span className="text-[10px] font-bold text-slate-500 bg-white/60 px-2 py-0.5 rounded shadow-sm border border-slate-100">{stat.pctTotal.toFixed(0)}%</span>
+                                            </div>
+                                            <div className="mt-2 flex items-center gap-2">
+                                                <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stat.completionRate}%` }}></div>
+                                                </div>
+                                                <span className="text-[9px] font-bold text-emerald-600">{stat.completionRate.toFixed(0)}% xong</span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        {/* 2. Content Area based on Selection */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            
+                            {/* Left: Charts (Origin & Status) */}
+                            <div className="lg:col-span-8 space-y-6">
+                                {/* Visual Comparison (Only for All) */}
+                                {selectedBrandDetail === 'All' && (
+                                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                        <h4 className="text-sm font-bold text-slate-700 mb-6 flex items-center gap-2">
+                                            <BarChartIcon className="w-4 h-4 text-blue-500"/> So sánh Trực quan
+                                        </h4>
+                                        <div className="flex items-end justify-center gap-12 h-40 px-8">
+                                            {brandDetailedStats.map((stat, idx) => {
+                                                const maxVal = Math.max(...brandDetailedStats.map(s => s.reportCount));
+                                                const height = maxVal > 0 ? (stat.reportCount / maxVal) * 100 : 0;
+                                                let logoUrl = undefined;
+                                                if (stat.brand === 'HTM') logoUrl = systemSettings?.brandLogos?.HTM;
+                                                if (stat.brand === 'VMA') logoUrl = systemSettings?.brandLogos?.VMA;
+
+                                                return (
+                                                    <div key={idx} className="flex flex-col items-center gap-3 w-24 group">
+                                                        <div className="w-full bg-slate-100 rounded-t-xl relative flex items-end justify-center h-full overflow-hidden">
+                                                            <div 
+                                                                className={`w-full absolute bottom-0 transition-all duration-1000 ease-out ${
+                                                                    stat.brand === 'HTM' ? 'bg-[#003DA5]' : 
+                                                                    stat.brand === 'VMA' ? 'bg-[#059669]' : 'bg-slate-400'
+                                                                }`}
+                                                                style={{ height: `${height}%`, minHeight: '4px' }}
+                                                            ></div>
+                                                            <span className="relative z-10 text-white font-bold text-lg mb-2 drop-shadow-md">{stat.reportCount}</span>
+                                                        </div>
+                                                        <div className="flex flex-col items-center">
+                                                            {stat.brand === 'HTM' ? <BrandLogoHTM className="w-10 h-10 shadow-sm" textSize="text-[10px]" imageUrl={logoUrl} /> :
+                                                             stat.brand === 'VMA' ? <BrandLogoVMA className="w-10 h-10 shadow-sm" textSize="text-[10px]" imageUrl={logoUrl} /> :
+                                                             <BrandLogoETC className="w-10 h-10 shadow-sm" textSize="text-[10px]" />}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Drill Down Charts */}
+                                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                                    <h4 className="text-sm font-bold text-slate-700 mb-6 flex justify-between items-center">
+                                        <span className="flex items-center gap-2">
+                                            {selectedBrandDetail !== 'All' && (
+                                                selectedBrandDetail === 'HTM' ? <BrandLogoHTM className="w-6 h-6 rounded-md" textSize="text-[6px]" imageUrl={systemSettings?.brandLogos?.HTM} /> :
+                                                selectedBrandDetail === 'VMA' ? <BrandLogoVMA className="w-6 h-6 rounded-md" textSize="text-[6px]" imageUrl={systemSettings?.brandLogos?.VMA} /> :
+                                                <BrandLogoETC className="w-6 h-6 rounded-md" textSize="text-[6px]" />
+                                            )}
+                                            Phân tích chi tiết ({selectedBrandDetail === 'All' ? 'Tổng hợp' : selectedBrandDetail})
+                                        </span>
+                                        {selectedBrandDetail !== 'All' && (
+                                            <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-100 font-bold">
+                                                {brandDetailedStats.find(b => b.brand === selectedBrandDetail)?.reportCount} phiếu
+                                            </span>
+                                        )}
+                                    </h4>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <div className="p-1.5 bg-rose-50 text-rose-600 rounded-lg"><ShieldCheckIcon className="w-4 h-4" /></div>
+                                                <span className="text-xs font-bold text-slate-500 uppercase">Nguồn gốc lỗi</span>
+                                            </div>
+                                            <ProgressBarChart 
+                                                data={selectedBrandDetail === 'All' ? metrics.originData['All'] : detailedChartData.originData} 
+                                                color={COLORS.DANGER} 
+                                            />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <div className="p-1.5 bg-amber-50 text-amber-600 rounded-lg"><ClockIcon className="w-4 h-4" /></div>
+                                                <span className="text-xs font-bold text-slate-500 uppercase">Trạng thái xử lý</span>
+                                            </div>
+                                            <ProgressBarChart 
+                                                data={selectedBrandDetail === 'All' ? metrics.statusData : detailedChartData.statusData} 
+                                                color={COLORS.WARNING} 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right: Top Products & Insights */}
+                            <div className="lg:col-span-4 space-y-6">
+                                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full">
+                                    <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                                        <ExclamationCircleIcon className="w-4 h-4 text-orange-500"/>
+                                        {selectedBrandDetail === 'All' ? 'Top Sản phẩm (Chung)' : `Top Sản phẩm (${selectedBrandDetail})`}
+                                    </h4>
+                                    
+                                    <div className="space-y-3">
+                                        {(selectedBrandDetail === 'All' ? metrics.topProducts : detailedChartData.topProducts).slice(0, 5).map((prod, idx) => (
+                                            <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-orange-200 transition-colors group">
+                                                <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-black shrink-0 ${idx === 0 ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-500'}`}>
+                                                    {idx + 1}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <p className="text-[10px] font-bold text-[#003DA5] bg-white px-1.5 rounded border border-slate-200 inline-block mb-1">{prod.code}</p>
+                                                        <span className="text-xs font-black text-slate-800">{prod.count}</span>
+                                                    </div>
+                                                    <p className="text-xs font-medium text-slate-600 line-clamp-2 leading-tight group-hover:text-slate-900" title={prod.name}>{prod.name}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {(selectedBrandDetail === 'All' ? metrics.topProducts : detailedChartData.topProducts).length === 0 && (
+                                            <div className="text-center py-8 text-slate-400 text-xs italic">Chưa có dữ liệu</div>
+                                        )}
+                                    </div>
+
+                                    {/* Mini Insight */}
+                                    <div className="mt-6 pt-4 border-t border-slate-100">
+                                        <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Thông tin nhanh</h5>
+                                        <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <SparklesIcon className="w-3 h-3 text-blue-600" />
+                                                <span className="text-xs font-bold text-blue-700">Nguyên nhân chính</span>
+                                            </div>
+                                            <p className="text-xs text-blue-800/80 leading-relaxed">
+                                                {(() => {
+                                                    const data = selectedBrandDetail === 'All' ? metrics.originData['All'] : detailedChartData.originData;
+                                                    if (data.length > 0) return `${data[0].label} chiếm tỷ trọng cao nhất (${data[0].percentage.toFixed(0)}%).`;
+                                                    return "Chưa đủ dữ liệu để phân tích.";
+                                                })()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </DataModal>
             )}
 

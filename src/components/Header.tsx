@@ -28,6 +28,7 @@ interface HeaderProps {
   onOpenProductModal: () => void;
   onOpenUserModal: () => void;
   onOpenSystemSettingsModal: () => void;
+  onOpenProfileModal: () => void; // New prop
   onToggleChat: () => void;
   isOffline?: boolean;
 }
@@ -59,6 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProductModal, 
   onOpenUserModal, 
   onOpenSystemSettingsModal,
+  onOpenProfileModal,
   onToggleChat,
   isOffline
 }) => {
@@ -81,6 +83,10 @@ export const Header: React.FC<HeaderProps> = ({
   const notifMenuRef = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Check if we should use the default branding colors
+  const shouldShowDefaultBranding = !systemSettings.companyName || 
+    systemSettings.companyName.trim().toUpperCase() === 'CÔNG TY CỔ PHẦN VẬT TƯ Y TẾ HỒNG THIỆN MỸ';
 
   // Xử lý click outside để đóng các menu
   useEffect(() => {
@@ -137,18 +143,18 @@ export const Header: React.FC<HeaderProps> = ({
             
             <div className="hidden md:flex flex-col justify-center">
                <div className="flex flex-col w-max">
-                   {systemSettings.companyName.includes('HỒNG THIỆN MỸ') ? (
-                       <div className="flex items-center gap-1.5 leading-none whitespace-nowrap" style={{ fontSize: 'var(--header-size, 1.1rem)' }}>
-                           <span className="font-bold uppercase tracking-tight text-[#003DA5]">CÔNG TY CỔ PHẦN VẬT TƯ Y TẾ</span>
-                           <span className="font-bold uppercase tracking-tight text-[#C5003E]">HỒNG THIỆN MỸ</span>
-                       </div>
-                   ) : (
-                       <div className="font-bold uppercase tracking-tight leading-none text-slate-800 group-hover:text-[#003DA5] transition-colors duration-300 whitespace-nowrap" style={{ fontSize: 'var(--header-size, 1.1rem)' }}>
-                         {systemSettings.companyName || 'HỒNG THIỆN MỸ'}
-                       </div>
-                   )}
+                   <div className="font-bold uppercase tracking-tight leading-none transition-colors duration-300 whitespace-nowrap" style={{ fontSize: 'var(--header-size, 1.1rem)' }}>
+                     {!shouldShowDefaultBranding ? (
+                        <span className="text-slate-800 group-hover:text-[#003DA5]">{systemSettings.companyName}</span>
+                     ) : (
+                        <span className="flex items-center gap-1.5">
+                            <span className="text-[#003DA5]">CÔNG TY CỔ PHẦN VẬT TƯ Y TẾ</span>
+                            <span className="text-[#DC2626]">HỒNG THIỆN MỸ</span>
+                        </span>
+                     )}
+                   </div>
                    <div className="w-full mt-1">
-                        <div className="font-bold text-slate-500/80 uppercase group-hover:text-slate-600 transition-colors">
+                        <div className="font-bold text-slate-500/80 uppercase group-hover:text-slate-600 transition-colors text-sm">
                             {systemSettings.appName || 'QUALITY MANAGEMENT SYSTEM'}
                         </div>
                    </div>
@@ -157,17 +163,15 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* Mobile Branding */}
             <div className="md:hidden flex flex-col justify-center items-start">
-               {systemSettings.companyName.includes('HỒNG THIỆN MỸ') ? (
-                   <>
-                       <span className="font-bold uppercase leading-none text-[#003DA5] text-xs">VẬT TƯ</span>
-                       <span className="font-bold text-[#C5003E] uppercase tracking-wide text-xs">HỒNG THIỆN MỸ</span>
-                   </>
+               {!shouldShowDefaultBranding ? (
+                   <span className="font-bold uppercase leading-none text-slate-800 text-sm">{systemSettings.companyName}</span>
                ) : (
-                   <>
-                       <span className="font-bold uppercase leading-none text-slate-800 text-sm">HTM JSC</span>
-                       <span className="font-bold text-[#003DA5] uppercase tracking-wide text-[0.6rem]">QMS</span>
-                   </>
+                   <div className="flex flex-col leading-none text-[0.7rem] font-bold uppercase gap-0.5">
+                       <span className="text-[#003DA5] whitespace-nowrap">CÔNG TY CỔ PHẦN VẬT TƯ Y TẾ</span>
+                       <span className="text-[#DC2626]">HỒNG THIỆN MỸ</span>
+                   </div>
                )}
+               <span className="font-bold text-slate-400 uppercase tracking-wide text-[0.6rem] mt-0.5">QMS SYSTEM</span>
             </div>
 
             {isLoadingReports && (
@@ -248,7 +252,7 @@ export const Header: React.FC<HeaderProps> = ({
                     </button>
                 )}
 
-                {/* AI Chat Button - NEW */}
+                {/* AI Chat Button */}
                 <button 
                     onClick={onToggleChat}
                     className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 border bg-white/40 hover:bg-white/80 border-white/60 text-slate-500 hover:text-[#003DA5] hover:border-white shadow-sm backdrop-blur-md"
@@ -450,7 +454,10 @@ export const Header: React.FC<HeaderProps> = ({
                             </div>
                         </div>
                         <div className="p-2 space-y-1">
-                            <button className="flex w-full items-center justify-start px-4 py-3 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50/80 hover:text-[#003DA5] transition-colors text-left group">
+                            <button 
+                                onClick={() => { onOpenProfileModal(); setIsProfileMenuOpen(false); }}
+                                className="flex w-full items-center justify-start px-4 py-3 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50/80 hover:text-[#003DA5] transition-colors text-left group"
+                            >
                                 <div className="p-2 bg-slate-100 rounded-xl mr-3 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                                     <UserGroupIcon className="h-4 w-4" />
                                 </div>

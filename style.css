@@ -112,3 +112,8 @@ input, button, textarea, select {
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
 }
+
+/* Text Shadow for better contrast on glass */
+.text-shadow-sm {
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { User, SystemSettings } from '../types';
-import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, CompanyLogo } from './Icons';
+import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, CompanyLogo, ArrowRightIcon } from './Icons';
 
 interface Props {
   onLogin: (user: User) => void;
@@ -25,6 +25,7 @@ const Login: React.FC<Props> = ({ onLogin, users, settings }) => {
       if (!username && usernameRef.current) {
           usernameRef.current.focus();
       }
+      // Animation trigger on mount
       const timer = setTimeout(() => setIsLoaded(true), 100); 
       return () => clearTimeout(timer);
   }, []);
@@ -32,6 +33,11 @@ const Login: React.FC<Props> = ({ onLogin, users, settings }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleLoginProcess();
+  };
+
+  const handleForgotPassword = (e: React.MouseEvent) => {
+      e.preventDefault();
+      alert("Vui lòng liên hệ bộ phận IT hoặc Quản trị viên để đặt lại mật khẩu.");
   };
 
   const handleLoginProcess = () => {
@@ -67,7 +73,7 @@ const Login: React.FC<Props> = ({ onLogin, users, settings }) => {
           return (
             <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
                  <div className="absolute inset-0 bg-cover bg-center z-0 animate-pulse-slow transition-transform duration-[60s] hover:scale-110 ease-linear" style={{ backgroundImage: `url(${settings.backgroundValue})`, transform: 'scale(1.1)' }}></div>
-                 <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-[4px]"></div>
+                 <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[4px]"></div>
             </div>
           );
       }
@@ -80,12 +86,13 @@ const Login: React.FC<Props> = ({ onLogin, users, settings }) => {
       
       // Modern Animated Mesh Gradient for Glassmorphism
       return (
-       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Animated Blobs */}
-          <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-blue-400/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-purple-400/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000"></div>
-          <div className="absolute top-[40%] left-[40%] w-[50vw] h-[50vw] bg-pink-300/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000"></div>
+       <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[#f0f4f8]">
+          {/* Abstract Blobs */}
+          <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-blue-400/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] bg-indigo-400/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000"></div>
+          <div className="absolute top-[40%] left-[40%] w-[60vw] h-[60vw] bg-purple-300/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000"></div>
           
+          {/* Noise Texture Overlay for realism */}
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
        </div>
       );
@@ -95,141 +102,161 @@ const Login: React.FC<Props> = ({ onLogin, users, settings }) => {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-slate-800 font-sans selection:bg-[#003DA5] selection:text-white p-4 sm:p-6">
        {renderBackground()}
        
-       <div className={`relative z-10 w-full max-w-[440px] transition-all duration-1000 ease-out transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+       <div className={`relative z-10 w-full max-w-[480px] transition-all duration-1000 ease-out transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
         
         {/* Glass Card */}
-        <div className="bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] rounded-[2.5rem] border border-white/60 p-8 sm:p-12 ring-1 ring-white/40 relative overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-2xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] rounded-[2.5rem] border border-white/60 p-8 sm:p-12 ring-1 ring-white/50 relative overflow-hidden group">
             
             {/* Ambient light inside card */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-gradient-to-b from-white/40 to-transparent blur-xl pointer-events-none"></div>
+            <div className="absolute -top-20 -left-20 w-40 h-40 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-purple-400/20 rounded-full blur-3xl pointer-events-none"></div>
 
-            {/* Logo Section */}
-            <div className="flex flex-col items-center mb-10 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                <div className="w-24 h-24 bg-white/60 backdrop-blur-md rounded-3xl flex items-center justify-center border border-white/80 shadow-xl shadow-blue-900/5 mb-6 p-5 transform hover:scale-105 transition-transform duration-500 animate-float">
-                     {settings.logoUrl ? (
-                        <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain drop-shadow-sm" />
+            {/* 1. Logo & Title Section */}
+            <div className="flex flex-col items-center mb-8 animate-fade-in-up text-center" style={{ animationDelay: '100ms' }}>
+                {/* Logo */}
+                <div className="w-28 h-28 bg-white/90 rounded-[2rem] flex items-center justify-center border border-white shadow-xl shadow-indigo-500/10 p-5 transform group-hover:scale-105 transition-transform duration-500 mb-6 relative backdrop-blur-sm">
+                    {settings.logoUrl ? (
+                        <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain" />
                     ) : (
-                        <CompanyLogo className="w-full h-full text-[#003DA5] drop-shadow-sm" />
+                        <CompanyLogo className="w-full h-full text-[#003DA5]" />
                     )}
+                    {/* Inner sheen */}
+                    <div className="absolute inset-0 rounded-[2rem] ring-1 ring-white/50 pointer-events-none bg-gradient-to-tr from-transparent via-white/40 to-transparent opacity-50"></div>
                 </div>
                 
-                {settings.companyName.includes('HỒNG THIỆN MỸ') ? (
-                    <div className="text-center space-y-1">
-                        <h1 className="text-lg font-extrabold text-[#003DA5] tracking-tight uppercase"> 
-                            CÔNG TY CỔ PHẦN VẬT TƯ Y TẾ
-                        </h1>
-                        <h1 className="text-2xl font-black text-[#C5003E] tracking-tighter uppercase drop-shadow-sm">
-                            HỒNG THIỆN MỸ
-                        </h1>
-                    </div>
-                ) : (
-                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight text-center drop-shadow-sm">
-                        {settings.companyName || 'Hồng Thiện Mỹ'}
-                    </h1>
-                )}
+                {/* WELCOME - Hiệu ứng Gradient (Đã bỏ animate-shimmer) */}
+                <div className="mb-6 relative">
+                    <p className="text-4xl sm:text-5xl font-black tracking-[0.1em] text-transparent bg-clip-text bg-gradient-to-br from-blue-600 via-indigo-500 to-blue-600 uppercase drop-shadow-sm">
+                        WELCOME
+                    </p>
+                    {/* Glow effect phía sau chữ Welcome */}
+                    <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full -z-10 scale-75"></div>
+                </div>
 
-                <p className="text-xs font-bold text-slate-500 mt-3 text-center uppercase tracking-widest px-4 py-1.5 rounded-full bg-white/30 border border-white/50 backdrop-blur-sm">
-                    {settings.appName || 'Hệ thống Quản lý Chất lượng'}
-                </p>
+                {/* Main Title Block */}
+                <div className="space-y-1 relative flex flex-col items-center">
+                    {/* Dòng "Hệ thống" dời xuống đây */}
+                    <p className="text-xs font-bold tracking-[0.3em] text-slate-400 uppercase mb-2 opacity-80">
+                        - HỆ THỐNG -
+                    </p>
+
+                    {/* Tiêu đề chính - Đồng nhất 1 màu */}
+                    <div className="text-[#003DA5] space-y-1">
+                        <h1 className="text-xl sm:text-2xl font-black uppercase leading-tight tracking-tight">
+                            THEO DÕI XỬ LÝ KHIẾU NẠI
+                        </h1>
+                        <h2 className="text-xl sm:text-2xl font-black uppercase leading-none tracking-tight">
+                            CHẤT LƯỢNG SẢN PHẨM
+                        </h2>
+                    </div>
+                    
+                    <div className="h-1 w-16 bg-[#003DA5]/20 rounded-full mt-5 mx-auto"></div>
+                </div>
             </div>
 
+            {/* 2. Form */}
             <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                <div className="space-y-5">
-                    <div className="group relative transition-all duration-300">
-                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5 ml-1 block group-focus-within:text-[#003DA5] transition-colors">Tên đăng nhập</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <UserIcon className="h-5 w-5 text-slate-500 group-focus-within:text-[#003DA5] transition-colors" />
-                            </div>
-                            <input 
-                                ref={usernameRef}
-                                type="text" 
-                                value={username} 
-                                onChange={(e) => setUsername(e.target.value)} 
-                                className="block w-full pl-11 pr-4 py-3.5 bg-white/40 border border-white/60 rounded-2xl text-slate-800 text-sm font-bold placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-[#003DA5]/50 focus:bg-white/60 transition-all shadow-sm focus:shadow-lg backdrop-blur-sm"
-                                placeholder="Nhập username..."
-                                autoComplete="username"
-                                disabled={loading}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="group relative transition-all duration-300">
-                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1.5 ml-1 block group-focus-within:text-[#003DA5] transition-colors">Mật khẩu</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <LockClosedIcon className="h-5 w-5 text-slate-500 group-focus-within:text-[#003DA5] transition-colors" />
-                            </div>
-                            <input 
-                                type={showPassword ? "text" : "password"} 
-                                value={password} 
-                                onChange={(e) => setPassword(e.target.value)} 
-                                className="block w-full pl-11 pr-12 py-3.5 bg-white/40 border border-white/60 rounded-2xl text-slate-800 text-sm font-bold placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-[#003DA5]/50 focus:bg-white/60 transition-all shadow-sm focus:shadow-lg backdrop-blur-sm"
-                                placeholder="Nhập mật khẩu..."
-                                autoComplete="current-password"
-                                disabled={loading}
-                            />
-                            <button 
-                                type="button" 
-                                onClick={() => setShowPassword(!showPassword)} 
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#003DA5] p-2 rounded-xl hover:bg-white/50 transition-all cursor-pointer outline-none active:scale-95" 
-                                title={showPassword ? "Ẩn" : "Hiện"}
-                                disabled={loading}
-                                tabIndex={-1}
-                            >
-                                {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between px-1">
-                    <label className="flex items-center gap-2.5 cursor-pointer group select-none">
-                        <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all shadow-sm ${rememberMe ? 'bg-[#003DA5] border-[#003DA5]' : 'border-slate-400/50 bg-white/40 group-hover:border-[#003DA5]'}`}>
-                            {rememberMe && <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5 text-white" stroke="currentColor" strokeWidth="4"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
-                        <span className={`text-xs font-bold transition-colors ${rememberMe ? 'text-[#003DA5]' : 'text-slate-600 group-hover:text-[#003DA5]'}`}>Ghi nhớ</span>
-                    </label>
-                    <a href="#" className="text-xs font-bold text-slate-500 hover:text-[#003DA5] transition-colors hover:underline">Quên mật khẩu?</a>
-                </div>
-
                 {error && (
-                    <div className="p-4 rounded-2xl bg-red-50/60 border border-red-100 flex items-center gap-3 text-xs font-bold text-red-600 animate-shake shadow-sm backdrop-blur-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 ml-1 flex-shrink-0 animate-pulse"></span>
-                        <span>{error}</span>
+                    <div className="p-4 rounded-2xl bg-red-50/90 border border-red-100 text-red-600 text-xs font-bold flex items-center gap-3 animate-shake shadow-sm backdrop-blur-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
+                        {error}
                     </div>
                 )}
 
-                <button 
-                    type="submit" 
-                    disabled={loading} 
-                    className="w-full py-4 rounded-2xl bg-[#003DA5] text-white text-sm font-bold shadow-xl shadow-blue-900/20 hover:bg-[#002a70] hover:shadow-2xl hover:shadow-blue-900/30 hover:-translate-y-1 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center uppercase tracking-widest active:scale-[0.98] active:translate-y-0 relative overflow-hidden group border border-white/20"
+                <div className="space-y-5">
+                    {/* Username Input */}
+                    <div className="relative group/input">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <UserIcon className="h-5 w-5 text-slate-400 group-focus-within/input:text-[#003DA5] transition-colors duration-300" />
+                        </div>
+                        <input
+                            ref={usernameRef}
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="block w-full pl-12 pr-4 py-4 bg-white/60 border border-slate-200/60 rounded-2xl text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-[#003DA5]/50 focus:bg-white/90 transition-all shadow-inner hover:bg-white/80"
+                            placeholder="Tên đăng nhập"
+                            disabled={loading}
+                        />
+                    </div>
+
+                    {/* Password Input */}
+                    <div className="relative group/input">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <LockClosedIcon className="h-5 w-5 text-slate-400 group-focus-within/input:text-[#003DA5] transition-colors duration-300" />
+                        </div>
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="block w-full pl-12 pr-12 py-4 bg-white/60 border border-slate-200/60 rounded-2xl text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-[#003DA5]/50 focus:bg-white/90 transition-all shadow-inner hover:bg-white/80"
+                            placeholder="Mật khẩu"
+                            disabled={loading}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors outline-none"
+                            tabIndex={-1}
+                        >
+                            {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                    <label className="flex items-center cursor-pointer group select-none">
+                        <div className="relative">
+                            <input
+                                type="checkbox"
+                                className="peer sr-only"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                            />
+                            <div className="w-5 h-5 border-2 border-slate-300 rounded-lg transition-all peer-checked:bg-[#003DA5] peer-checked:border-[#003DA5] peer-checked:shadow-md peer-hover:border-blue-300 bg-white/80"></div>
+                            <svg className="absolute w-3.5 h-3.5 text-white top-1 left-1 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none scale-0 peer-checked:scale-100 duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <span className="ml-2.5 text-xs font-bold text-slate-500 group-hover:text-slate-700 transition-colors">Ghi nhớ đăng nhập</span>
+                    </label>
+                    <a href="#" onClick={handleForgotPassword} className="text-xs font-bold text-[#003DA5] hover:text-blue-700 transition-colors hover:underline decoration-2 underline-offset-2">
+                        Quên mật khẩu?
+                    </a>
+                </div>
+
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-xl shadow-blue-900/20 text-sm font-bold text-white bg-gradient-to-r from-[#003DA5] to-blue-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed mt-4 relative overflow-hidden group/btn hover:shadow-blue-900/40"
                 >
-                    <div className="absolute inset-0 bg-white/20 blur-lg group-hover:opacity-100 opacity-0 transition-opacity duration-300"></div>
-                    <span className="relative z-10 flex items-center gap-2">
-                        {loading ? (
-                            <>
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Đang xử lý...
-                            </>
-                        ) : 'Đăng Nhập'}
-                    </span>
-                    {/* Hover Shine Effect */}
-                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none"></div>
+                    {/* Shiny Effect Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-in-out skew-x-12"></div>
+                    
+                    {loading ? (
+                        <div className="flex items-center gap-2">
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="tracking-wide">ĐANG XỬ LÝ...</span>
+                        </div>
+                    ) : (
+                        <span className="relative z-10 flex items-center gap-2 tracking-wide uppercase text-base">
+                            ĐĂNG NHẬP HỆ THỐNG <ArrowRightIcon className="w-5 h-5 opacity-80 group-hover/btn:translate-x-1 transition-transform" />
+                        </span>
+                    )}
                 </button>
             </form>
-            
-            <div className="mt-8 text-center animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-                <p className="text-[0.6rem] font-bold text-slate-400 uppercase tracking-[0.25em] hover:text-slate-600 transition-colors cursor-default">
-                    © 2025 Secure System
+
+            {/* Footer */}
+            <div className="mt-8 pt-6 border-t border-slate-200/50 text-center animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-70">
+                    &copy; {new Date().getFullYear()} <span className="text-[#003DA5]">Hồng Thiện Mỹ</span>. All rights reserved.
                 </p>
             </div>
         </div>
-      </div>
+       </div>
     </div>
   );
 };

@@ -49,6 +49,8 @@ export interface DefectReport {
   tenThietBi?: string; 
   nhaPhanPhoi: string;
   donViSuDung: string;
+  nguoiLienHe?: string; // New field: Contact Person
+  soDienThoai?: string; // New field: Contact Phone
   noiDungPhanAnh: string;
   images?: string[]; // New field: Image URLs
   soLo: string;
@@ -91,6 +93,12 @@ export interface SystemSettings {
   backgroundType: 'default' | 'image' | 'color';
   backgroundValue: string;
   
+  // Brand Logos
+  brandLogos?: {
+      HTM?: string;
+      VMA?: string;
+  };
+
   // Global Settings
   fontFamily?: string; 
   baseFontSize?: string;
