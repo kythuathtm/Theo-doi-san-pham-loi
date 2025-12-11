@@ -9,7 +9,6 @@ import {
   ArchiveBoxIcon, ExclamationTriangleIcon, CubeIcon, PrinterIcon, ArrowRightOnRectangleIcon, UserIcon, ExclamationCircleIcon
 } from './Icons';
 
-// Handle ReactToPrint import compatibility
 const useReactToPrint = (ReactToPrintPkg as any).useReactToPrint || (ReactToPrintPkg as any).default?.useReactToPrint;
 
 interface Props {
@@ -24,7 +23,6 @@ interface Props {
   onAddComment: (reportId: string, content: string, user: { username: string, role: string }) => Promise<boolean>;
 }
 
-// --- Helper Functions ---
 const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return '';
     try {
@@ -44,8 +42,6 @@ const getProcessingDays = (startDate: string, endDate?: string) => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
-// --- Helper Components ---
-
 interface DetailRowProps {
   label: string;
   value: React.ReactNode;
@@ -56,7 +52,6 @@ interface DetailRowProps {
 }
 
 const DetailRow: React.FC<DetailRowProps> = ({ label, value, className = "text-slate-800", wrapperClass = "col-span-1", icon, isFullWidth = false }) => {
-    // Check if value is potentially dangerous (raw object)
     let displayValue = value;
     const showPlaceholder = value === null || value === undefined || value === '';
 
@@ -116,7 +111,6 @@ const TimelineItem: React.FC<{ log: ActivityLog }> = ({ log }) => {
   const isComment = log.type === 'comment';
   return (
     <div className="flex gap-4 pb-6 last:pb-2 relative animate-fade-in group">
-      {/* Line connector */}
       <div className="absolute top-5 left-[15px] bottom-0 w-[2px] bg-slate-100 group-last:hidden"></div>
       
       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 ring-4 ring-white shadow-sm border transition-colors ${
@@ -147,8 +141,7 @@ const TimelineItem: React.FC<{ log: ActivityLog }> = ({ log }) => {
   );
 };
 
-// 2. Block Status Stepper
-const StatusStepper = ({ currentStatus }: { currentStatus: string }) => {
+const StatusStepper = ({ currentStatus, onStepClick, canEdit }: { currentStatus: string, onStepClick?: (step: string) => void, canEdit: boolean }) => {
     const steps = ['Mới', 'Đang tiếp nhận', 'Đang xác minh', 'Đang xử lý', 'Hoàn thành'];
     const currentIndex = steps.indexOf(currentStatus);
     const isErrorState = currentStatus === 'Chưa tìm ra nguyên nhân';
@@ -156,17 +149,15 @@ const StatusStepper = ({ currentStatus }: { currentStatus: string }) => {
     return (
         <div className="w-full py-4 px-0 bg-white border-b border-slate-100 overflow-x-auto print:hidden no-scrollbar shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] relative z-20">
             <div className="flex items-start justify-between min-w-[500px] relative mx-auto max-w-3xl px-4 pt-2">
-                {/* Background Line */}
                 <div className="absolute left-6 right-6 top-[1.1rem] h-0.5 bg-slate-100 rounded-full -z-10"></div>
                 
-                {/* Active Line */}
                 <div 
                     className={`absolute left-6 top-[1.1rem] h-0.5 rounded-full -z-10 transition-all duration-700 ease-in-out shadow-sm ${isErrorState ? 'bg-purple-300' : 'bg-blue-500'}`}
                     style={{ width: isErrorState ? 'calc(100% - 3rem)' : `${(currentIndex / (steps.length - 1)) * 100}%` }}
                 ></div>
 
                 {steps.map((step, index) => {
-                    let status = 'pending'; // pending, active, completed
+                    let status = 'pending'; 
                     if (isErrorState) {
                          if (index < 4) status = 'completed'; 
                     } else {
@@ -175,12 +166,16 @@ const StatusStepper = ({ currentStatus }: { currentStatus: string }) => {
                     }
                     
                     return (
-                        <div key={step} className="flex flex-col items-center gap-2 relative group px-1">
+                        <div 
+                            key={step} 
+                            onClick={() => canEdit && onStepClick && onStepClick(step)}
+                            className={`flex flex-col items-center gap-2 relative group px-1 ${canEdit ? 'cursor-pointer' : 'cursor-default'}`}
+                        >
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center border-[3px] transition-all duration-500 z-10 shadow-sm ${
                                 status === 'completed' ? 'border-blue-500 bg-blue-500 text-white scale-100' :
                                 status === 'active' ? 'border-blue-500 bg-white text-blue-600 shadow-[0_0_0_4px_rgba(59,130,246,0.15)] scale-110' :
                                 'border-white bg-slate-100 text-slate-300 ring-2 ring-white'
-                            }`}>
+                            } ${canEdit ? 'group-hover:scale-110 group-hover:shadow-md' : ''}`}>
                                 {status === 'completed' ? (
                                     <CheckCircleIcon className="w-4 h-4" />
                                 ) : (
@@ -193,6 +188,11 @@ const StatusStepper = ({ currentStatus }: { currentStatus: string }) => {
                             }`}>
                                 {step}
                             </span>
+                            {canEdit && status !== 'active' && (
+                                <div className="absolute top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] px-2 py-1 rounded z-20 pointer-events-none whitespace-nowrap shadow-lg translate-y-1 group-hover:translate-y-0 duration-200">
+                                    Chuyển sang {step}
+                                </div>
+                            )}
                         </div>
                     );
                 })}
@@ -209,8 +209,6 @@ const StatusStepper = ({ currentStatus }: { currentStatus: string }) => {
         </div>
     );
 };
-
-// --- Main Component ---
 
 const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelete, permissions, onClose, currentUserRole, currentUsername, onAddComment }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'log'>('info');
@@ -293,6 +291,23 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
       setIsUpdating(false);
   };
 
+  const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === report.trangThai) return;
+    if (!window.confirm(`Bạn có chắc muốn chuyển trạng thái sang "${newStatus}"?`)) return;
+    
+    const updates: any = { trangThai: newStatus };
+    if (newStatus === 'Hoàn thành' && !report.ngayHoanThanh) {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = (`0${d.getMonth() + 1}`).slice(-2);
+        const day = (`0${d.getDate()}`).slice(-2);
+        updates.ngayHoanThanh = `${y}-${m}-${day}`;
+    }
+    
+    const user = { username: currentUsername, role: currentUserRole };
+    await onUpdate(report.id, updates, `Cập nhật trạng thái: ${newStatus}`, user);
+  };
+
   const handleSendComment = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!newComment.trim()) return;
@@ -321,19 +336,16 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
   const isOverdue = daysOpen > 7 && report.trangThai !== 'Hoàn thành';
 
   return (
-    <div className="flex flex-col h-full sm:h-auto bg-[#f8fafc] font-sans">
+    <div className="flex flex-col h-full bg-[#f8fafc] font-sans">
       <style type="text/css" media="print">
         {`
           @page { size: A4; margin: 15mm; }
           body { -webkit-print-color-adjust: exact; }
           .no-scrollbar::-webkit-scrollbar { display: none; }
           .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-          /* Reset container for print */
           .overflow-y-auto { overflow: visible !important; height: auto !important; }
           .max-h-\[calc\(90vh-4rem\)\] { max-height: none !important; }
-          /* Hiding elements */
           button, .no-print, .print\\:hidden { display: none !important; }
-          /* Showing print specific */
           .print\\:block { display: block !important; }
           .print\\:flex { display: flex !important; }
           .print\\:hidden { display: none !important; }
@@ -345,7 +357,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
         `}
       </style>
       
-      {/* 1. Header (Sticky) */}
       <div className="flex flex-col border-b border-slate-200 bg-white/95 backdrop-blur-xl shadow-sm z-30 sticky top-0 print:hidden flex-shrink-0">
           <div className="flex justify-between items-center px-5 py-3">
             <div className="flex items-center gap-4 min-w-0">
@@ -423,10 +434,8 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
           </div>
       </div>
       
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-0 sm:p-0 custom-scrollbar pb-24 sm:max-h-[calc(90vh-4rem)]" ref={componentRef}>
+      <div className="flex-1 overflow-y-auto p-0 sm:p-0 custom-scrollbar pb-24" ref={componentRef}>
          
-         {/* --- PRINT HEADER (Hidden normally, shown on print) --- */}
          <div className="hidden print:block mb-6 border-b-2 border-black pb-4">
              <div className="flex justify-between items-start">
                  <div>
@@ -441,12 +450,14 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
              </div>
          </div>
 
-         {/* 2. Status Stepper */}
-         <StatusStepper currentStatus={report.trangThai} />
+         <StatusStepper 
+            currentStatus={report.trangThai} 
+            canEdit={permissions.canEdit}
+            onStepClick={handleStatusChange}
+         />
 
          <div className="max-w-[1280px] mx-auto p-4 sm:p-5 space-y-5 print:p-0 print:space-y-4">
              
-             {/* 3. Information & Processing Blocks (and History via tabs) */}
              <div className="flex p-1 bg-slate-200/60 rounded-xl mb-4 print:hidden max-w-sm mx-auto backdrop-blur-sm">
                 <button 
                     onClick={() => setActiveTab('info')}
@@ -462,14 +473,11 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                 </button>
              </div>
 
-             {/* INFO TAB Content (Available for Print) */}
              <div className={`${activeTab === 'info' ? 'block' : 'hidden print:block'}`}>
                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 animate-fade-in-up items-start print:block print:space-y-4">
                     
-                    {/* LEFT COLUMN (7/12): 3.1 & 3.2 */}
                     <div className="lg:col-span-7 space-y-5 print:space-y-4">
                         
-                        {/* 3.1. Customer & Complaint Block */}
                         <SectionCard title="Thông tin Khách hàng & Khiếu nại" icon={<UserGroupIcon className="w-4 h-4"/>}>
                             <div className="space-y-4">
                                 <div className="grid grid-cols-12 gap-4 print:gap-2">
@@ -513,7 +521,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                             </div>
                         </SectionCard>
 
-                        {/* 3.2. Product Information Block */}
                         <SectionCard title="Thông tin Sản phẩm" icon={<CubeIcon className="w-4 h-4"/>}>
                             <div className="grid grid-cols-12 gap-4 mb-4 print:gap-2">
                                 <DetailRow label="Tên sản phẩm" value={report.tenThuongMai} className="font-bold bg-slate-50 print:bg-white" wrapperClass="col-span-12" />
@@ -586,7 +593,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                         </SectionCard>
                     </div>
 
-                    {/* RIGHT COLUMN (5/12): 3.3 Resolution Block */}
                     <div className="lg:col-span-5 h-full">
                         <SectionCard 
                             title="Xử lý & Khắc phục" 
@@ -606,7 +612,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                         >
                             <div className="space-y-4">
                                 <div className="space-y-4">
-                                    {/* Cause */}
                                     <div className="group flex flex-col">
                                         <div className="flex justify-between items-center mb-1.5">
                                             <div className="flex items-center gap-2">
@@ -637,7 +642,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                         )}
                                     </div>
 
-                                    {/* Solution */}
                                     <div className="group flex flex-col">
                                         <div className="flex justify-between items-center mb-1.5">
                                             <div className="flex items-center gap-2">
@@ -669,7 +673,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                                     </div>
                                 </div>
                                 
-                                {/* Status & Origin Control */}
                                 {permissions.canEdit ? (
                                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 mt-4 space-y-3 shadow-sm print:bg-white print:border-none print:p-0">
                                         <div className="flex flex-col gap-1.5">
@@ -741,7 +744,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                  </div>
              </div>
 
-             {/* Log & Discussion Tab */}
              {activeTab === 'log' && (
                  <div className="space-y-4 animate-fade-in-up print:hidden">
                     <div className="bg-white rounded-3xl border border-slate-200 p-5 min-h-[450px] flex flex-col shadow-sm">
@@ -757,7 +759,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                             <div ref={commentEndRef} />
                         </div>
                         
-                        {/* Comment Input */}
                         <div className="mt-auto bg-slate-50 p-2.5 rounded-3xl border border-slate-200 shadow-inner flex items-end gap-2 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-300 transition-all">
                             <textarea
                                 value={newComment}
@@ -784,7 +785,6 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                  </div>
              )}
 
-             {/* --- SIGNATURE SECTION (Hidden normally, shown on print) --- */}
              <div className="hidden print:flex justify-between mt-10 pt-4 border-t-2 border-black">
                  <div className="text-center w-1/3">
                      <p className="font-bold text-black uppercase text-sm mb-16">Người Lập Phiếu</p>

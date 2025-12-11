@@ -505,22 +505,12 @@ export const App: React.FC = () => {
                         )}
                     </main>
 
-                    {/* Modals & Overlays */}
-                    {isFormOpen && (
-                        <DefectReportForm 
-                            initialData={editingReport}
-                            onSave={(r) => { saveReport(r, !!editingReport); setIsFormOpen(false); setEditingReport(null); }}
-                            onClose={() => { setIsFormOpen(false); setEditingReport(null); }}
-                            currentUserRole={currentUser.role as UserRole}
-                            editableFields={roleSettings[currentUser.role]?.editableFields || []}
-                            products={products}
-                        />
-                    )}
-
+                    {/* Modals & Overlays - Render Order Adjusted */}
+                    
                     {selectedReport && (
-                        <div className="fixed inset-0 z-50 flex justify-end pointer-events-none">
-                            <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm pointer-events-auto" onClick={() => setSelectedReport(null)}></div>
-                            <div className="w-full max-w-4xl h-full bg-white shadow-2xl pointer-events-auto animate-slide-left overflow-hidden flex flex-col">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+                            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm pointer-events-auto transition-opacity" onClick={() => setSelectedReport(null)}></div>
+                            <div className="w-full max-w-5xl h-full max-h-[95vh] bg-white shadow-2xl pointer-events-auto animate-zoom-in overflow-hidden flex flex-col rounded-2xl ring-1 ring-white/20">
                                 <DefectReportDetail 
                                     report={selectedReport}
                                     onEdit={(r) => { setSelectedReport(null); setEditingReport(r); setIsFormOpen(true); }}
@@ -582,6 +572,18 @@ export const App: React.FC = () => {
                             currentUser={currentUser}
                             onSave={(u) => saveUser(u, true)}
                             onClose={() => setIsProfileModalOpen(false)}
+                        />
+                    )}
+
+                    {/* Form Modal moved last to overlay everything when opened */}
+                    {isFormOpen && (
+                        <DefectReportForm 
+                            initialData={editingReport}
+                            onSave={(r) => { saveReport(r, !!editingReport); setIsFormOpen(false); setEditingReport(null); }}
+                            onClose={() => { setIsFormOpen(false); setEditingReport(null); }}
+                            currentUserRole={currentUser.role as UserRole}
+                            editableFields={roleSettings[currentUser.role]?.editableFields || []}
+                            products={products}
                         />
                     )}
 
