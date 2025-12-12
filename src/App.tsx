@@ -128,6 +128,7 @@ export const App: React.FC = () => {
 
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prevUsernameRef = useRef<string | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -202,14 +203,24 @@ export const App: React.FC = () => {
   }, [roleSettings]);
 
   useEffect(() => {
-      if (currentUser) {
+      // Logic to set default view ONLY when user logs in or switches user
+      // Prevents resetting to dashboard when user profile updates in background
+      if (currentUser && currentUser.username !== prevUsernameRef.current) {
           if (canViewDashboard) {
               setCurrentView('dashboard');
           } else {
               setCurrentView('list');
           }
+          prevUsernameRef.current = currentUser.username;
+      } else if (!currentUser) {
+          prevUsernameRef.current = null;
       }
-  }, [currentUser, canViewDashboard]);
+
+      // Ensure that if user loses dashboard permission while on dashboard, they are redirected
+      if (currentUser && currentView === 'dashboard' && !canViewDashboard) {
+          setCurrentView('list');
+      }
+  }, [currentUser, canViewDashboard, currentView]);
 
   const dashboardReports = useMemo(() => {
     let result = [...reports];
