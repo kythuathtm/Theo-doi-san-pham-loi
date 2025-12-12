@@ -311,12 +311,16 @@ const DashboardReport: React.FC<Props> = ({ reports, onFilterSelect, onSelectRep
     // Calculate recent activity
     const recentActivity = useMemo(() => {
         return reports
-            .flatMap(r => (r.activityLog || []).map(log => ({
-                ...log,
-                reportId: r.id,
-                reportName: r.tenThuongMai,
-                reportCode: r.maSanPham
-            })))
+            .flatMap(r => {
+                // Safe access to activityLog
+                const logs = Array.isArray(r.activityLog) ? r.activityLog : [];
+                return logs.map(log => ({
+                    ...log,
+                    reportId: r.id,
+                    reportName: r.tenThuongMai,
+                    reportCode: r.maSanPham
+                }));
+            })
             .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
             .slice(0, 10);
     }, [reports]);

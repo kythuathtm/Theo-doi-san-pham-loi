@@ -4,9 +4,10 @@ import { DefectReport, ToastType, ActivityLog } from '../types';
 import { db } from '../firebaseConfig';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, setDoc, deleteDoc, writeBatch, arrayUnion, limit } from 'firebase/firestore';
 
-const LS_REPORTS = 'app_reports_data';
+// Performance Optimization: Disabled LocalStorage for Reports
+// Storing large Base64 images in localStorage causes severe UI freezing (blocking main thread).
+// const LS_REPORTS = 'app_reports_data'; 
 
-// Removed mock data as requested
 const MOCK_REPORTS: DefectReport[] = [];
 
 // Helper to clean data for Firestore
@@ -23,18 +24,14 @@ const cleanData = (data: any): any => {
 };
 
 export const useReports = (showToast: (msg: string, type: ToastType) => void) => {
-  const [reports, setReports] = useState<DefectReport[]>(() => {
-      try {
-          const saved = localStorage.getItem(LS_REPORTS);
-          return saved ? JSON.parse(saved) : MOCK_REPORTS;
-      } catch { return MOCK_REPORTS; }
-  });
+  // Optimization: Initialize with empty array instead of reading heavy localStorage
+  const [reports, setReports] = useState<DefectReport[]>([]);
   const [isLoadingReports, setIsLoadingReports] = useState(true);
 
-  // Update Local Storage Helper
+  // Update State Helper (LocalStorage sync removed for performance)
   const updateLocal = (newReports: DefectReport[]) => {
       setReports(newReports);
-      localStorage.setItem(LS_REPORTS, JSON.stringify(newReports));
+      // localStorage.setItem(LS_REPORTS, JSON.stringify(newReports)); // REMOVED to fix lag
   };
 
   useEffect(() => {
@@ -54,15 +51,15 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
             }, 
             (error: any) => {
                 if (error?.code === 'permission-denied' || error?.message?.includes('Missing or insufficient permissions')) {
-                    console.info("Reports: Firestore permission denied. Using local data (Offline Mode).");
+                    console.info("Reports: Firestore permission denied.");
                 } else {
-                    console.warn("Error fetching reports (Offline Mode):", error);
+                    console.warn("Error fetching reports:", error);
                 }
                 setIsLoadingReports(false);
             }
         );
     } catch (error) {
-        console.warn("Reports: Init failed or offline, using local data.");
+        console.warn("Reports: Init failed.");
         setIsLoadingReports(false);
     }
     return () => unsubscribe();
@@ -125,9 +122,9 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
         showToast(isEditing ? 'Cập nhật thành công!' : 'Tạo mới thành công!', 'success');
         return true;
     } catch (error: any) {
-        console.info("Offline save: report (local only)");
-        showToast('Đã lưu (Offline mode)', 'success');
-        return true;
+        console.error("Save error:", error);
+        showToast('Lỗi khi lưu dữ liệu (Kiểm tra kết nối)', 'error');
+        return false;
     }
   };
 
@@ -145,7 +142,8 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
                       user: user.username,
                       role: user.role
                   };
-                  updatedR.activityLog = [...(updatedR.activityLog || []), log];
+                  // Safe array spread
+                  updatedR.activityLog = [...(Array.isArray(updatedR.activityLog) ? updatedR.activityLog : []), log];
               }
               return updatedR;
           }
@@ -171,9 +169,9 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
           showToast(successMessage, 'success');
           return true;
       } catch (error: any) {
-          console.info("Offline update: report (local only)");
-          showToast(successMessage + ' (Offline)', 'success');
-          return true;
+          console.error("Update error:", error);
+          showToast('Lỗi kết nối khi cập nhật.', 'error');
+          return false;
       }
   };
 
@@ -190,7 +188,7 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
 
       const updatedReports = reports.map(r => {
           if (r.id === reportId) {
-              return { ...r, activityLog: [...(r.activityLog || []), newComment] };
+              return { ...r, activityLog: [...(Array.isArray(r.activityLog) ? r.activityLog : []), newComment] };
           }
           return r;
       });
@@ -201,8 +199,8 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
           await updateDoc(reportRef, { activityLog: arrayUnion(newComment) });
           return true;
       } catch (error) {
-          console.info("Offline comment (local only)");
-          return true; 
+          console.error("Comment error:", error);
+          return false; 
       }
   };
 
@@ -216,18 +214,18 @@ export const useReports = (showToast: (msg: string, type: ToastType) => void) =>
         showToast('Đã xóa báo cáo.', 'info');
         return true;
     } catch (error: any) {
-        console.info("Offline delete (local only)");
-        showToast('Đã xóa (Offline mode)', 'info');
-        return true;
+        console.error("Delete error:", error);
+        showToast('Lỗi khi xóa (Kiểm tra kết nối)', 'error');
+        return false;
     }
   };
 
   const importReports = async (newReports: DefectReport[]) => {
       try {
-          // Local Only import for now as batch writing all might fail partly or trigger permissions
+          // Optimistic local update only for import to allow bulk viewing
           const combined = [...newReports.map(r => ({...r, id: `imp_${Date.now()}_${Math.random()}`})), ...reports];
           updateLocal(combined);
-          showToast(`Đã import ${newReports.length} phiếu (Offline/Local).`, 'success');
+          showToast(`Đã hiển thị ${newReports.length} phiếu (Lưu ý: Dữ liệu import cần xử lý lưu từng phiếu).`, 'info');
           return true;
       } catch (e) { return false; }
   };

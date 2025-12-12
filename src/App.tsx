@@ -112,6 +112,8 @@ export const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(''); // Performance: Debounced search
+  
   const [statusFilter, setStatusFilter] = useState('All');
   const [defectTypeFilter, setDefectTypeFilter] = useState('All');
   
@@ -129,6 +131,14 @@ export const App: React.FC = () => {
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevUsernameRef = useRef<string | null>(null);
+
+  // Performance: Debounce Search Term
+  useEffect(() => {
+      const handler = setTimeout(() => {
+          setDebouncedSearchTerm(searchTerm);
+      }, 300); // Wait 300ms after user stops typing
+      return () => clearTimeout(handler);
+  }, [searchTerm]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -257,8 +267,8 @@ export const App: React.FC = () => {
   const filteredReports = useMemo(() => {
     let result = [...dashboardReports];
 
-    if (searchTerm) {
-      const terms = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+    if (debouncedSearchTerm) {
+      const terms = debouncedSearchTerm.toLowerCase().split(/\s+/).filter(Boolean);
       
       result = result.filter((r) => {
           const searchableText = [
@@ -296,7 +306,7 @@ export const App: React.FC = () => {
     }
 
     return result;
-  }, [dashboardReports, searchTerm, statusFilter, defectTypeFilter, isOverdueFilter]);
+  }, [dashboardReports, debouncedSearchTerm, statusFilter, defectTypeFilter, isOverdueFilter]);
 
   const sortedReports = useMemo(() => {
       let sortableItems = [...filteredReports];

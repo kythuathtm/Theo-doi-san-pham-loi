@@ -801,7 +801,7 @@ const DefectReportDetail: React.FC<Props> = ({ report, onEdit, onUpdate, onDelet
                  <div className="space-y-4 animate-fade-in-up print:hidden">
                     <div className="bg-white rounded-3xl border border-slate-200 p-5 min-h-[450px] flex flex-col shadow-sm">
                         <div className="flex-1 space-y-2 mb-4 overflow-y-auto max-h-[550px] pr-2 custom-scrollbar p-2">
-                            {report.activityLog && report.activityLog.length > 0 ? (
+                            {Array.isArray(report.activityLog) && report.activityLog.length > 0 ? (
                                 report.activityLog.map((log) => <TimelineItem key={log.id} log={log} />)
                             ) : (
                                 <div className="text-center flex flex-col items-center justify-center h-40 text-slate-400 italic">
